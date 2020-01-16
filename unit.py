@@ -24,15 +24,16 @@ class Unit:
         self.update_pos()
         self.update_rect()
 
-
         MAP.add_unit_at(self, tile.x, tile.y)
         return self
+
 
     def update(self):   
         if self.path.size() == 0:
             self.update_target()
         if self.path.size() > 0:
             self.move_to(self.path.pop())
+
 
     def update_target(self):
         raise NotImplementedError()
@@ -52,9 +53,11 @@ class Unit:
     def update_rect(self):
         self.rect = pygame.Rect(self.pos.x, self.pos.y, self.radius * 2, self.radius * 2)
 
+
     def move_by(self, vector):
         target = self.tile + vector
         self.move_to(target)
+
 
     def move_to(self, target):
         if MAP.pos_within_bounds(target):
@@ -64,6 +67,7 @@ class Unit:
             self.update_pos()
             self.update_rect()
             
+
     def draw(self):
         pygame.draw.rect(screen, self.color, self.rect)
         if self.path is not None:
@@ -76,8 +80,10 @@ class Unit:
             rect = pygame.Rect(point.x, point.y, 3, 3)
             pygame.draw.rect(screen, COLOR_PINK, rect)
 
+
     def print(self):
         print("--Unit id: ", self.id, "  x: ", self.tile.x, "  y: ", self.tile.y)
+
 
     def change_weights_for_types(self, weights, unitTypes, data, flip_direction = False):
         nearby_targets = MAP.get_units_near_unit_of_types(self, data[0][0], data[0][1], unitTypes)
@@ -109,17 +115,20 @@ class Unit:
         else:
             return False
 
+
     def change_weights_if_blocked(self, weights, unitTypes):
         for i in range(8):
             new_tile = self.tile + DIRECTION_VECTORS[i]
             if not MAP.pos_within_bounds(new_tile) or type(MAP.get_unit_at(new_tile)) in unitTypes:
                 weights[i][0] = 0
 
+
     def get_vector_from_weights(weights):
         direction_number = weighted_random(((0,weights[0][0]), (1,weights[1][0]), (2,weights[2][0]), (3,weights[3][0]), (4,weights[4][0]), (5,weights[5][0]), (6,weights[6][0]), (7,weights[7][0])))
         if direction_number is not None:
             return DIRECTION_VECTORS[direction_number]
         return None
+
 
     def kill_deer_at_tile(self, tile):
         global deer_killed
@@ -145,6 +154,7 @@ class Deer(Unit):
         self.radius = UNIT_RADIUS_DEER
         self.target = None
         Unit.__init__(self, tile)
+
 
     def update_target(self):
         weight_n = [100]
@@ -194,8 +204,6 @@ class Wolf(Unit):
 
         # Each Other
         Unit.change_weights_for_types(self, weights, {Wolf}, [(0, 40, ADD, 20)])
-        # Chase deer
-
         # Deer
         if self.satiation > 0:
             self.satiation = self.satiation - 1
@@ -217,8 +225,6 @@ class Wolf(Unit):
             self.path.append(target)
 
 
-
-
 class Bear(Unit):
     def __init__(self, tile):
         self.color = COLOR_GREY_LIGHT
@@ -226,6 +232,7 @@ class Bear(Unit):
         Unit.__init__(self, tile)
         self.path = list()
         self.add_path()
+
 
     def add_path(self):
         target = self.get_target()
@@ -251,12 +258,14 @@ class Bear(Unit):
                     x = x -1
                     self.path.append(Point(x=x, y=y))
 
+
     def get_target(self):
         i = randint(0, TILE_COUNT - 1)
         if randint(0, 1) == 0:
             return Point(x = self.tile.x, y = i)
         else:
             return Point(x = i, y = self.tile.y)
+
 
     def update(self):
         if len(self.path) > 0:
@@ -269,6 +278,7 @@ class Bear(Unit):
             if randint(0, 9) == 0:
                 self.add_path()
 
+
 def create_block_line(tile_1, tile_2) :
     # vertical
     if tile_1.x == tile_2.x and tile_1.y < tile_2.y:
@@ -277,5 +287,3 @@ def create_block_line(tile_1, tile_2) :
     # horizontal
     elif tile_1.y == tile_2.y and tile_1.x < tile_2.x:
         pass
-
-
