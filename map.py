@@ -1,0 +1,69 @@
+from globals import *
+from point import *
+import pygame
+
+class Map:
+    def __init__(self):
+        self.grid = list()
+
+        self.units = dict()
+
+        for i in range(TILE_COUNT):
+            self.grid.append(list())
+            for j in range(TILE_COUNT):
+                self.grid[i].append(None)
+        
+    def pos_within_bounds(self, pos):
+        return pos.x >= 0 and pos.y >= 0 and pos.x < TILE_COUNT and pos.y < TILE_COUNT
+
+    def get_units(self):
+        return self.units.values()
+
+    def add_unit_at(self, unit, x, y):
+        self.grid[x][y] = unit
+        self.units[unit.id] = unit
+
+    def remove_unit(self, unit):
+        if self.get_unit_at(unit.tile) is not None:
+            self.grid[unit.tile.x][unit.tile.y] = None
+        del self.units[unit.id]
+
+    def move_unit(self, unit, from_tile, to_tile):
+        if self.grid[to_tile.x][to_tile.y] is not None:
+            print("stomping on ",type(self.grid[to_tile.x][to_tile.y]))
+        self.grid[from_tile.x][from_tile.y] = None
+        self.grid[to_tile.x][to_tile.y] = unit
+    
+    def has_unit(self, id):
+        return self.units.has_key(id)
+
+    def get_unit(self, id):
+        return self.units[id]
+
+    def get_unit_at(self, tile):
+        if 0 <= tile.x < len(self.grid) and 0 <= tile.y < len(self.grid[0]):
+            return self.grid[tile.x][tile.y]
+        else:
+            return None
+
+    def print(self):
+        print("Map Grid Units:")
+        for i in range(TILE_COUNT):
+            for j in range(TILE_COUNT):
+                if self.grid[i][j] is not None:
+                    # self.grid[i][j].print()
+                    print("--Unit id: ", self.grid[i][j].id, "  x: ", i, "  y: ", j)
+        print("Map Dict Units:")
+        for k, v in self.units.items():
+            v.print()
+
+
+    def get_units_near_unit_of_types(self, unit, range_inner, range_outer, types):
+        r = set()
+        for other_unit in self.units.values():
+            if other_unit is not unit and type(other_unit) in types:
+                vector = other_unit.tile - unit.tile
+                if range_inner ** 2 <= vector.size_squared() <= range_outer ** 2:
+                    r.add(other_unit)
+        return r
+
