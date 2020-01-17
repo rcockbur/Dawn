@@ -24,7 +24,6 @@ class Unit:
         self.tile = tile
         self.path = Path(list())
         self.target = None
-        # self.update_pos()
 
         MAP.add_unit_at(self, tile.x, tile.y)
         return self
@@ -44,13 +43,6 @@ class Unit:
         raise NotImplementedError()
 
 
-    # def update_pos(self):
-    #     x = tile_get_mid_x(self.tile.x) - self.radius
-    #     y = tile_get_mid_y(self.tile.y) - self.radius
-
-    #     self.pos = Point(x=x, y=y)
-
-
     def set_path(self, path):
         self.path = path
 
@@ -65,7 +57,6 @@ class Unit:
             old_tile = self.tile.copy()
             self.tile = target.copy()
             MAP.move_unit(self, old_tile, self.tile)
-            # self.update_pos()
             
 
     def calculate_rect(tile, radius):
@@ -81,11 +72,8 @@ class Unit:
 
 
     def draw_path(self):
-        # print(self.path.points)
-
         for point in self.path.points:
             rect = Unit.calculate_rect(point, self.radius - 1)
-            # rect = pygame.Rect(point.x, point.y, self.radius * 2 - 2, self.radius * 2 - 2)
             pygame.draw.rect(screen, COLOR_YELLOW, rect)
 
 
