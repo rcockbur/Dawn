@@ -22,7 +22,7 @@ for row in f:
     file_y += 1
     if file_x == 100:
         file_x = 0
-
+Person(Point(x = 35, y = 50))
 for i in range(100):
     Deer(Point(x=20,  y=35))        
 
@@ -85,7 +85,7 @@ while not done:
     frames = frames + 1
 
     # update units
-    if frames % 1 == 0:
+    if frames % 2 == 0:
         for unit_id in list(MAP.units):
             if type(MAP.units[unit_id]) is not Block:
                 MAP.units[unit_id].update()

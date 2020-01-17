@@ -5,7 +5,6 @@ from utility import *
 from map import *
 from path import *
 
-
 class Unit:
     color = (0, 128, 255)
     id_index = 0
@@ -16,13 +15,16 @@ class Unit:
         return Unit.id_index - 1
 
 
-    def __init__(self, tile):
+    def init_a(self, tile):
+        self.move_in = 10
+        self.move_period = 10
+
+    def init_b(self, tile):
         self.id = Unit.new_id()
         self.tile = tile
         self.path = Path(list())
         self.target = None
-        self.update_pos()
-        self.update_rect()
+        # self.update_pos()
 
         MAP.add_unit_at(self, tile.x, tile.y)
         return self
@@ -32,26 +34,25 @@ class Unit:
         if self.path.size() == 0:
             self.update_target()
         if self.path.size() > 0:
-            self.move_to(self.path.pop())
+            self.move_in = self.move_in - 1
+            if self.move_in == 0:
+                self.move_in = self.move_period
+                self.move_to(self.path.pop())
 
 
     def update_target(self):
         raise NotImplementedError()
 
 
-    def update_pos(self):
-        x = tile_get_mid_x(self.tile.x) - self.radius
-        y = tile_get_mid_y(self.tile.y) - self.radius
+    # def update_pos(self):
+    #     x = tile_get_mid_x(self.tile.x) - self.radius
+    #     y = tile_get_mid_y(self.tile.y) - self.radius
 
-        self.pos = Point(x=x, y=y)
+    #     self.pos = Point(x=x, y=y)
 
 
     def set_path(self, path):
         self.path = path
-        
-
-    def update_rect(self):
-        self.rect = pygame.Rect(self.pos.x, self.pos.y, self.radius * 2, self.radius * 2)
 
 
     def move_by(self, vector):
@@ -64,21 +65,28 @@ class Unit:
             old_tile = self.tile.copy()
             self.tile = target.copy()
             MAP.move_unit(self, old_tile, self.tile)
-            self.update_pos()
-            self.update_rect()
+            # self.update_pos()
             
 
+    def calculate_rect(tile, radius):
+        pos = Point(tile_get_mid_x(tile.x) - radius, tile_get_mid_y(tile.y) - radius)
+        return pygame.Rect(pos.x, pos.y, radius * 2, radius * 2)
+
     def draw(self):
-        pygame.draw.rect(screen, self.color, self.rect)
+        rect = Unit.calculate_rect(self.tile, self.radius)
+        pygame.draw.rect(screen, self.color, rect)
+
         if self.path is not None:
             self.draw_path()
 
 
     def draw_path(self):
         # print(self.path.points)
+
         for point in self.path.points:
-            rect = pygame.Rect(point.x, point.y, 3, 3)
-            pygame.draw.rect(screen, COLOR_PINK, rect)
+            rect = Unit.calculate_rect(point, self.radius - 1)
+            # rect = pygame.Rect(point.x, point.y, self.radius * 2 - 2, self.radius * 2 - 2)
+            pygame.draw.rect(screen, COLOR_YELLOW, rect)
 
 
     def print(self):
@@ -141,19 +149,14 @@ class Unit:
             self.color = COLOR_PINK
 
 
-class Block(Unit):
-    def __init__(self, tile):
-        self.color = COLOR_GREY_DARK
-        self.radius = UNIT_RADIUS_BLOCK
-        Unit.__init__(self, tile)
-
         
 class Deer(Unit):
     def __init__(self, tile):
+        Unit.init_a(self, tile)
         self.color = UNIT_COLOR_DEER
         self.radius = UNIT_RADIUS_DEER
         self.target = None
-        Unit.__init__(self, tile)
+        Unit.init_b(self, tile)
 
 
     def update_target(self):
@@ -185,10 +188,11 @@ class Deer(Unit):
 
 class Wolf(Unit):
     def __init__(self, tile):
+        Unit.init_a(self, tile)
         self.color = UNIT_COLOR_WOLF
         self.radius = UNIT_RADIUS_WOLF
         self.satiation = 0
-        Unit.__init__(self, tile)
+        Unit.init_b(self, tile)
 
 
     def update_target(self):
@@ -227,11 +231,12 @@ class Wolf(Unit):
 
 class Bear(Unit):
     def __init__(self, tile):
+        Unit.init_a(self, tile)
         self.color = COLOR_GREY_LIGHT
         self.radius = UNIT_RADIUS_WOLF
-        Unit.__init__(self, tile)
         self.path = list()
         self.add_path()
+        Unit.init_b(self, tile)
 
 
     def add_path(self):
@@ -277,6 +282,42 @@ class Bear(Unit):
         else:
             if randint(0, 9) == 0:
                 self.add_path()
+
+
+
+class Person(Unit):
+    def __init__(self, tile):
+        Unit.init_a(self, tile)
+        self.color = UNIT_COLOR_PERSON
+        self.radius = UNIT_RADIUS_PERSON
+        self.move_in = 25
+        self.move_period = 25
+        self.moving_right = True
+        self.move_distance = 20
+        Unit.init_b(self, tile)
+
+
+    def update_target(self):
+        point_index = Point(x = self.tile.x, y = self.tile.y)
+        global person_move
+
+        for i in range(self.move_distance):
+            if self.moving_right:
+                point_index.x = point_index.x + 1
+            else:
+                point_index.x = point_index.x - 1
+            new_point = point_index.copy()
+            self.path.append(new_point)
+        self.moving_right = not self.moving_right
+
+
+
+class Block(Unit):
+    def __init__(self, tile):
+        Unit.init_a(self, tile)
+        self.color = COLOR_GREY_DARK
+        self.radius = UNIT_RADIUS_BLOCK
+        Unit.init_b(self, tile)
 
 
 def create_block_line(tile_1, tile_2) :
