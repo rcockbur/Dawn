@@ -19,9 +19,6 @@ class Unit:
         index[0] += 1
         return r
 
-
-
-
     def init_a(self, tile):
         self.id = Unit.new_id()
         self.move_period = 10
@@ -32,14 +29,10 @@ class Unit:
         MAP.add_unit_at(self, tile.x, tile.y)
 
     def init_b(self, tile):
-        
-        
         self.path = Path(list())
         self.target = None
         self.move_in = self.move_period
-
-        
-        return self
+        # return self
 
     def class_name(self):
         return type(self).__name__.lower()
@@ -98,8 +91,6 @@ class Unit:
         if self.is_selected:
             outter_rect = Unit.calculate_rect(self.tile, self.radius+2)    
             pygame.draw.rect(screen, COLOR_YELLOW, outter_rect)
-            if self.path is not None:
-                self.draw_path()
         rect = Unit.calculate_rect(self.tile, self.radius)
         pygame.draw.rect(screen, self.color, rect)
 
@@ -107,9 +98,11 @@ class Unit:
 
 
     def draw_path(self):
-        for point in self.path.points:
-            rect = Unit.calculate_rect(point, self.radius - 2)
-            pygame.draw.rect(screen, COLOR_YELLOW, rect)
+        if self.is_selected:
+            if self.path is not None:
+                for point in self.path.points:
+                    rect = Unit.calculate_rect(point, self.radius - 2)
+                    pygame.draw.rect(screen, COLOR_YELLOW, rect)
 
     def select(self):
         self.is_selected = True

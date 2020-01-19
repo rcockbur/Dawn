@@ -8,7 +8,7 @@ import time
 
 rt_2 = sqrt(2)
 debug = False
-# debug = True
+debug = True
 neighbors = [(0,1),(0,-1),(1,0),(-1,0),(1,1),(1,-1),(-1,1),(-1,-1)]
 
 def heuristic(a, b):

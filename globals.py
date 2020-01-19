@@ -5,7 +5,6 @@ from point import *
 
 NoneType = type(None)
 
-PROGRAM_DURATION = 50000
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 800
 
@@ -43,8 +42,10 @@ UNIT_RADIUS_PERSON = TILE_RADIUS
 UNIT_RADIUS_BLOCK = TILE_RADIUS
 
 SECONDS_PER_MINUTE = 60
+FRAMES_PER_SECOND = 100
 
-FRAMES_PER_SECOND = 400
+LEFT_BUTTON = 1
+RIGHT_BUTTON = 3
 
 NORTH = 0
 NORTH_EAST = 1
@@ -60,6 +61,12 @@ DIRECTION_VECTORS = [Vector(0,-1), Vector(1,-1), Vector(1,0), Vector(1,1), Vecto
 DIRECTION_NAMES = ["NORTH", "NORTH_EAST", "EAST", "SOUTH_EAST", "SOUTH", "SOUTH_WEST", "WEST", "NORTH_WEST"]
 
 screen = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
+
+frames = [0]
+seconds = [0]
+minutes = [0]
+
+selected_unit = [None]
 
 deer_killed = 0
 from map import Map

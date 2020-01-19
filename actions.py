@@ -5,7 +5,7 @@ from map import Map
 from astar import *
 from unit import *
 
-selected_unit = [None]
+
 
 def path_to(tile):
     if type(selected_unit[0]) is Person and type(MAP.get_unit_at(tile)) != Block:

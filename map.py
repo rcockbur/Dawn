@@ -74,3 +74,10 @@ class Map:
                     r.add(other_unit)
         return r
 
+    def tile_from_pos(self, pos):
+        if GRID_OFFSET_X < pos[0] < GRID_OFFSET_X + GRID_SIZE and GRID_OFFSET_Y < pos[1] < GRID_OFFSET_Y + GRID_SIZE:
+            tile_x = int((pos[0] - GRID_OFFSET_X) / TILE_SPACING)
+            tile_y = int((pos[1] - GRID_OFFSET_Y) / TILE_SPACING)
+            return Point(tile_x, tile_y)
+        return None
+
