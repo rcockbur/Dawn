@@ -9,25 +9,40 @@ class Unit:
     color = (0, 128, 255)
     id_index = 0
 
-
     def new_id():
         Unit.id_index += 1
         return Unit.id_index - 1
 
+    def new_name(self):
+        index = self.get_name_index()
+        r = self.class_name() + "_" + str(index[0])
+        index[0] += 1
+        return r
+
+
+
 
     def init_a(self, tile):
-        self.move_in = 10
+        self.id = Unit.new_id()
         self.move_period = 10
+        self.move_in = self.move_period
+        self.tile = tile
+        self.is_selected = False
+        self.name = self.new_name()
+        MAP.add_unit_at(self, tile.x, tile.y)
 
     def init_b(self, tile):
-        self.id = Unit.new_id()
-        self.tile = tile
+        
+        
         self.path = Path(list())
         self.target = None
         self.move_in = self.move_period
 
-        MAP.add_unit_at(self, tile.x, tile.y)
+        
         return self
+
+    def class_name(self):
+        return type(self).__name__.lower()
 
 
     def update(self):   
@@ -40,12 +55,12 @@ class Unit:
                 if unit == None:
                     self.move_to(self.path.pop())
                 else:
-                    # print(self.name, "waiting for", unit.name)
+                    print(self.name, "waiting for", unit.name)
                     pass
             self.move_in = self.move_period
-                
-                
 
+    def get_name_index(self):
+        raise NotImplementedError()
 
     def update_target(self):
         raise NotImplementedError()
@@ -62,12 +77,12 @@ class Unit:
 
     def move_to(self, target):
         if MAP.tile_within_bounds(target) == False:
-            print (self.name, "tried to move of bounds")
+            print (type(self).__name__, "tried to move of bounds")
             return
 
         unit = MAP.get_unit_at(target)
         if MAP.get_unit_at(target) is not None:
-            print(self.name, "tried to move onto", unit.name)
+            print(type(self).__name__, "tried to move onto", unit.name)
             return
         
         old_tile = self.tile.copy()
@@ -80,11 +95,15 @@ class Unit:
         return pygame.Rect(pos.x, pos.y, radius * 2, radius * 2)
 
     def draw(self):
+        if self.is_selected:
+            outter_rect = Unit.calculate_rect(self.tile, self.radius+2)    
+            pygame.draw.rect(screen, COLOR_YELLOW, outter_rect)
+            if self.path is not None:
+                self.draw_path()
         rect = Unit.calculate_rect(self.tile, self.radius)
         pygame.draw.rect(screen, self.color, rect)
 
-        if self.path is not None:
-            self.draw_path()
+        
 
 
     def draw_path(self):
@@ -92,11 +111,31 @@ class Unit:
             rect = Unit.calculate_rect(point, self.radius - 2)
             pygame.draw.rect(screen, COLOR_YELLOW, rect)
 
+    def select(self):
+        self.is_selected = True
+
+    def deselect(self):
+        self.is_selected = False
+
 
     def print(self):
         print("--Unit id: ", self.id, "  x: ", self.tile.x, "  y: ", self.tile.y)
 
 
+
+    def kill_deer_at_tile(self, tile):
+        global deer_killed
+        unit = MAP.get_unit_at(tile)
+        if type(unit) == Deer:
+            deer_killed = deer_killed + 1
+            if deer_killed % 10 == 0: print(deer_killed, " deer killed")
+            MAP.remove_unit(unit)
+            self.satiation = randint(1000, 1000)
+            self.color = COLOR_PINK
+
+    #----------------------------------------------
+    #----------------OBSOLETE----------------------
+    #----------------------------------------------
     def change_weights_for_types(self, weights, unitTypes, data, flip_direction = False):
         nearby_targets = MAP.get_units_near_unit_of_types(self, data[0][0], data[0][1], unitTypes)
         if len(nearby_targets) > 0:
@@ -146,29 +185,26 @@ class Unit:
         if direction_number is not None:
             return DIRECTION_VECTORS[direction_number]
         return None
+    #----------------------------------------------
+    #----------------------------------------------
+    #----------------------------------------------
 
-
-    def kill_deer_at_tile(self, tile):
-        global deer_killed
-        unit = MAP.get_unit_at(tile)
-        if type(unit) == Deer:
-            deer_killed = deer_killed + 1
-            if deer_killed % 10 == 0: print(deer_killed, " deer killed")
-            MAP.remove_unit(unit)
-            self.satiation = randint(1000, 1000)
-            self.color = COLOR_PINK
 
 
         
 class Deer(Unit):
+    name_index = [0]
+
     def __init__(self, tile):
-        self.name = "deer"
         Unit.init_a(self, tile)
+        # self.name = "deer"
         self.color = UNIT_COLOR_DEER
         self.radius = UNIT_RADIUS_DEER
-        self.target = None
         self.move_in = 5
         Unit.init_b(self, tile)
+
+    def get_name_index(self):
+        return Deer.name_index
 
     # @measure
     def update_target(self):
@@ -186,11 +222,11 @@ class Deer(Unit):
         # if not Unit.change_weights_for_types(self, weights, {Deer}, [(0, 15, ADD, 6)]):
         Unit.change_weights_for_types(self, weights, {Deer}, [(0, 40, ADD, 20)])
         # Run away from baddies
-        if not Unit.change_weights_for_types(self, weights, {Wolf, Bear}, [(0, 20, ADD, 100)], flip_direction = True):
-            Unit.change_weights_for_types(self, weights,    {Wolf, Bear}, [(0, 40, ADD, 20)], flip_direction = True)  
+        if not Unit.change_weights_for_types(self, weights, {Wolf}, [(0, 20, ADD, 100)], flip_direction = True):
+            Unit.change_weights_for_types(self, weights,    {Wolf}, [(0, 40, ADD, 20)], flip_direction = True)  
 
         # Don't run into stuff
-        Unit.change_weights_if_blocked(self, weights, {Block, Deer, Wolf, Bear, Person})
+        Unit.change_weights_if_blocked(self, weights, {Block, Deer, Wolf, Person})
         vector = Unit.get_vector_from_weights(weights)
         # Move
         if vector is not None:
@@ -199,14 +235,19 @@ class Deer(Unit):
 
 
 class Wolf(Unit):
+    name_index = [0]
+
     def __init__(self, tile):
-        self.name = "wolf"
         Unit.init_a(self, tile)
+        # self.name = "wolf"
         self.color = UNIT_COLOR_WOLF
         self.radius = UNIT_RADIUS_WOLF
+        self.move_in = 8
         self.satiation = 0
         Unit.init_b(self, tile)
 
+    def get_name_index(self):
+        return Wolf.name_index
 
     def update_target(self):
         weight_n = [100]
@@ -228,12 +269,9 @@ class Wolf(Unit):
         else:
             self.color = UNIT_COLOR_WOLF
             if not Unit.change_weights_for_types(self, weights, {Deer}, [(0, 20, ADD, 50)]):
-                Unit.change_weights_for_types(self, weights, {Deer}, [(0, 40, ADD, 20)])
-        # Run away from bear
-        if not Unit.change_weights_for_types(self, weights, {Bear}, [(0, 20, ADD, 100)], flip_direction = True):
-            Unit.change_weights_for_types(self, weights,    {Bear}, [(0, 40, ADD, 20)], flip_direction = True)              
+                Unit.change_weights_for_types(self, weights, {Deer}, [(0, 40, ADD, 20)])            
         # Don't run into stuff
-        Unit.change_weights_if_blocked(self, weights, {Block, Wolf, Bear, Person})
+        Unit.change_weights_if_blocked(self, weights, {Block, Wolf, Person})
         vector = Unit.get_vector_from_weights(weights)
         # Move and kill any deer you hit
         if vector is not None:
@@ -242,66 +280,14 @@ class Wolf(Unit):
             self.path.append(target)
 
 
-class Bear(Unit):
-    def __init__(self, tile):
-        self.name = "bear"
-        Unit.init_a(self, tile)
-        self.color = COLOR_GREY_LIGHT
-        self.radius = UNIT_RADIUS_WOLF
-        self.path = list()
-        self.add_path()
-        Unit.init_b(self, tile)
-
-
-    def add_path(self):
-        target = self.get_target()
-        # target = Point(x = 5, y = 10)
-        x = self.tile.x
-        y = self.tile.y
-        if target.x == self.tile.x:
-            if target.y > self.tile.y:
-                for i in range(target.y - self.tile.y):
-                    y = y + 1
-                    self.path.append(Point(x=x, y=y))
-            else:
-                for i in range(self.tile.y - target.y):
-                    y = y -1
-                    self.path.append(Point(x=x, y=y))
-        else:
-            if target.x > self.tile.x:
-                for i in range(target.x - self.tile.x):
-                    x = x + 1
-                    self.path.append(Point(x=x, y=y))
-            else:
-                for i in range(self.tile.x - target.x):
-                    x = x -1
-                    self.path.append(Point(x=x, y=y))
-
-
-    def get_target(self):
-        i = randint(0, TILE_COUNT - 1)
-        if randint(0, 1) == 0:
-            return Point(x = self.tile.x, y = i)
-        else:
-            return Point(x = i, y = self.tile.y)
-
-
-    def update(self):
-        if len(self.path) > 0:
-            if randint(0, 9) == 0:
-                if type(MAP.get_unit_at(self.path[0])) in {Block, Wolf, Deer}:
-                    self.path.clear()
-                else:
-                    self.move_to(self.path.pop(0))
-        else:
-            if randint(0, 9) == 0:
-                self.add_path()
 
 
 
 class Person(Unit):
+    name_index = [0]
+
     def __init__(self, tile):
-        self.name = "person"
+        # self.name = "person"
         Unit.init_a(self, tile)
         self.color = UNIT_COLOR_PERSON
         self.radius = UNIT_RADIUS_PERSON
@@ -310,31 +296,26 @@ class Person(Unit):
         self.move_distance = 20
         Unit.init_b(self, tile)
 
+    def get_name_index(self):
+        return Person.name_index
+
 
     def update_target(self):
         pass
-        # point_index = Point(x = self.tile.x, y = self.tile.y)
-        # global person_move
-
-        # for i in range(self.move_distance):
-        #     if self.moving_right:
-        #         point_index.x = point_index.x + 1
-        #     else:
-        #         point_index.x = point_index.x - 1
-        #     new_point = point_index.copy()
-        #     self.path.append(new_point)
-        # self.moving_right = not self.moving_right
-        # self.path.print()
-
 
 
 class Block(Unit):
+    name_index = [0]
+
     def __init__(self, tile):
-        self.name = "block"
+        # self.name = "block"
         Unit.init_a(self, tile)
         self.color = COLOR_GREY_DARK
         self.radius = UNIT_RADIUS_BLOCK
         Unit.init_b(self, tile)
+
+    def get_name_index(self):
+        return Block.name_index
 
 
 def create_block_line(tile_1, tile_2) :

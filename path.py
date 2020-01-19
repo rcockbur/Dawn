@@ -20,6 +20,9 @@ class Path:
     def pop(self):
         return self.points.pop(0)
 
+    def get(self, n):
+        return self.points[n]
+
     def print(self):
         r = "Path: "
         for point in self.points:
@@ -28,5 +31,4 @@ class Path:
 
     def reverse(self):
         self.points = self.points[::-1]
-        self.points.pop(0)
         return self

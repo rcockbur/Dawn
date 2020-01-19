@@ -3,10 +3,17 @@ from globals import *
 from map import Map
 from unit import *
 from point import *
-from astar import *
+from actions import *
+from draw import draw_text_at
+
 
 print("PROGRAM START")
 pygame.display.set_caption('Dawn') 
+freesansbold_14 = pygame.font.Font('freesansbold.ttf', 14) 
+
+LEFT = 1
+RIGHT = 3
+
 
 
 
@@ -24,14 +31,18 @@ for row in f:
             symbol_index = symbol_index + 1
     row_index = row_index + 1
 
-
+# print(ROSS)
 ross = Person(Point(x = TILE_COUNT-1, y = TILE_COUNT-1))
+a = Person(Point(x = TILE_COUNT-3, y = TILE_COUNT-1))
+b = Person(Point(x = TILE_COUNT-5, y = TILE_COUNT-1))
+c = Person(Point(x = TILE_COUNT-7, y = TILE_COUNT-1))
+
 
 for i in range(100):
     Deer(Point(x=20,  y=35))        
 
 for i in range(10):
-    Wolf(Point(x=59,  y=45))
+    Wolf(Point(x=49,  y=45))
 
 # Bear(Point(x=60,  y=60))
 
@@ -41,7 +52,6 @@ minutes = 0
 
 done = False
 print("MAIN LOOP STARTING")
-print("-------")
 
 # --------------------------------------------
 #                  Main Loop
@@ -80,16 +90,21 @@ while not done:
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = pygame.mouse.get_pos()
             
-            
+        
             #spawn deer
             if GRID_OFFSET_X < pos[0] < GRID_OFFSET_X + GRID_SIZE and GRID_OFFSET_Y < pos[1] < GRID_OFFSET_Y + GRID_SIZE:
                 tile_x = int((pos[0] - GRID_OFFSET_X) / TILE_SPACING)
                 tile_y = int((pos[1] - GRID_OFFSET_Y) / TILE_SPACING)
                 tile = Point(tile_x, tile_y)
-                # print("Pathing from", ross.tile.str(),"to", tile.str())
-                if type(MAP.get_unit_at(tile)) != Block:
-                    path = astar(ross.tile, tile)
-                    ross.path = path
+
+                if event.button == LEFT:
+                    select_tile(tile)
+
+                if event.button == RIGHT:
+                    print("Pathing from", ross.tile.str(),"to", tile.str())
+                    path_to(tile)
+                    
+                
                 # Deer(Point(x=tile_x,  y=tile_y)) 
 
     frames = frames + 1
@@ -115,13 +130,24 @@ while not done:
     for unit in MAP.get_units():
         unit.draw()          # units
 
-    font = pygame.font.Font('freesansbold.ttf', 14) 
-    num_deer = len(MAP.get_units_of_type(Deer))
-    text = font.render(str(num_deer) + ' Deer', True, COLOR_GREEN, COLOR_BLACK) 
-    textRect = text.get_rect()  
-    textRect.topleft = (GRID_SIZE + GRID_OFFSET_X + 5, GRID_OFFSET_Y) 
+    #num_deer
+    string = "Deer: " + str(len(MAP.get_units_of_type(Deer)))
+    draw_text_at(freesansbold_14, string, (GRID_SIZE + GRID_OFFSET_X + 5, GRID_OFFSET_Y))
 
-    screen.blit(text, textRect) 
+    # print(selected_unit[0])
+    if selected_unit[0] is not None:
+        string = "class:    " + selected_unit[0].class_name()
+        draw_text_at(freesansbold_14, string, (GRID_SIZE + GRID_OFFSET_X + 5, GRID_OFFSET_Y + 100))        
+
+        string = "name:   " + selected_unit[0].name
+        draw_text_at(freesansbold_14, string, (GRID_SIZE + GRID_OFFSET_X + 5, GRID_OFFSET_Y + 120))        
+
+        string = "pos:      (" + str(selected_unit[0].tile.x) + "," + str(selected_unit[0].tile.y) + ")"
+        draw_text_at(freesansbold_14, string, (GRID_SIZE + GRID_OFFSET_X + 5, GRID_OFFSET_Y + 140))
+
+        if selected_unit[0].path.size() > 0:
+            string = "Target: (" + str(selected_unit[0].path.get(-1).x) + "," + str(selected_unit[0].path.get(-1).y) + ")"
+            draw_text_at(freesansbold_14, string, (GRID_SIZE + GRID_OFFSET_X + 5, GRID_OFFSET_Y + 160))            
 
     # flip
     pygame.display.flip()
