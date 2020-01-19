@@ -20,7 +20,7 @@ def tup_from_tile(tile):
 def tile_from_tup(tup):
     return Point(x = tup[0], y = tup[1])
 
-
+@measure
 def astar(start_tile, end_tile):
     start_time = time.time()
 
@@ -43,8 +43,8 @@ def astar(start_tile, end_tile):
             while current in came_from:
                 path.append(tile_from_tup(current))
                 current = came_from[current]
-            print("Path found")
-            print("Elapsed Time: ", time.time() - start_time)
+            # print("Path found")
+            # print("Elapsed Time: ", time.time() - start_time)
             return path.reverse()
 
         close_set.add(current)

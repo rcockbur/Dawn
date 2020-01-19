@@ -14,22 +14,24 @@ f = open("map.txt", "r")
 
 row_index = 0
 for row in f:
-    row_index = row_index + 1
+    
     if row_index < TILE_COUNT:
         symbol_index = 0
         for symbol in row.strip(' \t\n\r').split(","):
-            symbol_index = symbol_index + 1
             if symbol_index < TILE_COUNT:
                 if symbol == "s":
                     Block(Point(x = symbol_index, y = row_index))
+            symbol_index = symbol_index + 1
+    row_index = row_index + 1
 
 
-ross = Person(Point(x = 0, y = 0))
+ross = Person(Point(x = TILE_COUNT-1, y = TILE_COUNT-1))
+
 for i in range(100):
     Deer(Point(x=20,  y=35))        
 
 for i in range(10):
-    Wolf(Point(x=55,  y=35))
+    Wolf(Point(x=59,  y=45))
 
 # Bear(Point(x=60,  y=60))
 
@@ -84,7 +86,7 @@ while not done:
                 tile_x = int((pos[0] - GRID_OFFSET_X) / TILE_SPACING)
                 tile_y = int((pos[1] - GRID_OFFSET_Y) / TILE_SPACING)
                 tile = Point(tile_x, tile_y)
-                print("Pathing from", ross.tile.str(),"to", tile.str())
+                # print("Pathing from", ross.tile.str(),"to", tile.str())
                 if type(MAP.get_unit_at(tile)) != Block:
                     path = astar(ross.tile, tile)
                     ross.path = path
@@ -114,7 +116,8 @@ while not done:
         unit.draw()          # units
 
     font = pygame.font.Font('freesansbold.ttf', 14) 
-    text = font.render(str(20) + ' Deer', True, COLOR_GREEN, COLOR_BLACK) 
+    num_deer = len(MAP.get_units_of_type(Deer))
+    text = font.render(str(num_deer) + ' Deer', True, COLOR_GREEN, COLOR_BLACK) 
     textRect = text.get_rect()  
     textRect.topleft = (GRID_SIZE + GRID_OFFSET_X + 5, GRID_OFFSET_Y) 
 

@@ -19,6 +19,13 @@ class Map:
     def get_units(self):
         return self.units.values()
 
+    def get_units_of_type(self, _type):
+        r = set()
+        for unit in self.units.values():
+            if type(unit) == _type:
+                r.add(unit)
+        return r
+
     def add_unit_at(self, unit, x, y):
         self.grid[x][y] = unit
         self.units[unit.id] = unit

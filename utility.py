@@ -1,5 +1,36 @@
 from globals import *
 from random import randint
+import time
+
+string_length = 5
+
+def measure(func):
+    def wrapper(*args, **kwargs):
+        t = time.time()
+        r = func(*args, **kwargs)
+        t = time.time() - t
+
+        if hasattr(func, "total_time"):
+            func.total_time = func.total_time + t
+            func.count = func.count + 1
+        else:
+            func.total_time = t
+            func.count = 1
+
+        t_average = func.total_time / func.count
+        str_average = str(round(t_average, string_length))
+        str_current = str(round(t, string_length))
+        for i in range(string_length + 2 - len(str_average)):
+            str_average = str_average + "0"
+        for i in range(string_length + 2 - len(str_current)):
+            str_current = str_current + "0"
+        
+        print("func:",func.__name__, "  time:", str_current, "  avg:", str_average)
+
+        return r
+
+    return wrapper
+
 
 def weighted_random(pairs):
     boundary_temp = 0

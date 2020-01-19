@@ -40,7 +40,8 @@ class Unit:
                 if unit == None:
                     self.move_to(self.path.pop())
                 else:
-                    print(self.name, "waiting for", unit.name)
+                    # print(self.name, "waiting for", unit.name)
+                    pass
             self.move_in = self.move_period
                 
                 
@@ -169,7 +170,7 @@ class Deer(Unit):
         self.move_in = 5
         Unit.init_b(self, tile)
 
-
+    # @measure
     def update_target(self):
         weight_n = [100]
         weight_ne = [100]
