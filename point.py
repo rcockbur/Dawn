@@ -38,6 +38,9 @@ class Point:
     def copy(self):
         return Point(x=self.x, y=self.y)
 
+    def str(self):
+        return "(" + str(self.x) + "," + str(self.y) + ")"
+
 
 class Vector:
     def __init__(self, x, y):

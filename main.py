@@ -76,14 +76,14 @@ while not done:
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = pygame.mouse.get_pos()
-            print(pos)
+            
             
             #spawn deer
             if GRID_OFFSET_X < pos[0] < GRID_OFFSET_X + GRID_SIZE and GRID_OFFSET_Y < pos[1] < GRID_OFFSET_Y + GRID_SIZE:
                 tile_x = int((pos[0] - GRID_OFFSET_X) / TILE_SPACING)
                 tile_y = int((pos[1] - GRID_OFFSET_Y) / TILE_SPACING)
                 tile = Point(tile_x, tile_y)
-
+                print("Pathing from", ross.tile.str(),"to", tile.str())
                 path = astar(ross.tile, tile)
                 ross.path = path
                 # Deer(Point(x=tile_x,  y=tile_y)) 
