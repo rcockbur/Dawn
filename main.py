@@ -11,19 +11,20 @@ pygame.display.set_caption('Dawn')
 
 
 f = open("map.txt", "r")
-file_x = 0
-file_y = 0
+
+row_index = 0
 for row in f:
-    for symbol in row.strip(' \t\n\r').split(","):
-        if symbol == "_":
-            file_x += 1
-        if symbol == "s":
-            Block(Point(x = file_x, y = file_y))
-            file_x+=1
-    file_y += 1
-    if file_x == 100:
-        file_x = 0
-ross = Person(Point(x = 35, y = 70))
+    row_index = row_index + 1
+    if row_index < TILE_COUNT:
+        symbol_index = 0
+        for symbol in row.strip(' \t\n\r').split(","):
+            symbol_index = symbol_index + 1
+            if symbol_index < TILE_COUNT:
+                if symbol == "s":
+                    Block(Point(x = symbol_index, y = row_index))
+
+
+ross = Person(Point(x = 0, y = 0))
 for i in range(100):
     Deer(Point(x=20,  y=35))        
 
@@ -84,8 +85,9 @@ while not done:
                 tile_y = int((pos[1] - GRID_OFFSET_Y) / TILE_SPACING)
                 tile = Point(tile_x, tile_y)
                 print("Pathing from", ross.tile.str(),"to", tile.str())
-                path = astar(ross.tile, tile)
-                ross.path = path
+                if type(MAP.get_unit_at(tile)) != Block:
+                    path = astar(ross.tile, tile)
+                    ross.path = path
                 # Deer(Point(x=tile_x,  y=tile_y)) 
 
     frames = frames + 1

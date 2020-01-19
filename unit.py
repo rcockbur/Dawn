@@ -36,7 +36,11 @@ class Unit:
             if self.path.size() == 0:
                 self.update_target()
             if self.path.size() > 0:
-                self.move_to(self.path.pop())
+                unit = MAP.get_unit_at(self.path.points[0])
+                if unit == None:
+                    self.move_to(self.path.pop())
+                else:
+                    print(self.name, "waiting for", unit.name)
             self.move_in = self.move_period
                 
                 
@@ -62,7 +66,7 @@ class Unit:
 
         unit = MAP.get_unit_at(target)
         if MAP.get_unit_at(target) is not None:
-            print(self.name, "blocked by", unit.name)
+            print(self.name, "tried to move onto", unit.name)
             return
         
         old_tile = self.tile.copy()
@@ -185,7 +189,7 @@ class Deer(Unit):
             Unit.change_weights_for_types(self, weights,    {Wolf, Bear}, [(0, 40, ADD, 20)], flip_direction = True)  
 
         # Don't run into stuff
-        Unit.change_weights_if_blocked(self, weights, {Block, Deer, Wolf, Bear})
+        Unit.change_weights_if_blocked(self, weights, {Block, Deer, Wolf, Bear, Person})
         vector = Unit.get_vector_from_weights(weights)
         # Move
         if vector is not None:
@@ -228,7 +232,7 @@ class Wolf(Unit):
         if not Unit.change_weights_for_types(self, weights, {Bear}, [(0, 20, ADD, 100)], flip_direction = True):
             Unit.change_weights_for_types(self, weights,    {Bear}, [(0, 40, ADD, 20)], flip_direction = True)              
         # Don't run into stuff
-        Unit.change_weights_if_blocked(self, weights, {Block, Wolf, Bear})
+        Unit.change_weights_if_blocked(self, weights, {Block, Wolf, Bear, Person})
         vector = Unit.get_vector_from_weights(weights)
         # Move and kill any deer you hit
         if vector is not None:

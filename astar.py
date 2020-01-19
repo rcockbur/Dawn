@@ -60,7 +60,7 @@ def astar(start_tile, end_tile):
             tentative_g_score = gscore[current] + heuristic(current, neighbor)
             if 0 <= neighbor[0] < TILE_COUNT:
                 if 0 <= neighbor[1] < TILE_COUNT:
-                    if MAP.get_unit_at(tile_from_tup(neighbor)) != None:
+                    if type(MAP.get_unit_at(tile_from_tup(neighbor))) == Block:
                         continue
                 else:
                     continue    # array bound y walls
