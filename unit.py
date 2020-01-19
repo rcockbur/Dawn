@@ -24,19 +24,22 @@ class Unit:
         self.tile = tile
         self.path = Path(list())
         self.target = None
+        self.move_in = self.move_period
 
         MAP.add_unit_at(self, tile.x, tile.y)
         return self
 
 
     def update(self):   
-        if self.path.size() == 0:
-            self.update_target()
-        if self.path.size() > 0:
-            self.move_in = self.move_in - 1
-            if self.move_in == 0:
-                self.move_in = self.move_period
+        self.move_in = self.move_in - 1
+        if self.move_in == 0:
+            if self.path.size() == 0:
+                self.update_target()
+            if self.path.size() > 0:
                 self.move_to(self.path.pop())
+            self.move_in = self.move_period
+                
+                
 
 
     def update_target(self):
@@ -53,10 +56,18 @@ class Unit:
 
 
     def move_to(self, target):
-        if MAP.pos_within_bounds(target):
-            old_tile = self.tile.copy()
-            self.tile = target.copy()
-            MAP.move_unit(self, old_tile, self.tile)
+        if MAP.tile_within_bounds(target) == False:
+            print (self.name, "tried to move of bounds")
+            return
+
+        unit = MAP.get_unit_at(target)
+        if MAP.get_unit_at(target) is not None:
+            print(self.name, "blocked by", unit.name)
+            return
+        
+        old_tile = self.tile.copy()
+        self.tile = target.copy()
+        MAP.move_unit(self, old_tile, self.tile)
             
 
     def calculate_rect(tile, radius):
@@ -73,7 +84,7 @@ class Unit:
 
     def draw_path(self):
         for point in self.path.points:
-            rect = Unit.calculate_rect(point, self.radius - 1)
+            rect = Unit.calculate_rect(point, self.radius - 2)
             pygame.draw.rect(screen, COLOR_YELLOW, rect)
 
 
@@ -115,7 +126,13 @@ class Unit:
     def change_weights_if_blocked(self, weights, unitTypes):
         for i in range(8):
             new_tile = self.tile + DIRECTION_VECTORS[i]
-            if not MAP.pos_within_bounds(new_tile) or type(MAP.get_unit_at(new_tile)) in unitTypes:
+            if MAP.tile_within_bounds(new_tile) == False:
+                # print("correction bounds")
+                weights[i][0] = 0
+
+            unit = MAP.get_unit_at(new_tile)
+            if type(unit) in unitTypes:
+                # print("correction type")
                 weights[i][0] = 0
 
 
@@ -140,10 +157,12 @@ class Unit:
         
 class Deer(Unit):
     def __init__(self, tile):
+        self.name = "deer"
         Unit.init_a(self, tile)
         self.color = UNIT_COLOR_DEER
         self.radius = UNIT_RADIUS_DEER
         self.target = None
+        self.move_in = 5
         Unit.init_b(self, tile)
 
 
@@ -176,6 +195,7 @@ class Deer(Unit):
 
 class Wolf(Unit):
     def __init__(self, tile):
+        self.name = "wolf"
         Unit.init_a(self, tile)
         self.color = UNIT_COLOR_WOLF
         self.radius = UNIT_RADIUS_WOLF
@@ -219,6 +239,7 @@ class Wolf(Unit):
 
 class Bear(Unit):
     def __init__(self, tile):
+        self.name = "bear"
         Unit.init_a(self, tile)
         self.color = COLOR_GREY_LIGHT
         self.radius = UNIT_RADIUS_WOLF
@@ -275,6 +296,7 @@ class Bear(Unit):
 
 class Person(Unit):
     def __init__(self, tile):
+        self.name = "person"
         Unit.init_a(self, tile)
         self.color = UNIT_COLOR_PERSON
         self.radius = UNIT_RADIUS_PERSON
@@ -286,22 +308,25 @@ class Person(Unit):
 
 
     def update_target(self):
-        point_index = Point(x = self.tile.x, y = self.tile.y)
-        global person_move
+        pass
+        # point_index = Point(x = self.tile.x, y = self.tile.y)
+        # global person_move
 
-        for i in range(self.move_distance):
-            if self.moving_right:
-                point_index.x = point_index.x + 1
-            else:
-                point_index.x = point_index.x - 1
-            new_point = point_index.copy()
-            self.path.append(new_point)
-        self.moving_right = not self.moving_right
+        # for i in range(self.move_distance):
+        #     if self.moving_right:
+        #         point_index.x = point_index.x + 1
+        #     else:
+        #         point_index.x = point_index.x - 1
+        #     new_point = point_index.copy()
+        #     self.path.append(new_point)
+        # self.moving_right = not self.moving_right
+        # self.path.print()
 
 
 
 class Block(Unit):
     def __init__(self, tile):
+        self.name = "block"
         Unit.init_a(self, tile)
         self.color = COLOR_GREY_DARK
         self.radius = UNIT_RADIUS_BLOCK

@@ -13,7 +13,7 @@ class Map:
             for j in range(TILE_COUNT):
                 self.grid[i].append(None)
         
-    def pos_within_bounds(self, pos):
+    def tile_within_bounds(self, pos):
         return pos.x >= 0 and pos.y >= 0 and pos.x < TILE_COUNT and pos.y < TILE_COUNT
 
     def get_units(self):

@@ -1,25 +1,32 @@
+from globals import *
+from point import *
+from map import *
+from path import *
+from unit import *
+import time
+
 class Node():
     """A node class for A* Pathfinding"""
 
-    def __init__(self, parent=None, position=None):
+    def __init__(self, parent=None, tile=None):
         self.parent = parent
-        self.position = position
+        self.tile = tile
 
         self.g = 0
         self.h = 0
         self.f = 0
 
     def __eq__(self, other):
-        return self.position == other.position
+        return self.tile.x == other.tile.x and self.tile.y == other.tile.y
 
 
-def astar(maze, start, end):
+def astar(start_tile, end_tile):
     """Returns a list of tuples as a path from the given start to the given end in the given maze"""
 
     # Create start and end node
-    start_node = Node(None, start)
+    start_node = Node(None, start_tile)
     start_node.g = start_node.h = start_node.f = 0
-    end_node = Node(None, end)
+    end_node = Node(None, end_tile)
     end_node.g = end_node.h = end_node.f = 0
 
     # Initialize both open and closed list
@@ -31,6 +38,8 @@ def astar(maze, start, end):
 
     # Loop until you find the end
     while len(open_list) > 0:
+        # time.sleep(0.2)
+        # print(len(open_list), " ", len(closed_list))
 
         # Get the current node
         current_node = open_list[0]
@@ -44,32 +53,41 @@ def astar(maze, start, end):
         open_list.pop(current_index)
         closed_list.append(current_node)
 
+        # DEBUG
+        rect = Unit.calculate_rect(current_node.tile, 2)
+        pygame.draw.rect(screen, COLOR_BLUE, rect)
+        pygame.display.flip()
+
         # Found the goal
         if current_node == end_node:
-            path = []
+            path = Path([])
             current = current_node
             while current is not None:
-                path.append(current.position)
+                path.append(current.tile.copy())
                 current = current.parent
-            return path[::-1] # Return reversed path
+            return path.reverse() # Return reversed path
 
         # Generate children
         children = []
-        for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]: # Adjacent squares
+        for vector in DIRECTION_VECTORS: # Adjacent squares
 
             # Get node position
-            node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
+            node_tile = current_node.tile + vector
 
-            # Make sure within range
-            if node_position[0] > (len(maze) - 1) or node_position[0] < 0 or node_position[1] > (len(maze[len(maze)-1]) -1) or node_position[1] < 0:
+            # Ensure within bounds
+            if MAP.tile_within_bounds(node_tile) == False:
                 continue
 
-            # Make sure walkable terrain
-            if maze[node_position[0]][node_position[1]] != 0:
+            # Ensure walkable
+            unit = MAP.get_unit_at(node_tile)
+            if unit is not None:
+                continue
+
+            if Node(current_node, node_tile) in closed_list:
                 continue
 
             # Create new node
-            new_node = Node(current_node, node_position)
+            new_node = Node(current_node, node_tile)
 
             # Append
             children.append(new_node)
@@ -78,19 +96,39 @@ def astar(maze, start, end):
         for child in children:
 
             # Child is on the closed list
+            skip = False
             for closed_child in closed_list:
                 if child == closed_child:
-                    continue
+                    skip = True
+            if skip:
+                continue
 
-            # Create the f, g, and h values
-            child.g = current_node.g + 1
-            child.h = ((child.position[0] - end_node.position[0]) ** 2) + ((child.position[1] - end_node.position[1]) ** 2)
-            child.f = child.g + child.h
+                        # Child is already in the open list
 
-            # Child is already in the open list
+            my_node = None
             for open_node in open_list:
-                if child == open_node and child.g > open_node.g:
-                    continue
+                if open_node == child:
+                    my_node = open_node
+                    break
 
-            # Add the child to the open list
-            open_list.append(child)
+            if my_node is None:
+                child.g = current_node.g + 1
+                child.h = abs(child.tile.x - end_node.tile.x) + abs(child.tile.y - end_node.tile.y)
+                child.f = child.g + child.h
+                child.parent = current_node
+                open_list.append(child)
+
+                ##DEBUG
+                rect = Unit.calculate_rect(child.tile, 2)
+                pygame.draw.rect(screen, COLOR_RED, rect)
+                pygame.display.flip()
+
+
+            else:
+                new_g = current_node.g + 1
+                if my_node.g > new_g:
+                    my_node.g = new_g
+                    my_node.parent = current_node
+
+
+

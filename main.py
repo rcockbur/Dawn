@@ -3,6 +3,7 @@ from globals import *
 from map import Map
 from unit import *
 from point import *
+from astar import *
 
 print("PROGRAM START")
 pygame.display.set_caption('Dawn') 
@@ -22,12 +23,12 @@ for row in f:
     file_y += 1
     if file_x == 100:
         file_x = 0
-Person(Point(x = 35, y = 50))
-for i in range(100):
-    Deer(Point(x=20,  y=35))        
+ross = Person(Point(x = 35, y = 70))
+# for i in range(100):
+#     Deer(Point(x=20,  y=35))        
 
-for i in range(10):
-    Wolf(Point(x=55,  y=35))
+# for i in range(10):
+#     Wolf(Point(x=55,  y=35))
 
 # Bear(Point(x=60,  y=60))
 
@@ -77,10 +78,14 @@ while not done:
             pos = pygame.mouse.get_pos()
             print(pos)
             
+            #spawn deer
             if GRID_OFFSET_X < pos[0] < GRID_OFFSET_X + GRID_SIZE and GRID_OFFSET_Y < pos[1] < GRID_OFFSET_Y + GRID_SIZE:
                 tile_x = int((pos[0] - GRID_OFFSET_X) / TILE_SPACING)
                 tile_y = int((pos[1] - GRID_OFFSET_Y) / TILE_SPACING)
-                Deer(Point(x=tile_x,  y=tile_y)) 
+                tile = Point(tile_x, tile_y)
+                path = astar(ross.tile, tile)
+                ross.path = path
+                # Deer(Point(x=tile_x,  y=tile_y)) 
 
     frames = frames + 1
 

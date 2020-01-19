@@ -19,3 +19,13 @@ class Path:
 
     def pop(self):
         return self.points.pop(0)
+
+    def print(self):
+        r = "Path: "
+        for point in self.points:
+            r = r + "(" + str(point.x) + "," + str(point.y) + ")"
+        print(r)
+
+    def reverse(self):
+        self.points = self.points[::-1]
+        return self
