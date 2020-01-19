@@ -300,8 +300,7 @@ class Person(Unit):
         Unit.init_a(self, tile)
         self.color = UNIT_COLOR_PERSON
         self.radius = UNIT_RADIUS_PERSON
-        self.move_in = 25
-        self.move_period = 25
+        self.move_period = 5
         self.moving_right = True
         self.move_distance = 20
         Unit.init_b(self, tile)

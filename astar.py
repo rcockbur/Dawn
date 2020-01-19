@@ -5,6 +5,8 @@ from path import *
 from unit import *
 import time
 
+rt_2 = sqrt(2)
+
 class Node():
     """A node class for A* Pathfinding"""
 
@@ -54,7 +56,7 @@ def astar(start_tile, end_tile):
         closed_list.append(current_node)
 
         # DEBUG
-        rect = Unit.calculate_rect(current_node.tile, 2)
+        rect = Unit.calculate_rect(current_node.tile, 1)
         pygame.draw.rect(screen, COLOR_BLUE, rect)
         pygame.display.flip()
 
@@ -103,7 +105,6 @@ def astar(start_tile, end_tile):
             if skip:
                 continue
 
-                        # Child is already in the open list
 
             my_node = None
             for open_node in open_list:
@@ -111,23 +112,30 @@ def astar(start_tile, end_tile):
                     my_node = open_node
                     break
 
+            
+            if child.tile.x != current_node.tile.x and child.tile.y != current_node.tile.y:
+                distance = rt_2
+            else:
+                distance = 1
+
             if my_node is None:
-                child.g = current_node.g + 1
-                child.h = abs(child.tile.x - end_node.tile.x) + abs(child.tile.y - end_node.tile.y)
+                child.g = current_node.g + distance
+                child.h = sqrt(((child.tile.x - end_node.tile.x)**2) + ((child.tile.y - end_node.tile.y)**2))
                 child.f = child.g + child.h
                 child.parent = current_node
                 open_list.append(child)
 
                 ##DEBUG
-                rect = Unit.calculate_rect(child.tile, 2)
+                rect = Unit.calculate_rect(child.tile, 1)
                 pygame.draw.rect(screen, COLOR_RED, rect)
                 pygame.display.flip()
 
 
             else:
-                new_g = current_node.g + 1
-                if my_node.g > new_g:
+                new_g = current_node.g + distance
+                if my_node.g >= new_g:
                     my_node.g = new_g
+                    my_node.f = my_node.h + my_node.g
                     my_node.parent = current_node
 
 

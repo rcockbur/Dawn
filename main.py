@@ -24,11 +24,11 @@ for row in f:
     if file_x == 100:
         file_x = 0
 ross = Person(Point(x = 35, y = 70))
-# for i in range(100):
-#     Deer(Point(x=20,  y=35))        
+for i in range(100):
+    Deer(Point(x=20,  y=35))        
 
-# for i in range(10):
-#     Wolf(Point(x=55,  y=35))
+for i in range(10):
+    Wolf(Point(x=55,  y=35))
 
 # Bear(Point(x=60,  y=60))
 
@@ -83,6 +83,7 @@ while not done:
                 tile_x = int((pos[0] - GRID_OFFSET_X) / TILE_SPACING)
                 tile_y = int((pos[1] - GRID_OFFSET_Y) / TILE_SPACING)
                 tile = Point(tile_x, tile_y)
+
                 path = astar(ross.tile, tile)
                 ross.path = path
                 # Deer(Point(x=tile_x,  y=tile_y)) 

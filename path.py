@@ -28,4 +28,5 @@ class Path:
 
     def reverse(self):
         self.points = self.points[::-1]
+        self.points.pop(0)
         return self
