@@ -4,6 +4,7 @@ import pygame, random
 from utility import *
 from map import *
 from path import *
+import astar
 
 class Unit:
     color = (0, 128, 255)
@@ -83,15 +84,15 @@ class Unit:
         MAP.move_unit(self, old_tile, self.tile)
             
 
-    def calculate_rect(tile, radius):
-        pos = Point(tile_get_mid_x(tile.x) - radius, tile_get_mid_y(tile.y) - radius)
-        return pygame.Rect(pos.x, pos.y, radius * 2, radius * 2)
+    # def calculate_rect(tile, radius):
+    #     pos = Point(tile_get_mid_x(tile.x) - radius, tile_get_mid_y(tile.y) - radius)
+    #     return pygame.Rect(pos.x, pos.y, radius * 2, radius * 2)
 
     def draw(self):
         if self.is_selected:
-            outter_rect = Unit.calculate_rect(self.tile, self.radius+2)    
+            outter_rect = Map.calculate_rect(self.tile, self.radius+2)    
             pygame.draw.rect(screen, COLOR_YELLOW, outter_rect)
-        rect = Unit.calculate_rect(self.tile, self.radius)
+        rect = Map.calculate_rect(self.tile, self.radius)
         pygame.draw.rect(screen, self.color, rect)
 
         
@@ -101,7 +102,7 @@ class Unit:
         if self.is_selected:
             if self.path is not None:
                 for point in self.path.points:
-                    rect = Unit.calculate_rect(point, self.radius - 2)
+                    rect = Map.calculate_rect(point, self.radius - 2)
                     pygame.draw.rect(screen, COLOR_YELLOW, rect)
 
     def select(self):
@@ -183,7 +184,14 @@ class Unit:
     #----------------------------------------------
 
 
+def tup_from_tile(tile):
+    return (tile.x, tile.y)
 
+def tile_from_tup(tup):
+    return Point(x = tup[0], y = tup[1])
+
+neighbors = [(0,1),(0,-1),(1,0),(-1,0),(1,1),(1,-1),(-1,1),(-1,-1)]
+debug = False
         
 class Deer(Unit):
     name_index = [0]
@@ -199,32 +207,81 @@ class Deer(Unit):
     def get_name_index(self):
         return Deer.name_index
 
-    # @measure
+    @measure
     def update_target(self):
-        weight_n = [100]
-        weight_ne = [100]
-        weight_e = [100]
-        weight_se = [100]
-        weight_s = [100]
-        weight_sw = [100]
-        weight_w = [100]
-        weight_nw = [100]
-        weights = [weight_n, weight_ne, weight_e, weight_se, weight_s, weight_sw, weight_w, weight_nw]  
+        open_set = set()
+        closed_set = set()
+        search_distance = 10
+        open_set.add(tup_from_tile(self.tile))
+        iteration_count = 0
+        while(len(open_set) > 0) and iteration_count < search_distance:
+            
+            working_set = open_set.copy()
+            open_set.clear()
+            for tup in working_set:
+                closed_set.add(tup)
 
-        # Group up
-        # if not Unit.change_weights_for_types(self, weights, {Deer}, [(0, 15, ADD, 6)]):
-        Unit.change_weights_for_types(self, weights, {Deer}, [(0, 40, ADD, 20)])
-        # Run away from baddies
-        if not Unit.change_weights_for_types(self, weights, {Wolf}, [(0, 20, ADD, 100)], flip_direction = True):
-            Unit.change_weights_for_types(self, weights,    {Wolf}, [(0, 40, ADD, 20)], flip_direction = True)  
+                                    # DEBUG
+                if debug:
+                    rect = Map.calculate_rect(tile_from_tup(tup), 1)
+                    pygame.draw.rect(screen, COLOR_BLUE, rect)
+                    pygame.display.flip()
 
-        # Don't run into stuff
-        Unit.change_weights_if_blocked(self, weights, {Block, Deer, Wolf, Person})
-        vector = Unit.get_vector_from_weights(weights)
-        # Move
-        if vector is not None:
-            target = self.tile + vector
-            self.path.append(target)
+                if iteration_count < search_distance - 1:
+                    for i, j in neighbors:
+                        neighbor = (tup[0] + i, tup[1] + j)
+                        if 0 <= neighbor[0] < TILE_COUNT:
+                            if 0 <= neighbor[1] < TILE_COUNT:
+                                if type(MAP.get_unit_at(tile_from_tup(neighbor))) == Block:
+                                    continue
+                            else:
+                                continue
+                        else:
+                            continue
+                        if neighbor in closed_set or neighbor in open_set:
+                            continue
+                        open_set.add(neighbor)
+
+                        # DEBUG
+                        if debug:
+                            rect = Map.calculate_rect(tile_from_tup(neighbor), 1)
+                            pygame.draw.rect(screen, COLOR_RED, rect)
+                            pygame.display.flip()
+            iteration_count += 1
+
+        closed_set.remove(tup_from_tile(self.tile))
+        path = astar.astar(self.tile, tile_from_tup(random.choice(tuple(closed_set))))
+        self.path = path
+
+
+
+
+
+
+        # weight_n = [100]
+        # weight_ne = [100]
+        # weight_e = [100]
+        # weight_se = [100]
+        # weight_s = [100]
+        # weight_sw = [100]
+        # weight_w = [100]
+        # weight_nw = [100]
+        # weights = [weight_n, weight_ne, weight_e, weight_se, weight_s, weight_sw, weight_w, weight_nw]  
+
+        # # Group up
+        # # if not Unit.change_weights_for_types(self, weights, {Deer}, [(0, 15, ADD, 6)]):
+        # Unit.change_weights_for_types(self, weights, {Deer}, [(0, 40, ADD, 20)])
+        # # Run away from baddies
+        # if not Unit.change_weights_for_types(self, weights, {Wolf}, [(0, 20, ADD, 100)], flip_direction = True):
+        #     Unit.change_weights_for_types(self, weights,    {Wolf}, [(0, 40, ADD, 20)], flip_direction = True)  
+
+        # # Don't run into stuff
+        # Unit.change_weights_if_blocked(self, weights, {Block, Deer, Wolf, Person})
+        # vector = Unit.get_vector_from_weights(weights)
+        # # Move
+        # if vector is not None:
+        #     target = self.tile + vector
+        #     self.path.append(target)
 
 
 class Wolf(Unit):

@@ -82,11 +82,3 @@ def draw_grid():
 
 def draw_line(point_1, point_2, color, width):
     pygame.draw.line(screen, color, point_1, point_2, width)
-
-def print_debug():
-    print("Units:")
-    w1.print()
-    w2.print()
-    map.print()  
-
-

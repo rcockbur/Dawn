@@ -8,7 +8,7 @@ import time
 
 rt_2 = sqrt(2)
 debug = False
-debug = True
+# debug = True
 neighbors = [(0,1),(0,-1),(1,0),(-1,0),(1,1),(1,-1),(-1,1),(-1,-1)]
 
 def heuristic(a, b):
@@ -20,7 +20,7 @@ def tup_from_tile(tile):
 def tile_from_tup(tup):
     return Point(x = tup[0], y = tup[1])
 
-@measure
+# @measure
 def astar(start_tile, end_tile):
     start_time = time.time()
 
@@ -50,7 +50,7 @@ def astar(start_tile, end_tile):
         close_set.add(current)
         #DEBUG
         if debug:
-            rect = Unit.calculate_rect(tile_from_tup(current), 1)
+            rect = Map.calculate_rect(tile_from_tup(current), 1)
             pygame.draw.rect(screen, COLOR_BLUE, rect)
             pygame.display.flip()
 
@@ -78,7 +78,7 @@ def astar(start_tile, end_tile):
 
                 #DEBUG
                 if debug:
-                    rect = Unit.calculate_rect(tile_from_tup(neighbor), 1)
+                    rect = Map.calculate_rect(tile_from_tup(neighbor), 1)
                     pygame.draw.rect(screen, COLOR_RED, rect)
                     pygame.display.flip()
                 

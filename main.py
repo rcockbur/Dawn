@@ -3,6 +3,7 @@ print("----------------------- START --------------------------")
 import os, sys, pygame, random
 from globals import *
 from map import Map
+from astar import *
 from unit import *
 from point import *
 from actions import *
@@ -30,19 +31,16 @@ b = Person(Point(x = TILE_COUNT-3, y = TILE_COUNT-1))
 c = Person(Point(x = TILE_COUNT-5, y = TILE_COUNT-1))
 d = Person(Point(x = TILE_COUNT-7, y = TILE_COUNT-1))
 e = Person(Point(x = TILE_COUNT-9, y = TILE_COUNT-1))
-for i in range(100):
-    Deer(Point(x=10,  y=25))        
+for i in range(1):
+    Deer(Point(x=2,  y=25))        
 for i in range(10):
     Wolf(Point(x=49,  y=45))
 
 def update_time():
-    # global frames
-    # global seconds
-    # global minutes
     frames[0] = frames[0] + 1
     if frames[0] % FRAMES_PER_SECOND == 0:
         seconds[0] = seconds[0] + 1
-        print(str(seconds[0]))
+        # print(str(seconds[0]))
         if seconds[0] % SECONDS_PER_MINUTE == 0:
             minutes[0] = minutes[0] + 1
 
