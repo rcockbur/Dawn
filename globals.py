@@ -2,6 +2,8 @@ import pygame
 import random
 from point import *
 
+print("running globals.py")
+
 
 NoneType = type(None)
 
@@ -55,6 +57,7 @@ SOUTH = 4
 SOUTH_WEST = 5
 WEST = 6
 NORTH_WEST = 7
+
 
 DIRECTIONS = [NORTH, NORTH_EAST, EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, WEST, NORTH_WEST]
 DIRECTION_VECTORS = [Vector(0,-1), Vector(1,-1), Vector(1,0), Vector(1,1), Vector(0,1), Vector(-1,1), Vector(-1,0), Vector(-1,-1)]

@@ -2,6 +2,8 @@ import pygame
 from globals import *
 from unit import *
 
+print("running draw.py")
+
 freesansbold_14 = pygame.font.Font('freesansbold.ttf', 14) 
 
 def draw_text_at(font, string, pos):

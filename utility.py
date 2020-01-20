@@ -2,6 +2,8 @@ from globals import *
 from random import randint
 import time
 
+print("running utility.py")
+
 string_length = 5
 
 def measure(func):

@@ -2,9 +2,10 @@ from globals import *
 from point import *
 from map import *
 from path import *
-from unit import *
 from heapq import *
 import time
+
+print("running pathfinding.py")
 
 rt_2 = sqrt(2)
 debug = False
@@ -21,7 +22,7 @@ def tile_from_tup(tup):
     return Point(x = tup[0], y = tup[1])
 
 # @measure
-def astar(start_tile, end_tile):
+def astar(start_tile, end_tile, obstacle_types):
     start_time = time.time()
 
     start = tup_from_tile(start_tile)
@@ -39,7 +40,7 @@ def astar(start_tile, end_tile):
 
         # goal found
         if current == goal:
-            path = Path([])
+            path = Path()
             while current in came_from:
                 path.append(tile_from_tup(current))
                 current = came_from[current]
@@ -60,7 +61,7 @@ def astar(start_tile, end_tile):
             tentative_g_score = gscore[current] + heuristic(current, neighbor)
             if 0 <= neighbor[0] < TILE_COUNT:
                 if 0 <= neighbor[1] < TILE_COUNT:
-                    if type(MAP.get_unit_at(tile_from_tup(neighbor))) == Block:
+                    if type(MAP.get_unit_at(tile_from_tup(neighbor))) in obstacle_types:
                         continue
                 else:
                     continue    # array bound y walls
@@ -83,5 +84,55 @@ def astar(start_tile, end_tile):
                     pygame.display.flip()
                 
     print("Path not found")
-    print("Elapsed Time: ", time.time() - start_time)
-    return Path([])
+    for i in obstacle_types:
+        print(i)
+    return Path()
+
+
+def find_nearby_tile(tile, obstacle_types):
+    open_set = set()
+    closed_set = set()
+    search_distance = 10
+    open_set.add(tup_from_tile(tile))
+    iteration_count = 0
+    while(len(open_set) > 0) and iteration_count < search_distance:
+        
+        working_set = open_set.copy()
+        open_set.clear()
+        for tup in working_set:
+            closed_set.add(tup)
+
+            # DEBUG
+            if debug:
+                rect = Map.calculate_rect(tile_from_tup(tup), 1)
+                pygame.draw.rect(screen, COLOR_BLUE, rect)
+                pygame.display.flip()
+
+            if iteration_count < search_distance - 1:
+                for i, j in neighbors:
+                    neighbor = (tup[0] + i, tup[1] + j)
+                    if 0 <= neighbor[0] < TILE_COUNT:
+                        if 0 <= neighbor[1] < TILE_COUNT:
+                            if type(MAP.get_unit_at(tile_from_tup(neighbor))) in obstacle_types:
+                                continue
+                        else:
+                            continue
+                    else:
+                        continue
+                    if neighbor in closed_set or neighbor in open_set:
+                        continue
+                    open_set.add(neighbor)
+
+                    # DEBUG
+                    if debug:
+                        rect = Map.calculate_rect(tile_from_tup(neighbor), 1)
+                        pygame.draw.rect(screen, COLOR_RED, rect)
+                        pygame.display.flip()
+        iteration_count += 1
+
+    closed_set.remove(tup_from_tile(tile))
+    if len(closed_set) > 0:
+        chosen_tup = random.choice(tuple(closed_set))
+        return tile_from_tup(chosen_tup)
+    else:
+        return None

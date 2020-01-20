@@ -3,6 +3,8 @@ from point import *
 from utility import *
 import pygame
 
+print("running map.py")
+
 class Map:
     def __init__(self):
         self.grid = list()

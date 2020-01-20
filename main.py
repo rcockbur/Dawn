@@ -1,13 +1,14 @@
 print("----------------------- START --------------------------")
 
 import os, sys, pygame, random
-from globals import *
-from map import Map
-from astar import *
-from unit import *
+from globals import * #imports point
+from map import Map   #imports utility
+from unit import *    #imports path,pathfinding
 from point import *
 from actions import *
 from draw import *
+
+print("running main.py")
 
 pygame.display.set_caption('Dawn') 
 

@@ -1,6 +1,8 @@
 from math import sqrt, atan, pi, degrees, atan2
 from random import getrandbits
 
+print("running point.py")
+
 class Point:
     def __init__(self, x = 10, y = 10, point = None):
         if isinstance(point, Point):

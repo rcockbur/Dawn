@@ -2,15 +2,17 @@
 from globals import *
 
 from map import Map
-import astar
+import pathfinding
 from unit import *
 
-
+print("running actions.py")
 
 def path_to(tile):
-    if type(selected_unit[0]) is Person and type(MAP.get_unit_at(tile)) != Block:
-        path = astar.astar(selected_unit[0].tile, tile)
-        selected_unit[0].path = path
+    if type(selected_unit[0]) is Person:
+        unit = MAP.get_unit_at(tile)
+        if type(unit) not in selected_unit[0].block_target_types:
+            path = pathfinding.astar(selected_unit[0].tile, tile, selected_unit[0].block_pathing_types)
+            selected_unit[0].path = path
 
 def select_tile(tile):
     global selected_unit
@@ -20,7 +22,6 @@ def select_tile(tile):
 
     unit = MAP.get_unit_at(tile)
     if unit is not None:
-        
         unit.select()
         selected_unit[0] = unit
         print("Selected:", unit.name)
