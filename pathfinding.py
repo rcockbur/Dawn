@@ -89,13 +89,12 @@ def astar(start_tile, end_tile, obstacle_types):
     return Path()
 
 
-def find_nearby_tile(tile, obstacle_types):
+def find_nearby_tile(tile, obstacle_types, range):
     open_set = set()
     closed_set = set()
-    search_distance = 10
     open_set.add(tup_from_tile(tile))
     iteration_count = 0
-    while(len(open_set) > 0) and iteration_count < search_distance:
+    while(len(open_set) > 0) and iteration_count < range:
         
         working_set = open_set.copy()
         open_set.clear()
@@ -108,7 +107,7 @@ def find_nearby_tile(tile, obstacle_types):
                 pygame.draw.rect(screen, COLOR_BLUE, rect)
                 pygame.display.flip()
 
-            if iteration_count < search_distance - 1:
+            if iteration_count < range - 1:
                 for i, j in neighbors:
                     neighbor = (tup[0] + i, tup[1] + j)
                     if 0 <= neighbor[0] < TILE_COUNT:

@@ -10,7 +10,7 @@ print("running actions.py")
 def path_to(tile):
     if type(selected_unit[0]) is Person:
         unit = MAP.get_unit_at(tile)
-        if type(unit) not in selected_unit[0].block_target_types:
+        if type(unit) not in selected_unit[0].block_pathing_types:
             path = pathfinding.astar(selected_unit[0].tile, tile, selected_unit[0].block_pathing_types)
             selected_unit[0].path = path
 

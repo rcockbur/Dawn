@@ -71,7 +71,6 @@ minutes = [0]
 
 selected_unit = [None]
 
-deer_killed = 0
 from map import Map
 MAP = Map()
 random.seed()

@@ -32,7 +32,7 @@ b = Person(Point(x = TILE_COUNT-3, y = TILE_COUNT-1))
 c = Person(Point(x = TILE_COUNT-5, y = TILE_COUNT-1))
 d = Person(Point(x = TILE_COUNT-7, y = TILE_COUNT-1))
 e = Person(Point(x = TILE_COUNT-9, y = TILE_COUNT-1))
-for i in range(1):
+for i in range(10):
     Deer(Point(x=2,  y=25))        
 for i in range(10):
     Wolf(Point(x=49,  y=45))
@@ -48,7 +48,8 @@ def update_time():
 done = False
 paused = False
 
-while not done:      
+while not done:
+    # print("mainloop")      
     for event in pygame.event.get():
 
         # Check exit conditions
@@ -72,10 +73,14 @@ while not done:
 
     update_time()
 
+    dead_units = set()
     # update units
     for unit_id in list(MAP.units):
         if type(MAP.units[unit_id]) is not Block:
-            MAP.units[unit_id].update()
+            MAP.units[unit_id].update(dead_units)
+
+    for unit in dead_units:
+        MAP.remove_unit(unit)
 
     # draw background
     screen.fill(COLOR_BLACK) 
