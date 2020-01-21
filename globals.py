@@ -1,8 +1,10 @@
 import pygame
 import random
-from point import *
+from point import Point, Vector  
 
-print("running globals.py")
+# Any file which imports globals, also imports Point and Vector, as well as Map (below)
+
+print("running globals.py 1")
 
 
 NoneType = type(None)
@@ -19,10 +21,11 @@ COLOR_TEAL = (0, 255, 255)
 COLOR_WHITE = (255, 255, 255)
 COLOR_BLACK = (0, 0, 0)
 COLOR_GREY_LIGHT = (191, 191, 191)
-COLOR_GREY = (122, 122, 122)
-COLOR_GREY_DARK = (64, 64, 64)
-COLOR_GREY_VDARK = (32, 32, 32)
+COLOR_GREY = (122, 122, 122) 
+COLOR_GREY_DARK = (84, 84, 84)
+COLOR_GREY_VDARK = (32, 32, 32) # grid
 COLOR_BROWN = (100, 40, 0)
+COLOR_BROWN_LIGHT = (140, 65, 0)
 GRID_COLOR = COLOR_GREY_VDARK
 
 GRID_OFFSET_X = 12
@@ -34,9 +37,6 @@ TILE_RADIUS = 6
 TILE_SPACING = TILE_RADIUS * 2 + LINE_WIDTH
 GRID_SIZE = TILE_COUNT * TILE_SPACING
 
-UNIT_COLOR_WOLF = COLOR_RED
-UNIT_COLOR_DEER = COLOR_BROWN
-UNIT_COLOR_PERSON = COLOR_TEAL
 
 UNIT_RADIUS_DEER = TILE_RADIUS
 UNIT_RADIUS_WOLF = TILE_RADIUS
@@ -72,6 +72,9 @@ minutes = [0]
 selected_unit = [None]
 
 from map import Map
+
+print("running globals.py 2")
+
 MAP = Map()
 random.seed()
 pygame.init()

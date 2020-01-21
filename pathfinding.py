@@ -1,8 +1,7 @@
 from globals import *
-from point import *
-from map import *
-from path import *
-from heapq import *
+from path import Path
+from math import sqrt
+from heapq import heappush, heappop
 import time
 
 print("running pathfinding.py")

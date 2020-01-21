@@ -1,12 +1,12 @@
 print("----------------------- START --------------------------")
 
 import os, sys, pygame, random
-from globals import * #imports point
-from map import Map   #imports utility
-from unit import *    #imports path,pathfinding
-from point import *
-from actions import *
-from draw import *
+from point import Point
+from globals import *                               #imports point
+from map import Map                                
+from unit import Unit, Deer, Wolf, Person, Block   
+from actions import move_selected, select
+from draw import draw_hud, draw_grid
 
 print("running main.py")
 
@@ -67,9 +67,9 @@ while not done:
             clicked_tile = MAP.tile_from_pos(clicked_pos)
             if clicked_tile is not None:
                 if event.button == LEFT_BUTTON:
-                    select_tile(clicked_tile)
+                    select(clicked_tile)
                 if event.button == RIGHT_BUTTON:
-                    path_to(clicked_tile)
+                    move_selected(clicked_tile)
 
     update_time()
 

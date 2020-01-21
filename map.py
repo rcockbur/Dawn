@@ -1,6 +1,4 @@
-from globals import *
-from point import *
-from utility import *
+from globals import *       #includes point
 import pygame
 
 print("running map.py")
@@ -84,7 +82,14 @@ class Map:
             return Point(tile_x, tile_y)
         return None
 
-    def calculate_rect(tile, radius):
+def calculate_rect(tile, radius):
         pos = Point(tile_get_mid_x(tile.x) - radius, tile_get_mid_y(tile.y) - radius)
         return pygame.Rect(pos.x, pos.y, radius * 2, radius * 2)
+
+def tile_get_mid_x(tile_x):
+    return GRID_OFFSET_X + tile_x * TILE_SPACING + TILE_RADIUS + LINE_WIDTH / 2 + 1
+
+def tile_get_mid_y(tile_y):
+    return GRID_OFFSET_Y + tile_y * TILE_SPACING + TILE_RADIUS + LINE_WIDTH / 2 + 1
+
 

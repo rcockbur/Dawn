@@ -1,10 +1,9 @@
 from globals import *
-from point import *
 import pygame, random
-from utility import *
-from map import *
-from path import *
+from utility import measure
+from path import Path
 import pathfinding
+from map import calculate_rect
 
 print("running unit.py")
 
@@ -30,8 +29,12 @@ class Unit:
         self.idle_min = 1000
         self.idle_max = 2000
         self.idle_current = random.randint(0, self.idle_max)
-        self.move_range = 30
-        
+        self.move_range_min = 20
+        self.move_range_max = 40
+        self.satiation_current = 200
+        self.satiation_max = 200
+        self.manual_movement = False
+        self.kills = 0
         self.tile = tile
         self.is_selected = False
         self.name = self.new_name()
@@ -41,36 +44,52 @@ class Unit:
 
     def init_b(self, tile):
         self.move_current = self.move_period
+        self.color = self.satiation_color
+        self.color_original = self.color
 
     def class_name(self):
         return type(self).__name__.lower()
 
 
-    def update(self, dead_units):   
+    def update(self, dead_units):
         if self.is_dead == False:
-            # if path is empty
-            if self.path.size() == 0:
-                # generate new target if not idle
+            # check hunger  
+            if frames[0] % 20 == 0:
+                if self.satiation_current > 0:
+                    self.satiation_current -= 1
+                    self.color = self.satiation_color
+                else:
+                    self.color = self.hungery_color
+
+            # generate new target if empty
+            if self.path.size() == 0 and self.manual_movement == False:
                 if self.idle_current == 0:
                     self.idle_current = random.randint(self.idle_min, self.idle_max)
                     self.update_target()
                 else:
                     self.idle_current = self.idle_current - 1
 
-            # if we run into something
-            elif self.path.size() > 0:
-                if type(MAP.get_unit_at(self.path.points[0])) in self.kill_types:
-                    dead_units.add(MAP.get_unit_at(self.path.points[0]))
+            # we ran into something
+            if self.path.size() > 0:
+                unit = MAP.get_unit_at(self.path.points[0])
+                
+                if type(unit) in self.kill_types:
+                    self.kill_unit(unit, dead_units)
 
-                if type(MAP.get_unit_at(self.path.points[0])) in self.block_pathing_types:
-                    print("recalculating")
-                    self.update_target()
+                if type(unit) in self.block_pathing_types:
+                    if self.manual_movement == True:
+                        # print(self.name, "dropping path because of", unit.name, "@", frames[0])
+                        # self.path.clear()
+                        pass
+                    else:
+                        print(self.name, "recalculating because of", unit.name, "@", frames[0])
+                        self.update_target()
 
 
             # if we have path, and move is ready
             if self.path.size() > 0:
                 if self.move_current == 0:
-                    self.move_to(self.path.pop())
+                    self.move()
                     self.move_current = self.move_period
                 else:
                     self.move_current = self.move_current - 1
@@ -91,12 +110,8 @@ class Unit:
         self.path = path
 
 
-    def move_by(self, vector):
-        target = self.tile + vector
-        self.move_to(target)
-
-
-    def move_to(self, target):
+    def move(self):
+        target = self.path.points[0]
         if MAP.tile_within_bounds(target) == False:
             print (self.name, "tried to move of bounds")
             return
@@ -105,7 +120,7 @@ class Unit:
         if type(MAP.get_unit_at(target)) in self.block_pathing_types:
             print(self.name, "tried to move onto", unit.name)
             return
-        
+        self.path.pop()
         old_tile = self.tile.copy()
         self.tile = target.copy()
         MAP.move_unit(self, old_tile, self.tile)
@@ -113,9 +128,9 @@ class Unit:
 
     def draw(self):
         if self.is_selected:
-            outter_rect = Map.calculate_rect(self.tile, self.radius+2)    
+            outter_rect = calculate_rect(self.tile, self.radius+2)    
             pygame.draw.rect(screen, COLOR_YELLOW, outter_rect)
-        rect = Map.calculate_rect(self.tile, self.radius)
+        rect = calculate_rect(self.tile, self.radius)
         pygame.draw.rect(screen, self.color, rect)
 
         
@@ -125,7 +140,7 @@ class Unit:
         if self.is_selected:
             if self.path is not None:
                 for point in self.path.points:
-                    rect = Map.calculate_rect(point, self.radius - 2)
+                    rect = calculate_rect(point, self.radius - 2)
                     pygame.draw.rect(screen, COLOR_YELLOW, rect)
 
     def select(self):
@@ -140,11 +155,12 @@ class Unit:
 
 
 
-    def kill_unit(self, unit):
+    def kill_unit(self, unit, dead_units):
+        dead_units.add(unit)
         unit.is_dead = True
-        self.satiation = randint(1000, 1000)
         self.color = self.satiation_color
-
+        self.satiation_current = self.satiation_max
+        self.kills += 1
 
 
 def tup_from_tile(tile):
@@ -159,8 +175,8 @@ class Deer(Unit):
 
     def __init__(self, tile):
         Unit.init_a(self, tile)
-        # self.name = "deer"
-        self.color = UNIT_COLOR_DEER
+        self.hungery_color = (160, 70, 0)
+        self.satiation_color = (100, 40, 0)
         self.radius = UNIT_RADIUS_DEER
         self.block_pathing_types = { Block, Deer, Wolf, Person }
         Unit.init_b(self, tile)
@@ -170,7 +186,8 @@ class Deer(Unit):
 
     # @measure
     def update_target(self):
-        tile = pathfinding.find_nearby_tile(self.tile, self.block_pathing_types, self.move_range)
+        move_range = random.randint(self.move_range_min, self.move_range_max)
+        tile = pathfinding.find_nearby_tile(self.tile, self.block_pathing_types, move_range)
         if tile is not None:
             path = pathfinding.astar(self.tile, tile, self.block_pathing_types)
             self.path = path
@@ -182,19 +199,19 @@ class Wolf(Unit):
 
     def __init__(self, tile):
         Unit.init_a(self, tile)
-        # self.name = "wolf"
-        self.color = UNIT_COLOR_WOLF
+        self.hungery_color = (255, 151, 151)
+        self.satiation_color = (191, 191, 191)
         self.radius = UNIT_RADIUS_WOLF
         self.block_pathing_types = { Block, Wolf, Person }
         self.kill_types = { Deer }
-        self.satiation = 0
         Unit.init_b(self, tile)
 
     def get_name_index(self):
         return Wolf.name_index
 
     def update_target(self):
-        tile = pathfinding.find_nearby_tile(self.tile, self.block_pathing_types, self.move_range)
+        move_range = random.randint(self.move_range_min, self.move_range_max)
+        tile = pathfinding.find_nearby_tile(self.tile, self.block_pathing_types, move_range)
         if tile is not None:
             path = pathfinding.astar(self.tile, tile, self.block_pathing_types)
             self.path = path
@@ -205,13 +222,14 @@ class Person(Unit):
     name_index = [0]
 
     def __init__(self, tile):
-        # self.name = "person"
         Unit.init_a(self, tile)
-        self.color = UNIT_COLOR_PERSON
+        self.hungery_color = (175, 35, 255)
+        self.satiation_color = (35, 35, 255)
         self.radius = UNIT_RADIUS_PERSON
         self.moving_right = True
         self.move_distance = 20
         self.move_period = 30
+        self.manual_movement = True
         self.kill_types = { Deer, Wolf }
         self.block_pathing_types = { Block, Person }
         Unit.init_b(self, tile)
@@ -231,6 +249,7 @@ class Block(Unit):
         # self.name = "block"
         Unit.init_a(self, tile)
         self.color = COLOR_GREY_DARK
+        self.satiation_color = COLOR_GREY_DARK
         self.radius = UNIT_RADIUS_BLOCK
         Unit.init_b(self, tile)
 
