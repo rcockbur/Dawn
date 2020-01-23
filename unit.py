@@ -21,23 +21,29 @@ class Unit:
         index[0] += 1
         return r
 
+    def get_name_index(self):
+        raise NotImplementedError()
+
+
     def init_a(self, tile):
         self.is_dead = False
         self.id = Unit.new_id()
+        self.name = self.new_name()
         self.move_period = 70
         self.move_current = self.move_period
+        self.move_range_min = 10
+        self.move_range_max = 40
         self.idle_min = 1000
         self.idle_max = 2000
         self.idle_current = random.randint(0, self.idle_max)
-        self.move_range_min = 20
-        self.move_range_max = 40
         self.satiation_current = 200
         self.satiation_max = 200
-        self.manual_movement = False
+        self.is_manual = False
+        self.is_selected = False
         self.kills = 0
         self.tile = tile
-        self.is_selected = False
-        self.name = self.new_name()
+        
+        
         self.kill_types = {}
         self.path = Path()
         MAP.add_unit_at(self, tile.x, tile.y)
@@ -50,7 +56,7 @@ class Unit:
     def class_name(self):
         return type(self).__name__.lower()
 
-
+    # process hunger, pathing, killing, moving
     def update(self, dead_units):
         if self.is_dead == False:
             # check hunger  
@@ -62,22 +68,23 @@ class Unit:
                     self.color = self.hungery_color
 
             # generate new target if empty
-            if self.path.size() == 0 and self.manual_movement == False:
+            if self.path.size() == 0 and self.is_manual == False:
                 if self.idle_current == 0:
                     self.idle_current = random.randint(self.idle_min, self.idle_max)
-                    self.update_target()
+                    if self.is_manual == False:
+                        self.update_target()
                 else:
                     self.idle_current = self.idle_current - 1
 
             # we ran into something
-            if self.path.size() > 0:
+            elif self.path.size() > 0:
                 unit = MAP.get_unit_at(self.path.points[0])
                 
                 if type(unit) in self.kill_types:
                     self.kill_unit(unit, dead_units)
 
-                if type(unit) in self.block_pathing_types:
-                    if self.manual_movement == True:
+                if type(unit) in self.block_move_types:
+                    if self.is_manual == True:
                         # print(self.name, "dropping path because of", unit.name, "@", frames[0])
                         # self.path.clear()
                         pass
@@ -94,21 +101,11 @@ class Unit:
                 else:
                     self.move_current = self.move_current - 1
 
-
-                
-                    
-
-
-    def get_name_index(self):
-        raise NotImplementedError()
-
     def update_target(self):
         raise NotImplementedError()
 
-
     def set_path(self, path):
         self.path = path
-
 
     def move(self):
         target = self.path.points[0]
@@ -117,24 +114,21 @@ class Unit:
             return
 
         unit = MAP.get_unit_at(target)
-        if type(MAP.get_unit_at(target)) in self.block_pathing_types:
+        if type(MAP.get_unit_at(target)) in self.block_move_types:
             print(self.name, "tried to move onto", unit.name)
             return
         self.path.pop()
         old_tile = self.tile.copy()
         self.tile = target.copy()
         MAP.move_unit(self, old_tile, self.tile)
-            
-
+          
+    # MOVE TO DRAW.PY  
     def draw(self):
         if self.is_selected:
             outter_rect = calculate_rect(self.tile, self.radius+2)    
             pygame.draw.rect(screen, COLOR_YELLOW, outter_rect)
         rect = calculate_rect(self.tile, self.radius)
         pygame.draw.rect(screen, self.color, rect)
-
-        
-
 
     def draw_path(self):
         if self.is_selected:
@@ -178,6 +172,7 @@ class Deer(Unit):
         self.hungery_color = (160, 70, 0)
         self.satiation_color = (100, 40, 0)
         self.radius = UNIT_RADIUS_DEER
+        self.block_move_types = { Block, Deer, Wolf, Person }
         self.block_pathing_types = { Block, Deer, Wolf, Person }
         Unit.init_b(self, tile)
 
@@ -202,6 +197,7 @@ class Wolf(Unit):
         self.hungery_color = (255, 151, 151)
         self.satiation_color = (191, 191, 191)
         self.radius = UNIT_RADIUS_WOLF
+        self.block_move_types = { Block, Wolf, Person }
         self.block_pathing_types = { Block, Wolf, Person }
         self.kill_types = { Deer }
         Unit.init_b(self, tile)
@@ -226,20 +222,16 @@ class Person(Unit):
         self.hungery_color = (175, 35, 255)
         self.satiation_color = (35, 35, 255)
         self.radius = UNIT_RADIUS_PERSON
-        self.moving_right = True
         self.move_distance = 20
         self.move_period = 30
-        self.manual_movement = True
+        self.is_manual = True
         self.kill_types = { Deer, Wolf }
-        self.block_pathing_types = { Block, Person }
+        self.block_pathing_types = { Block }
+        self.block_move_types = { Block, Person }
         Unit.init_b(self, tile)
 
     def get_name_index(self):
         return Person.name_index
-
-
-    def update_target(self):
-        pass
 
 
 class Block(Unit):

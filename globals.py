@@ -69,7 +69,7 @@ frames = [0]
 seconds = [0]
 minutes = [0]
 
-selected_unit = [None]
+selected_units = set()
 
 from map import Map
 

@@ -54,6 +54,29 @@ class Map:
         else:
             return None
 
+    def get_units_in_box(self, corner_1, corner_3):
+        if corner_1.x < corner_3.x:
+            low_x = corner_1.x
+            high_x = corner_3.x
+        else:
+            low_x = corner_3.x
+            high_x = corner_1.x
+
+        if corner_1.y < corner_3.y:
+            low_y = corner_1.y
+            high_y = corner_3.y
+        else:
+            low_y = corner_3.y
+            high_y = corner_1.y
+
+
+        matching_units = set()
+        for unit in self.units.values():
+            if low_x <= unit.tile.x <= high_x:
+                if low_y <= unit.tile.y <= high_y:
+                    matching_units.add(unit)
+        return matching_units
+
     def print(self):
         print("Map Grid Units:")
         for i in range(TILE_COUNT):
@@ -75,12 +98,28 @@ class Map:
                     r.add(other_unit)
         return r
 
-    def tile_from_pos(self, pos):
-        if GRID_OFFSET_X < pos[0] < GRID_OFFSET_X + GRID_SIZE and GRID_OFFSET_Y < pos[1] < GRID_OFFSET_Y + GRID_SIZE:
-            tile_x = int((pos[0] - GRID_OFFSET_X) / TILE_SPACING)
-            tile_y = int((pos[1] - GRID_OFFSET_Y) / TILE_SPACING)
-            return Point(tile_x, tile_y)
-        return None
+def clamp_pos(pos):
+    x = pos[0]
+    y = pos[1]
+    if x < GRID_OFFSET_X: 
+        x = GRID_OFFSET_X
+    elif x > GRID_OFFSET_X + GRID_SIZE:
+        x = GRID_OFFSET_X + GRID_SIZE
+    if y < GRID_OFFSET_Y: 
+        y = GRID_OFFSET_Y
+    elif y > GRID_OFFSET_Y + GRID_SIZE:
+        y = GRID_OFFSET_Y + GRID_SIZE
+    return (x, y)
+
+def tile_from_pos(pos):
+    if GRID_OFFSET_X <= pos[0] <= GRID_OFFSET_X + GRID_SIZE and GRID_OFFSET_Y <= pos[1] <= GRID_OFFSET_Y + GRID_SIZE:
+        tile_x = int((pos[0] - GRID_OFFSET_X) / TILE_SPACING)
+        tile_y = int((pos[1] - GRID_OFFSET_Y) / TILE_SPACING)
+        return Point(tile_x, tile_y)
+    return None
+
+def pos_within_bounds(pos):
+    return GRID_OFFSET_X < pos[0] < GRID_OFFSET_X + GRID_SIZE and GRID_OFFSET_Y < pos[1] < GRID_OFFSET_Y + GRID_SIZE
 
 def calculate_rect(tile, radius):
         pos = Point(tile_get_mid_x(tile.x) - radius, tile_get_mid_y(tile.y) - radius)

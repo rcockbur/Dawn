@@ -3,10 +3,10 @@ print("----------------------- START --------------------------")
 import os, sys, pygame, random
 from point import Point
 from globals import *                               #imports point
-from map import Map                                
+from map import Map, tile_from_pos, clamp_pos, pos_within_bounds
 from unit import Unit, Deer, Wolf, Person, Block   
-from actions import move_selected, select
-from draw import draw_hud, draw_grid
+from actions import move_to_tile, select_box, clear_selection, stop
+from draw import draw_hud, draw_grid, draw_box
 
 print("running main.py")
 
@@ -48,8 +48,15 @@ def update_time():
 done = False
 paused = False
 
+mouse_pos_start = None
+
 while not done:
-    # print("mainloop")      
+    # print("mainloop") 
+    mouse_pos = pygame.mouse.get_pos()
+    mouse_pos_clamped = clamp_pos(mouse_pos)
+    mouse_tile = tile_from_pos(mouse_pos)
+    mouse_tile_clamped = tile_from_pos(mouse_pos_clamped)
+
     for event in pygame.event.get():
 
         # Check exit conditions
@@ -59,17 +66,27 @@ while not done:
         # Check keyboard events
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_p:
-                paused = not paused                 
+                paused = not paused       
+            elif event.key == pygame.K_ESCAPE:
+                clear_selection()
+            elif event.key == pygame.K_s:
+                stop()
 
-        # Check mouse events
+        # Mouse down
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            clicked_pos = pygame.mouse.get_pos()
-            clicked_tile = MAP.tile_from_pos(clicked_pos)
-            if clicked_tile is not None:
-                if event.button == LEFT_BUTTON:
-                    select(clicked_tile)
-                if event.button == RIGHT_BUTTON:
-                    move_selected(clicked_tile)
+            if event.button == LEFT_BUTTON and mouse_tile != None and mouse_pos_start == None:
+                mouse_pos_start = mouse_pos
+                mouse_tile_start = mouse_tile
+        # Mouse up
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == LEFT_BUTTON:
+                if mouse_pos_start is not None:
+                    select_box(mouse_tile_start, mouse_tile_clamped)
+                    mouse_pos_start = None
+            if event.button == RIGHT_BUTTON:
+                move_to_tile(mouse_tile)
+
+
 
     update_time()
 
@@ -94,6 +111,10 @@ while not done:
 
     # draw UI panels
     draw_hud()
+
+    if mouse_pos_start is not None:
+        draw_box(mouse_pos_start, mouse_pos_clamped)
+
 
     # flip
     pygame.display.flip()
