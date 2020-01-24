@@ -21,11 +21,12 @@ class Unit(Entity):
         self.satiation_max = 200
         self.idle_min = 1000 # after completing path
         self.idle_max = 2000
-        self.move_range_min = 10
-        self.move_range_max = 40
+        self.move_range_min = 60
+        self.move_range_max = 60
         self.move_period = 5
         self.move_current = 0
-        self.idle_current = random.randint(0, self.idle_max)
+        # self.idle_current = random.randint(0, self.idle_max)
+        self.idle_current = random.randint(1, 100)
         self.kill_types = {}
 
         self.patience_max = 20

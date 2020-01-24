@@ -33,9 +33,9 @@ b = Person(Point(x = TILE_COUNT-3, y = TILE_COUNT-1))
 c = Person(Point(x = TILE_COUNT-5, y = TILE_COUNT-1))
 d = Person(Point(x = TILE_COUNT-7, y = TILE_COUNT-1))
 e = Person(Point(x = TILE_COUNT-9, y = TILE_COUNT-1))
-for i in range(10):
+for i in range(1):
     Deer(Point(x=2,  y=25))        
-for i in range(10):
+for i in range(1):
     Wolf(Point(x=49,  y=45))
 
 
