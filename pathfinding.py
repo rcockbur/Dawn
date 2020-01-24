@@ -2,13 +2,16 @@ from globals import *
 from path import Path
 from math import sqrt
 from heapq import heappush, heappop
+from map import calculate_rect
 import time
 
 print("running pathfinding.py")
 
 rt_2 = sqrt(2)
-debug = False
-# debug = True
+debug_astar = True
+debug_flood = False
+
+# debug_astar = True
 neighbors = [(0,1),(0,-1),(1,0),(-1,0),(1,1),(1,-1),(-1,1),(-1,-1)]
 
 def heuristic(a, b):
@@ -20,12 +23,20 @@ def tup_from_tile(tile):
 def tile_from_tup(tup):
     return Point(x = tup[0], y = tup[1])
 
+def debug_draw(tup, color):
+    rect = calculate_rect(tile_from_tup(tup), 1)
+    pygame.draw.rect(screen, color, rect)
+    pygame.display.flip()
+
 # @measure
 def astar(start_tile, end_tile, obstacle_types):
     start_time = time.time()
 
     start = tup_from_tile(start_tile)
     goal = tup_from_tile(end_tile)
+
+    if debug_astar:
+        debug_draw(goal, COLOR_YELLOW)   
 
     close_set = set()
     came_from = {}
@@ -49,18 +60,17 @@ def astar(start_tile, end_tile, obstacle_types):
 
         close_set.add(current)
         #DEBUG
-        if debug:
-            rect = Map.calculate_rect(tile_from_tup(current), 1)
-            pygame.draw.rect(screen, COLOR_BLUE, rect)
-            pygame.display.flip()
+        if debug_astar:
+            debug_draw(current, COLOR_GREEN)
 
         # update neighbors
         for i, j in neighbors:
+            time.sleep(0.1)
             neighbor = current[0] + i, current[1] + j            
             tentative_g_score = gscore[current] + heuristic(current, neighbor)
             if 0 <= neighbor[0] < TILE_COUNT:
                 if 0 <= neighbor[1] < TILE_COUNT:
-                    if type(MAP.get_unit_at(tile_from_tup(neighbor))) in obstacle_types:
+                    if type(MAP.get_entity_at(tile_from_tup(neighbor))) in obstacle_types:
                         continue
                 else:
                     continue    # array bound y walls
@@ -77,10 +87,11 @@ def astar(start_tile, end_tile, obstacle_types):
                 heappush(oheap, (fscore[neighbor], neighbor))
 
                 #DEBUG
-                if debug:
-                    rect = Map.calculate_rect(tile_from_tup(neighbor), 1)
-                    pygame.draw.rect(screen, COLOR_RED, rect)
-                    pygame.display.flip()
+                if debug_astar:
+                    debug_draw(neighbor, COLOR_BLUE)
+
+        if debug_astar:
+            debug_draw(current, COLOR_RED)
                 
     print("Path not found")
     for i in obstacle_types:
@@ -101,17 +112,15 @@ def find_nearby_tile(tile, obstacle_types, range):
             closed_set.add(tup)
 
             # DEBUG
-            if debug:
-                rect = Map.calculate_rect(tile_from_tup(tup), 1)
-                pygame.draw.rect(screen, COLOR_BLUE, rect)
-                pygame.display.flip()
+            if debug_flood:
+                debug_draw(tup)
 
             if iteration_count < range - 1:
                 for i, j in neighbors:
                     neighbor = (tup[0] + i, tup[1] + j)
                     if 0 <= neighbor[0] < TILE_COUNT:
                         if 0 <= neighbor[1] < TILE_COUNT:
-                            if type(MAP.get_unit_at(tile_from_tup(neighbor))) in obstacle_types:
+                            if type(MAP.get_entity_at(tile_from_tup(neighbor))) in obstacle_types:
                                 continue
                         else:
                             continue
@@ -122,10 +131,8 @@ def find_nearby_tile(tile, obstacle_types, range):
                     open_set.add(neighbor)
 
                     # DEBUG
-                    if debug:
-                        rect = Map.calculate_rect(tile_from_tup(neighbor), 1)
-                        pygame.draw.rect(screen, COLOR_RED, rect)
-                        pygame.display.flip()
+                    if debug_flood:
+                        debug_draw(neighbor)
         iteration_count += 1
 
     closed_set.remove(tup_from_tile(tile))

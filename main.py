@@ -4,9 +4,10 @@ import os, sys, pygame, random
 from point import Point
 from globals import *                               #imports point
 from map import Map, tile_from_pos, clamp_pos, pos_within_bounds
-from unit import Unit, Deer, Wolf, Person, Block   
+from block import Block
+from unit import Unit, Deer, Wolf, Person  
 from actions import move_to_tile, select_box, clear_selection, stop
-from draw import draw_hud, draw_grid, draw_box
+from draw import draw_hud, draw_grid, draw_box, draw_unit, draw_path, draw_black
 
 print("running main.py")
 
@@ -37,13 +38,6 @@ for i in range(10):
 for i in range(10):
     Wolf(Point(x=49,  y=45))
 
-def update_time():
-    frames[0] = frames[0] + 1
-    if frames[0] % FRAMES_PER_SECOND == 0:
-        seconds[0] = seconds[0] + 1
-        # print(str(seconds[0]))
-        if seconds[0] % SECONDS_PER_MINUTE == 0:
-            minutes[0] = minutes[0] + 1
 
 done = False
 paused = False
@@ -84,40 +78,44 @@ while not done:
                     select_box(mouse_tile_start, mouse_tile_clamped)
                     mouse_pos_start = None
             if event.button == RIGHT_BUTTON:
-                move_to_tile(mouse_tile)
+                if mouse_tile is not None:
+                    move_to_tile(mouse_tile)
 
+    if paused == False:
 
+        dead_units.clear()
 
-    update_time()
+        # update units
+        for entity_id in list(MAP.entities):
+            if isinstance(MAP.entities[entity_id], Unit):
+                MAP.entities[entity_id].update()
+        for entity_id in list(MAP.entities):
+            if isinstance(MAP.entities[entity_id], Unit):
+                MAP.entities[entity_id].update_2()
 
-    dead_units = set()
-    # update units
-    for unit_id in list(MAP.units):
-        if type(MAP.units[unit_id]) is not Block:
-            MAP.units[unit_id].update(dead_units)
+        for unit in dead_units:
+            MAP.remove_entity(unit)
 
-    for unit in dead_units:
-        MAP.remove_unit(unit)
+        # draw background
+        draw_black()
+        draw_grid()              
 
-    # draw background
-    screen.fill(COLOR_BLACK) 
-    draw_grid()              
+        # draw units
+        for entity in MAP.get_entities():
+            draw_unit(entity)
+        for entity in MAP.get_entities():
+            draw_path(entity)
 
-    # draw units
-    for unit in MAP.get_units():
-        unit.draw()
-    for unit in MAP.get_units():
-        unit.draw_path()
+        # draw UI panels
+        draw_hud()
 
-    # draw UI panels
-    draw_hud()
+        if mouse_pos_start is not None:
+            draw_box(mouse_pos_start, mouse_pos_clamped)
 
-    if mouse_pos_start is not None:
-        draw_box(mouse_pos_start, mouse_pos_clamped)
+        # flip
+        pygame.display.flip()
 
-
-    # flip
-    pygame.display.flip()
+        frames[0] = frames[0] + 1
 
 print("------------------------ FIN ---------------------------")
 

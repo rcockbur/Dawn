@@ -6,11 +6,15 @@ from point import Point, Vector
 
 print("running globals.py 1")
 
+random.seed()
+pygame.init()
 
 NoneType = type(None)
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 800
+
+screen = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
 
 COLOR_RED = (255, 0, 0)
 COLOR_GREEN = (0, 255, 0)
@@ -63,20 +67,20 @@ DIRECTIONS = [NORTH, NORTH_EAST, EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, WEST, NORT
 DIRECTION_VECTORS = [Vector(0,-1), Vector(1,-1), Vector(1,0), Vector(1,1), Vector(0,1), Vector(-1,1), Vector(-1,0), Vector(-1,-1)]
 DIRECTION_NAMES = ["NORTH", "NORTH_EAST", "EAST", "SOUTH_EAST", "SOUTH", "SOUTH_WEST", "WEST", "NORTH_WEST"]
 
-screen = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
+
 
 frames = [0]
 seconds = [0]
 minutes = [0]
 
 selected_units = set()
+dead_units = set()
 
 from map import Map
 
 print("running globals.py 2")
 
 MAP = Map()
-random.seed()
-pygame.init()
+
 
 
