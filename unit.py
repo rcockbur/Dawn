@@ -13,7 +13,7 @@ class Unit(Entity):
 
     def init_a(self, tile):
         Entity.__init__(self, tile)
-        self.is_dead = False
+        
         self.is_manual = False
         self.path = Path()
         self.kills = 0
@@ -23,13 +23,14 @@ class Unit(Entity):
         self.idle_max = 2000
         self.move_range_min = 60
         self.move_range_max = 60
-        self.move_period = 5
+        self.move_period = 10
         self.move_current = 0
-        # self.idle_current = random.randint(0, self.idle_max)
-        self.idle_current = random.randint(1, 100)
+        self.status = IDLE
+        self.idle_current = random.randint(0, self.idle_max / 2)
+        # self.idle_current = random.randint(1, 100)
         self.kill_types = {}
 
-        self.patience_max = 20
+        self.patience_max = 50
         self.patience_current = self.patience_max
         
     def init_b(self, tile):
@@ -37,9 +38,6 @@ class Unit(Entity):
         self.color = self.satiation_color
         self.color_original = self.color
 
-    def die(self):
-        dead_units.add(self)
-        self.is_dead = True
 
     def update(self):
         self.going_to_move = False
@@ -62,42 +60,47 @@ class Unit(Entity):
                         self.update_target()
                 else:
                     self.idle_current = self.idle_current - 1
-
             # we ran into something
             elif self.path.size() > 0:
                 unit = MAP.get_entity_at(self.path.points[0])
-                
                 if type(unit) in self.kill_types:
                     self.kill_unit(unit)
-                
                 if type(unit) in self.block_move_types:
-                    if self.is_manual == True:
-                        testing_my_patiece = True
-                    else:
-                        self.update_target()
-                        print(self.name, "blocked by", unit.name, "@", frames[0])
-            
+                    testing_my_patiece = True
+            # we are blocked
             if testing_my_patiece == True:
                 self.patience_current = self.patience_current - 1
                 if self.patience_current == 0:
+                    self.patience_current = self.patience_max  
                     self.path.clear()
-                    self.patience_current = self.patience_max
-                    print(self.name, "lost patience with", unit.name, "@", frames[0])
+                    # print(self.name, "lost patience with", unit.name, "@", frames[0])
             else:
                 self.patience_current = self.patience_max
-
-
             # move if ready
-            
             if self.path.size() > 0:
+                self.status = MOVING
                 if testing_my_patiece == False and self.move_current < 1:
-                    self.going_to_move = True
+                    # self.going_to_move = True
+                    self.move()
                     self.move_current = self.move_period
+            else:
+                self.status = IDLE
             self.move_current = self.move_current - 1 
 
-    def update_2(self):
-        if self.going_to_move:
-            self.move()
+
+    def get_target_string(self):
+        if self.path.size() > 0:
+            return str(self.path.get(0).x) + " , " + str(self.path.get(0).y)
+        return "-"
+
+    def get_status_string(self):
+        if self.status == IDLE:
+            return "Idle"
+        elif self.status == MOVING:
+            return "Moving"
+        else:
+            return "Error"
+
 
 
     def move(self):
@@ -125,6 +128,7 @@ class Unit(Entity):
         print("--Unit id: ", self.id, "  x: ", self.tile.x, "  y: ", self.tile.y)
 
     def kill_unit(self, unit):
+        print(self.name, "killed", unit.name)
         self.color = self.satiation_color
         self.satiation_current = self.satiation_max
         self.kills += 1
@@ -145,7 +149,7 @@ class Deer(Unit):
         move_range = random.randint(self.move_range_min, self.move_range_max)
         tile = pathfinding.find_nearby_tile(self.tile, self.block_pathing_types, move_range)
         if tile is not None:
-            path = pathfinding.astar(self.tile, tile, self.block_pathing_types)
+            path = pathfinding.astar(self.tile, tile, self.block_pathing_types, False)
             self.path = path
 
 
@@ -164,7 +168,7 @@ class Wolf(Unit):
         move_range = random.randint(self.move_range_min, self.move_range_max)
         tile = pathfinding.find_nearby_tile(self.tile, self.block_pathing_types, move_range)
         if tile is not None:
-            path = pathfinding.astar(self.tile, tile, self.block_pathing_types)
+            path = pathfinding.astar(self.tile, tile, self.block_pathing_types, False)
             self.path = path
 
 

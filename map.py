@@ -38,7 +38,7 @@ class Map:
 
     def move_entity(self, entity, from_tile, to_tile):
         target_entity = self.grid[to_tile.x][to_tile.y]
-        if target_entity is not None:
+        if target_entity is not None and target_entity.is_dead == False:
             print(entity.name, "stomping on", target_entity.name)
         self.grid[from_tile.x][from_tile.y] = None
         self.grid[to_tile.x][to_tile.y] = entity

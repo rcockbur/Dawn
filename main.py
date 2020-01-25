@@ -33,10 +33,10 @@ b = Person(Point(x = TILE_COUNT-3, y = TILE_COUNT-1))
 c = Person(Point(x = TILE_COUNT-5, y = TILE_COUNT-1))
 d = Person(Point(x = TILE_COUNT-7, y = TILE_COUNT-1))
 e = Person(Point(x = TILE_COUNT-9, y = TILE_COUNT-1))
-for i in range(1):
-    Deer(Point(x=2,  y=25))        
-for i in range(1):
-    Wolf(Point(x=49,  y=45))
+for i in range(9):
+    Deer(Point(x=71,  y= 2+ 2*i))        
+for i in range(5):
+    Wolf(Point(x=30 + 2*i,  y=50))
 
 
 done = False
@@ -89,9 +89,6 @@ while not done:
         for entity_id in list(MAP.entities):
             if isinstance(MAP.entities[entity_id], Unit):
                 MAP.entities[entity_id].update()
-        for entity_id in list(MAP.entities):
-            if isinstance(MAP.entities[entity_id], Unit):
-                MAP.entities[entity_id].update_2()
 
         for unit in dead_units:
             MAP.remove_entity(unit)
@@ -104,7 +101,8 @@ while not done:
         for entity in MAP.get_entities():
             draw_unit(entity)
         for entity in MAP.get_entities():
-            draw_path(entity)
+            if hasattr(entity, 'path'):
+                draw_path(entity)
 
         # draw UI panels
         draw_hud()

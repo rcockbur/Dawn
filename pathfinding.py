@@ -8,8 +8,8 @@ import time
 print("running pathfinding.py")
 
 rt_2 = sqrt(2)
-debug_astar = True
-debug_flood = True
+# debug_astar = False
+debug_flood = False
 
 # debug_astar = True
 neighbors = [(0,1),(0,-1),(1,0),(-1,0),(1,1),(1,-1),(-1,1),(-1,-1)]
@@ -38,7 +38,7 @@ def debug_draw(tup, color, radius):
     pygame.display.flip()
 
 # @measure
-def astar(start_tile, end_tile, obstacle_types):
+def astar(start_tile, end_tile, obstacle_types, debug_astar):
     start_time = time.time()
 
     start = tup_from_tile(start_tile)
@@ -47,7 +47,7 @@ def astar(start_tile, end_tile, obstacle_types):
     nodes_checked = 0
 
     if debug_astar:
-        debug_draw(goal, COLOR_BLUE, 2)   
+        debug_draw(goal, COLOR_BLUE, 3)   
 
     close_set = set()
     came_from = {}
@@ -58,13 +58,16 @@ def astar(start_tile, end_tile, obstacle_types):
 
 
     while oheap:
-        
-
         current_heap_bundle = heappop(oheap)
         current_fscore = current_heap_bundle[0]
         time_stamp = current_heap_bundle[1]
         current_node = current_heap_bundle[2]
+        close_set.add(current_node)
 
+        #DEBUG
+        if debug_astar:
+            if current_node is not start:
+                debug_draw(current_node, COLOR_GREEN, 1)
 
         # goal found
         if current_node == goal:
@@ -72,52 +75,41 @@ def astar(start_tile, end_tile, obstacle_types):
             while current_node in came_from:
                 path.append(tile_from_tup(current_node))
                 current_node = came_from[current_node]
-            # print("Path found")
-            # print("Elapsed Time: ", time.time() - start_time)
+                #DEBUG
+                if debug_astar:
+                    if current_node is not start:
+                        debug_draw(current_node, COLOR_GREEN, 2)
+                        time.sleep(0.01)
             return path.reverse()
-
-        close_set.add(current_node)
-        # print("current_node ", str(current_fscore), "   ", time_stamp)
-        #DEBUG
-        if debug_astar:
-            if current_node is not start:
-                debug_draw(current_node, COLOR_GREEN, 1)
 
         # update neighbors
         for i, j in neighbors:
             neighbor = current_node[0] + i, current_node[1] + j            
-            tentative_g_score = gscore[current_node] + heuristic(current_node, neighbor)
+            proposed_g_score = gscore[current_node] + heuristic(current_node, neighbor)
             if 0 <= neighbor[0] < TILE_COUNT:
                 if 0 <= neighbor[1] < TILE_COUNT:
-                    if type(MAP.get_entity_at(tile_from_tup(neighbor))) in obstacle_types:
-                        continue
-                else:
-                    continue    # array bound y walls
-            else:
-                continue        # array bound x walls
-                
-            if neighbor in close_set and tentative_g_score >= gscore.get(neighbor, 0):
+                    if type(MAP.get_entity_at(tile_from_tup(neighbor))) in obstacle_types: continue
+                else: continue # out of bounds y         
+            else: continue # out of bounds x
+            if neighbor in close_set and proposed_g_score >= gscore.get(neighbor, 0):
                 continue
                 
-            if  tentative_g_score < gscore.get(neighbor, 0) or neighbor not in [i[2] for i in oheap]:
+            if  proposed_g_score < gscore.get(neighbor, 0) or neighbor not in [i[2] for i in oheap]:
                 nodes_checked = nodes_checked - 1
                 came_from[neighbor] = current_node
-                gscore[neighbor] = tentative_g_score
-                fscore[neighbor] = tentative_g_score + heuristic(neighbor, goal)
-                
+                gscore[neighbor] = proposed_g_score
+                fscore[neighbor] = proposed_g_score + heuristic(neighbor, goal)
                 heappush(oheap, (fscore[neighbor], nodes_checked, neighbor))
-
 
                 #DEBUG
                 if debug_astar:
                     debug_draw(neighbor, COLOR_YELLOW, 1)
-                    time.sleep(0.02)
 
-                
-
+        # DEBUG
         if debug_astar:
             if current_node is not start:
                 debug_draw(current_node, COLOR_PURPLE, 1)
+                # time.sleep(0.01)
                 
     print("Path not found")
     for i in obstacle_types:

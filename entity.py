@@ -19,12 +19,20 @@ class Entity():
         self.id = Entity.new_id()
         MAP.add_entity_at(self, tile.x, tile.y)
         self.is_selected = False
+        self.is_dead = False
         self.tile = tile
         self.class_name = type(self).__name__.lower()
         self.name = self.new_name()
+
+    def die(self):
+        dead_units.add(self)
+        self.is_dead = True
 
     def select(self):
         self.is_selected = True
 
     def deselect(self):
         self.is_selected = False
+
+    def get_tile_string(self):
+        return str(self.tile.x) + " , " + str(self.tile.y)
