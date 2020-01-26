@@ -1,7 +1,7 @@
 import pygame
 from globals import *
 from block import Block
-from unit import Unit, Deer
+from unit import Unit, Deer, Person, Wolf
 from map import calculate_rect
 
 print("running draw.py")
@@ -17,10 +17,12 @@ def draw_text_at(font, string, pos):
     screen.blit(text, textRect)
 
 def draw_hud():
-    draw_text_pair((GRID_OFFSET_X, 7),  [ ("Deer", 0),     (str(len(MAP.get_entities_of_type(Deer))), 50) ])
+    draw_text_pair((GRID_OFFSET_X, 7),  [ ("Deer:", 0),     (str(len(MAP.get_entities_of_type(Deer))), 50) ])
+    draw_text_pair((GRID_OFFSET_X + 150, 7),  [ ("Wolves:", 0),     (str(len(MAP.get_entities_of_type(Wolf))), 50) ])
+    draw_text_pair((GRID_OFFSET_X + 300, 7),  [ ("People:", 0),     (str(len(MAP.get_entities_of_type(Person))), 50) ])
 
     offset_y = GRID_OFFSET_Y
-    for selected_unit in selected_units:
+    for selected_unit in selected_entities:
         if isinstance(selected_unit, Unit): 
             offset_y = offset_y + draw_unit_info(selected_unit, (GRID_SIZE + GRID_OFFSET_X + 5, offset_y))
         if isinstance(selected_unit, Block): 
@@ -33,18 +35,20 @@ def draw_text_pair(pos, string_offset_pairs):
         string = string_offset_pair[0]
         offset = string_offset_pair[1]
         draw_text_at(freesansbold_12, string, (x + offset, y))
-        
-            
+                   
 def draw_unit_info(unit, pos):
-    row_x = 50
-    draw_text_pair((pos[0], pos[1] + 0),  [ ("name", 0),     (unit.name, row_x) ])
-    draw_text_pair((pos[0], pos[1] + 15), [ ("class", 0),    (unit.class_name, row_x) ])
-    draw_text_pair((pos[0], pos[1] + 30), [ ("pos", 0),      (unit.get_tile_string(), row_x) ])
-    draw_text_pair((pos[0], pos[1] + 45), [ ("kills", 0),    (str(unit.kills), row_x)])
-    draw_text_pair((pos[0], pos[1] + 60), [ ("food", 0),     (str(unit.satiation_current), row_x) ])
-    draw_text_pair((pos[0], pos[1] + 75), [ ("target", 0),   (unit.get_target_string(), row_x) ])
-    draw_text_pair((pos[0], pos[1] + 90), [ ("status", 0),   (unit.get_status_string(), row_x) ])
-    return 120  
+    row_x = 55
+    draw_text_pair((pos[0], pos[1] + 0),  [ ("Name", 0),     (unit.name, row_x) ])
+    draw_text_pair((pos[0], pos[1] + 15), [ ("Class", 0),    (unit.class_name, row_x) ])
+    draw_text_pair((pos[0], pos[1] + 30), [ ("Pos", 0),      (unit.get_tile_string(), row_x) ])
+    draw_text_pair((pos[0], pos[1] + 45), [ ("Kills", 0),    (str(unit.kills), row_x)])
+    draw_text_pair((pos[0], pos[1] + 60), [ ("Food", 0),     (str(unit.satiation_current), row_x) ])
+    draw_text_pair((pos[0], pos[1] + 75), [ ("Target", 0),   (unit.get_target_string(), row_x) ])
+    draw_text_pair((pos[0], pos[1] + 90), [ ("Status", 0),   (unit.get_status_string(), row_x) ])
+    draw_text_pair((pos[0], pos[1] + 105), [ ("Hungery", 0),   (unit.get_hungery_string(), row_x) ])
+    draw_text_pair((pos[0], pos[1] + 120), [ ("Idle", 0),   (str(unit.idle_current), row_x) ])
+    draw_text_pair((pos[0], pos[1] + 135), [ ("Move In", 0),   (str(unit.move_current), row_x) ])
+    return 165  
 
 def draw_block_info(block, pos):
     row_x = 50 
@@ -71,11 +75,13 @@ def draw_box(corner_1, corner_3):
     pygame.draw.line(screen, color, corner_4, corner_3, 1)
 
 def draw_unit(unit):
-    if unit.is_selected:
-        outter_rect = calculate_rect(unit.tile, unit.radius+2)    
-        pygame.draw.rect(screen, COLOR_YELLOW, outter_rect)
     rect = calculate_rect(unit.tile, unit.radius)
     pygame.draw.rect(screen, unit.color, rect)
+
+def draw_unit_highlight(unit):
+    outter_rect = calculate_rect(unit.tile, unit.radius)    
+    pygame.draw.rect(screen, COLOR_YELLOW, outter_rect, 2)
+
 
 def draw_path(unit):
     if unit.is_selected:

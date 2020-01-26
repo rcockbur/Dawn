@@ -34,13 +34,15 @@ def filter_selection(entities):
 
 def move_to_tile(tile):
     # print("move_to_tile")
-    if len(selected_units) > 0:
+    will_draw = debug_pathfinding
+    if len(selected_entities) > 0:
         dest_unit = MAP.get_entity_at(tile)
-        for selected_unit in selected_units:
-            # if type(dest_unit) not in selected_unit.block_pathing_types:
-            if selected_unit.is_manual and type(dest_unit) not in [Block]:
-                path = astar(selected_unit.tile, tile, selected_unit.block_pathing_types, False)
-                selected_unit.path = path
+        for selected_entity in selected_entities:
+            # if type(dest_unit) not in selected_entity.block_pathing_types:
+            if selected_entity.is_manual and type(dest_unit) not in [Block]:
+                path = astar(selected_entity.tile, tile, selected_entity.block_pathing_types, will_draw)
+                will_draw = False
+                selected_entity.path = path
 
 
 def select_box(corner_1, corner_3):
@@ -50,16 +52,16 @@ def select_box(corner_1, corner_3):
     # print(len(entities), "in", corner_1.x, corner_1.y, "    ", corner_3.x, corner_3.y)
     for unit in entities:
         unit.select()
-        selected_units.add(unit)
+        selected_entities.add(unit)
         # print("Selected:", unit.name)
 
 def clear_selection():
-    if len(selected_units) > 0:
-        for unit in selected_units:
+    if len(selected_entities) > 0:
+        for unit in selected_entities:
             unit.deselect()
-        selected_units.clear()
+        selected_entities.clear()
 
 def stop():
-    for selected_unit in selected_units:
-        selected_unit.path.clear()
+    for selected_entity in selected_entities:
+        selected_entity.path.clear()
 

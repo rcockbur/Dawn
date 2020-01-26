@@ -4,12 +4,14 @@ import os, sys, pygame, random
 from point import Point
 from globals import *                               #imports point
 from map import Map, tile_from_pos, clamp_pos, pos_within_bounds
-from block import Block
+from block import Block, Grass
 from unit import Unit, Deer, Wolf, Person  
 from actions import move_to_tile, select_box, clear_selection, stop
-from draw import draw_hud, draw_grid, draw_box, draw_unit, draw_path, draw_black
+from draw import draw_hud, draw_grid, draw_box, draw_unit, draw_path, draw_black, draw_unit_highlight
 
 print("running main.py")
+
+
 
 pygame.display.set_caption('Dawn') 
 
@@ -24,19 +26,23 @@ for row in map_file:
             if symbol_index < TILE_COUNT:
                 if symbol == "s":
                     Block(Point(x = symbol_index, y = row_index))
+                elif symbol == "g":
+                    Grass(Point(x = symbol_index, y = row_index))
             symbol_index = symbol_index + 1
     row_index = row_index + 1
 
 # Create units
-a = Person(Point(x = TILE_COUNT-1, y = TILE_COUNT-1))
-b = Person(Point(x = TILE_COUNT-3, y = TILE_COUNT-1))
-c = Person(Point(x = TILE_COUNT-5, y = TILE_COUNT-1))
-d = Person(Point(x = TILE_COUNT-7, y = TILE_COUNT-1))
-e = Person(Point(x = TILE_COUNT-9, y = TILE_COUNT-1))
-for i in range(9):
-    Deer(Point(x=71,  y= 2+ 2*i))        
-for i in range(5):
-    Wolf(Point(x=30 + 2*i,  y=50))
+a = Person(Point(x = TILE_COUNT-3, y = TILE_COUNT-9))
+b = Person(Point(x = TILE_COUNT-5, y = TILE_COUNT-9))
+c = Person(Point(x = TILE_COUNT-7, y = TILE_COUNT-9))
+d = Person(Point(x = TILE_COUNT-9, y = TILE_COUNT-9))
+
+for i in range(3):
+    for j in range(3):
+        Wolf(Point(x=65 + 2 * i,  y= 2 + 2 * j))        
+for x in range(7):
+    for y in range(7):
+        Deer(Point(x=22 + 2 * x,  y=44 + 2 * y))
 
 
 done = False
@@ -93,27 +99,30 @@ while not done:
         for unit in dead_units:
             MAP.remove_entity(unit)
 
-        # draw background
-        draw_black()
-        draw_grid()              
+    # draw background
+    draw_black()
+    draw_grid()              
 
-        # draw units
-        for entity in MAP.get_entities():
-            draw_unit(entity)
-        for entity in MAP.get_entities():
-            if hasattr(entity, 'path'):
-                draw_path(entity)
+    # draw units
+    for entity in MAP.get_entities():
+        draw_unit(entity)
+    for entity in MAP.get_entities():
+        if entity.is_selected == True:
+            draw_unit_highlight(entity)
+    for entity in MAP.get_entities():
+        if hasattr(entity, 'path'):
+            draw_path(entity)
 
-        # draw UI panels
-        draw_hud()
+    # draw UI panels
+    draw_hud()
 
-        if mouse_pos_start is not None:
-            draw_box(mouse_pos_start, mouse_pos_clamped)
+    if mouse_pos_start is not None:
+        draw_box(mouse_pos_start, mouse_pos_clamped)
 
-        # flip
-        pygame.display.flip()
+    # flip
+    pygame.display.flip()
 
-        frames[0] = frames[0] + 1
+    frames[0] = frames[0] + 1
 
 print("------------------------ FIN ---------------------------")
 

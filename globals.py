@@ -1,10 +1,12 @@
 import pygame
 import random
+import os
 from point import Point, Vector  
 
 # Any file which imports globals, also imports Point and Vector, as well as Map (below)
 
 print("running globals.py 1")
+os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (250,50)
 
 random.seed()
 pygame.init()
@@ -13,6 +15,11 @@ NoneType = type(None)
 
 WINDOW_WIDTH = 1050
 WINDOW_HEIGHT = 865
+
+debug_search = False
+debug_pathfinding = False
+debug_path = False
+
 
 screen = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
 
@@ -79,7 +86,7 @@ frames = [0]
 seconds = [0]
 minutes = [0]
 
-selected_units = set()
+selected_entities = set()
 dead_units = set()
 
 from map import Map
