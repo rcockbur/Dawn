@@ -1,6 +1,6 @@
 import pygame
 from globals import *
-from block import Block
+from block import Block, Grass
 from unit import Unit, Deer, Person, Wolf
 from map import calculate_rect
 
@@ -22,11 +22,13 @@ def draw_hud():
     draw_text_pair((GRID_OFFSET_X + 300, 7),  [ ("People:", 0),     (str(len(MAP.get_entities_of_type(Person))), 50) ])
 
     offset_y = GRID_OFFSET_Y
-    for selected_unit in selected_entities:
-        if isinstance(selected_unit, Unit): 
-            offset_y = offset_y + draw_unit_info(selected_unit, (GRID_SIZE + GRID_OFFSET_X + 5, offset_y))
-        if isinstance(selected_unit, Block): 
-            offset_y = offset_y + draw_block_info(selected_unit, (GRID_SIZE + GRID_OFFSET_X + 5, offset_y))
+    for selected_entity in selected_entities:
+        if isinstance(selected_entity, Unit): 
+            offset_y = offset_y + draw_unit_info(selected_entity, (GRID_SIZE + GRID_OFFSET_X + 5, offset_y))
+        if isinstance(selected_entity, Block): 
+            offset_y = offset_y + draw_block_info(selected_entity, (GRID_SIZE + GRID_OFFSET_X + 5, offset_y))
+        if isinstance(selected_entity, Grass): 
+            offset_y = offset_y + draw_grass_info(selected_entity, (GRID_SIZE + GRID_OFFSET_X + 5, offset_y))
 
 def draw_text_pair(pos, string_offset_pairs):
     x = pos[0]
@@ -56,6 +58,14 @@ def draw_block_info(block, pos):
     draw_text_pair((pos[0], pos[1] + 15), [ ("class", 0),    (block.class_name, row_x) ])
     draw_text_pair((pos[0], pos[1] + 30), [ ("pos", 0),      (block.get_tile_string(), row_x) ])
     return 60
+
+def draw_grass_info(grass, pos):
+    row_x = 50 
+    draw_text_pair((pos[0], pos[1] + 0),  [ ("name", 0),     (grass.name, row_x) ])
+    draw_text_pair((pos[0], pos[1] + 15), [ ("class", 0),    (grass.class_name, row_x) ])
+    draw_text_pair((pos[0], pos[1] + 30), [ ("pos", 0),      (grass.get_tile_string(), row_x) ])
+    draw_text_pair((pos[0], pos[1] + 45), [ ("crop", 0),      (str(grass.crop_current), row_x) ])
+    return 75
 
 def draw_grid():
     for i in range(TILE_COUNT + 1):

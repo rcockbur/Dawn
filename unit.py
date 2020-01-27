@@ -5,7 +5,7 @@ from path import Path
 import pathfinding
 from map import calculate_rect
 from entity import Entity
-from block import Block
+from block import Block, Grass
 
 print("running unit.py")
 
@@ -17,18 +17,19 @@ class Unit(Entity):
         self.is_manual = False
         self.path = Path()
         self.kills = 0
-        self.satiation_current = 100
         self.satiation_max = 100
+        self.satiation_current = random.randint(0, self.satiation_max)
         self.idle_min = 1000 # after completing path
         self.idle_max = 2000
-        self.move_range_min = 60
-        self.move_range_max = 60
+        self.move_range_min = 20
+        self.move_range_max = 40
         self.move_period = 10
         self.move_current = 0
         self.status = IDLE
         self.idle_current = random.randint(0, self.idle_max / 2)
         # self.idle_current = random.randint(1, 100)
         self.kill_types = {}
+        self.eats_grass = False
 
         self.patience_max = 50
         self.patience_current = self.patience_max
@@ -46,23 +47,28 @@ class Unit(Entity):
             is_blocked = False
 
             # check hunger  
-            if frames[0] % 10 == 0:
+            if frames[0] % 20 == 0:
                 if self.satiation_current > 0:
                     self.satiation_current -= 1
                     self.color = self.satiation_color
                 else:
                     self.color = self.hungery_color
-            # generate new target if empty
+
+            # automatic unit is out of path - reset idle if first time without path, update path if idle has counted down, count down idle
             if self.path.size() == 0 and self.is_manual == False:
-                if self.idle_current == 0:
+                if self.status == MOVING:
                     self.idle_current = random.randint(self.idle_min, self.idle_max)
-                    if self.is_manual == False:
-                        self.update_target()
                 else:
-                    self.idle_current = self.idle_current - 1
+                    if self.idle_current == 0:
+                        if self.is_manual == False:
+                            self.update_target()
+                    else:
+                        self.idle_current = self.idle_current - 1
             # we ran into something
             if self.path.size() > 0:
                 unit = MAP.get_entity_at(self.path.points[0])
+                if type(unit) == Grass and self.eats_grass == True and unit.crop_current == unit.crop_max:
+                    self.eat_grass(unit)
                 if type(unit) in self.kill_types:
                     self.kill_unit(unit)
                 if type(unit) in self.block_move_types:
@@ -85,7 +91,7 @@ class Unit(Entity):
                     self.move_current = self.move_period
             else:
                 self.status = IDLE
-            self.move_current = self.move_current - 1 
+            self.move_current = max(self.move_current - 1, 0)
 
 
     def get_target_string(self):
@@ -146,20 +152,37 @@ class Deer(Unit):
         self.hungery_color = (160, 70, 0)
         self.satiation_color = (100, 40, 0)
         self.radius = UNIT_RADIUS_DEER
-        self.block_move_types = { Block, Deer, Wolf, Person }
-        self.block_pathing_types = { Block, Deer, Wolf, Person }
+        self.block_move_types = { Block, Deer, Wolf, Person, Grass }
+        self.block_pathing_types = { Block, Deer, Wolf, Person, Grass }
         self.idle_min = 50 # after completing path
         self.idle_max = 75
+        self.kill_types = {}
         self.move_range_min = 20
         self.move_range_max = 40
+        self.eats_grass = True
         Unit.init_b(self, tile)
 
     def update_target(self):
         move_range = random.randint(self.move_range_min, self.move_range_max)
-        tile = pathfinding.find_nearby_tile(self.tile, self.block_pathing_types, move_range, False)
+
+        if self.satiation_current == 0 and random.randint(1, 1) == 1:
+            tile = pathfinding.find_nearby_entity(self.tile, self.block_pathing_types, self.move_range_max, {Grass}, True, debug_search_food)
+            if tile is not None:
+                print(self.name, "found grass")
+        else:
+            tile = None
+
+        if tile is None:
+            tile = pathfinding.find_nearby_tile(self.tile, self.block_pathing_types, move_range, debug_search_tile)
+
         if tile is not None:
-            path = pathfinding.astar(self.tile, tile, self.block_pathing_types, False)
+            path = pathfinding.astar(self.tile, tile, self.block_pathing_types, debug_pathfinding)
             self.path = path
+
+    def eat_grass(self, grass):
+        self.satiation_current = self.satiation_max
+        grass.eaten()
+
 
 
 class Wolf(Unit):
@@ -168,8 +191,8 @@ class Wolf(Unit):
         self.hungery_color = (255, 151, 151)
         self.satiation_color = (191, 191, 191)
         self.radius = UNIT_RADIUS_WOLF
-        self.block_move_types = { Block, Wolf, Person }
-        self.block_pathing_types = { Block, Wolf, Person }
+        self.block_move_types = { Block, Wolf, Person, Grass }
+        self.block_pathing_types = { Block, Wolf, Person, Grass }
         self.kill_types = { Deer }
         self.idle_min = 500 # after completing path
         self.idle_max = 1000
@@ -179,13 +202,13 @@ class Wolf(Unit):
         move_range = random.randint(self.move_range_min, self.move_range_max)
 
         
-        if random.randint(1, 2) == 1 and self.satiation_current == 0:
-            tile = pathfinding.find_nearby_entity(self.tile, self.block_pathing_types, move_range, self.kill_types)
+        if random.randint(1, 1) == 1 and self.satiation_current == 0:
+            tile = pathfinding.find_nearby_entity(self.tile, self.block_pathing_types, move_range, self.kill_types, False, debug_search_food)
         else:
             tile = None
 
         if tile is None:
-            tile = pathfinding.find_nearby_tile(self.tile, self.block_pathing_types, move_range, debug_search)
+            tile = pathfinding.find_nearby_tile(self.tile, self.block_pathing_types, move_range, debug_search_tile)
 
         if tile is not None:
             path = pathfinding.astar(self.tile, tile, self.block_pathing_types, debug_pathfinding)

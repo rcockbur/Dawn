@@ -37,11 +37,11 @@ b = Person(Point(x = TILE_COUNT-5, y = TILE_COUNT-9))
 c = Person(Point(x = TILE_COUNT-7, y = TILE_COUNT-9))
 d = Person(Point(x = TILE_COUNT-9, y = TILE_COUNT-9))
 
-for i in range(3):
-    for j in range(3):
+for i in range(1):
+    for j in range(1):
         Wolf(Point(x=65 + 2 * i,  y= 2 + 2 * j))        
-for x in range(7):
-    for y in range(7):
+for x in range(2):
+    for y in range(2):
         Deer(Point(x=22 + 2 * x,  y=44 + 2 * y))
 
 
@@ -93,7 +93,7 @@ while not done:
 
         # update units
         for entity_id in list(MAP.entities):
-            if isinstance(MAP.entities[entity_id], Unit):
+            if isinstance(MAP.entities[entity_id], Unit) or isinstance(MAP.entities[entity_id], Grass):
                 MAP.entities[entity_id].update()
 
         for unit in dead_units:

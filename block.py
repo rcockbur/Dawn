@@ -19,7 +19,33 @@ class Grass(Entity):
         self.color_eaten = (0, 50, 0)
         self.color_grown = (0, 100, 0)
         self.radius = UNIT_RADIUS_BLOCK
-        self.remaining_crop = 1
+        self.crop_current = 100
+        self.crop_max = 100
+
+
+    def update(self):
+                    # check hunger  
+        if frames[0] % 20 == 0:
+            if self.crop_current < self.crop_max:
+                self.crop_current += 1
+
+        if self.crop_current == self.crop_max:
+            self.color = self.color_grown
+        else:
+            self.color = self.color_eaten
 
     def eaten(self):
-        self.remaining_crop = 0
+        self.crop_current = 0
+
+
+    def die(self):
+        dead_units.add(self)
+        self.is_dead = True
+
+
+
+
+
+
+
+

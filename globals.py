@@ -16,8 +16,9 @@ NoneType = type(None)
 WINDOW_WIDTH = 1050
 WINDOW_HEIGHT = 865
 
-debug_search = False
-debug_pathfinding = False
+debug_search_tile = True
+debug_search_food = True
+debug_pathfinding = True
 debug_path = False
 
 
