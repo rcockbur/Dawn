@@ -29,7 +29,7 @@ class Path:
     def print(self):
         r = "Path: "
         for point in self.points:
-            r = r + "(" + str(point.x) + "," + str(point.y) + ")"
+            r = r + "(" + str(point[0]) + "," + str(point[1]) + ")"
         print(r)
 
     def reverse(self):

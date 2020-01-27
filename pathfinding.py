@@ -23,14 +23,10 @@ def heuristic(a, b):
     # print(r)
     return r
 
-def tup_from_tile(tile):
-    return (tile.x, tile.y)
 
-def tile_from_tup(tup):
-    return Point(x = tup[0], y = tup[1])
 
 def debug_draw(tup, color, radius, width):
-    rect = calculate_rect(tile_from_tup(tup), radius)
+    rect = calculate_rect(tup, radius)
     pygame.draw.rect(screen, color, rect, width)
     pygame.display.flip()
 
@@ -38,21 +34,19 @@ def debug_draw(tup, color, radius, width):
 def astar(start_tile, end_tile, obstacle_types, debug):
     start_time = time.time()
 
-    start = tup_from_tile(start_tile)
-    goal = tup_from_tile(end_tile)
 
     nodes_checked = 0
 
     if debug:
-        debug_draw(goal, COLOR_BLUE, 3, 0)   
-        debug_draw(start, (0, 255, 0), TILE_RADIUS, 1)
+        debug_draw(end_tile, COLOR_BLUE, 3, 0)   
+        debug_draw(start_tile, (0, 255, 0), TILE_RADIUS, 1)
 
     close_set = set()
     came_from = {}
-    gscore = {start:0}
-    fscore = {start:heuristic(start, goal)}
+    gscore = {start_tile:0}
+    fscore = {start_tile:heuristic(start_tile, end_tile)}
     oheap = []
-    heappush(oheap, (fscore[start], nodes_checked, start))
+    heappush(oheap, (fscore[start_tile], nodes_checked, start_tile))
 
 
     while oheap:
@@ -68,25 +62,25 @@ def astar(start_tile, end_tile, obstacle_types, debug):
             proposed_g_score = gscore[current_node] + heuristic(current_node, neighbor)
             if 0 <= neighbor[0] < TILE_COUNT:
                 if 0 <= neighbor[1] < TILE_COUNT:
-                    if neighbor == goal:
+                    if neighbor == end_tile:
                         # if debug: 
                         #     time.sleep(0.1)
                         path = Path()
-                        path.append(tile_from_tup(neighbor))
+                        path.append(neighbor)
                         while current_node in came_from:
                             
                             #DEBUG
                             if debug:
-                                if current_node is not start:
+                                if current_node is not start_tile:
                                     debug_draw(current_node, (0, 0, 255), 2, 0)
                                     time.sleep(0.02)
-                            path.append(tile_from_tup(current_node))
+                            path.append(current_node)
                             current_node = came_from[current_node]
                         if debug: 
                             time.sleep(0.2)
                         return path.reverse()  
 
-                    if type(MAP.get_entity_at(tile_from_tup(neighbor))) in obstacle_types: continue
+                    if type(MAP.get_entity_at(neighbor)) in obstacle_types: continue
                 else: continue # out of bounds y         
             else: continue # out of bounds x
             if neighbor in close_set and proposed_g_score >= gscore.get(neighbor, 0):
@@ -96,7 +90,7 @@ def astar(start_tile, end_tile, obstacle_types, debug):
                 nodes_checked = nodes_checked - 1
                 came_from[neighbor] = current_node
                 gscore[neighbor] = proposed_g_score
-                fscore[neighbor] = proposed_g_score + heuristic(neighbor, goal)
+                fscore[neighbor] = proposed_g_score + heuristic(neighbor, end_tile)
                 #DEBUG
                 if debug:
                     debug_draw(neighbor, (0, 255, 0), 1, 0)
@@ -109,7 +103,7 @@ def astar(start_tile, end_tile, obstacle_types, debug):
 
         # DEBUG
         if debug:
-            if current_node is not start:
+            if current_node is not start_tile:
                 debug_draw(current_node, (0, 100, 0), 1, 0)
                 # time.sleep(0.01)
                 
@@ -122,11 +116,10 @@ def astar(start_tile, end_tile, obstacle_types, debug):
 def find_nearby_tile(start_tile, obstacle_types, range, debug):
     open_set = set()
     closed_set = set()
-    start_pos = tup_from_tile(start_tile)
     open_set.add(start_pos)
     iteration_count = 0
     if debug:
-        debug_draw(start_pos, (255, 255, 0), TILE_RADIUS, 1)
+        debug_draw(start_tile, (255, 255, 0), TILE_RADIUS, 1)
 
     while(len(open_set) > 0) and iteration_count < range:
         
@@ -137,7 +130,7 @@ def find_nearby_tile(start_tile, obstacle_types, range, debug):
 
             # DEBUG
             if debug:
-                if tup is not start_pos and iteration_count < range - 1:
+                if tup is not start_tile and iteration_count < range - 1:
                     debug_draw(tup, (100, 100, 0), 1, 0)
 
             if iteration_count < range - 1:
@@ -146,7 +139,7 @@ def find_nearby_tile(start_tile, obstacle_types, range, debug):
 
                     if 0 <= neighbor[0] < TILE_COUNT:
                         if 0 <= neighbor[1] < TILE_COUNT:
-                            neighbor_entity = MAP.get_entity_at(tile_from_tup(neighbor))
+                            neighbor_entity = MAP.get_entity_at(neighbor)
                             if type(neighbor_entity) in obstacle_types:
                                 continue
                         else:
@@ -163,14 +156,14 @@ def find_nearby_tile(start_tile, obstacle_types, range, debug):
                         # time.sleep(0.01)
         iteration_count += 1
 
-    closed_set.remove(start_pos)
+    closed_set.remove(start_tile)
     if len(closed_set) > 0:
         chosen_tup = random.choice(tuple(closed_set))
         if debug:
             # time.sleep(0.2)
             debug_draw(chosen_tup, (0, 0, 255), 3, 0)
             time.sleep(0.2)
-        return tile_from_tup(chosen_tup)
+        return chosen_tup
     else:
         return None
 
@@ -178,11 +171,10 @@ def find_nearby_tile(start_tile, obstacle_types, range, debug):
 def find_nearby_entity(start_tile, obstacle_types, range, entity_types, require_crops, debug):
     open_set = set()
     closed_set = set()
-    start_pos = tup_from_tile(start_tile)
-    open_set.add(start_pos)
+    open_set.add(start_tile)
     iteration_count = 0
     if debug:
-        debug_draw(start_pos, (255, 0, 0), TILE_RADIUS, 1)
+        debug_draw(start_tile, (255, 0, 0), TILE_RADIUS, 1)
     while(len(open_set) > 0) and iteration_count < range:
         
         working_set = open_set.copy()
@@ -192,7 +184,7 @@ def find_nearby_entity(start_tile, obstacle_types, range, entity_types, require_
 
             # DEBUG
             if debug:
-                if tup is not start_pos:
+                if tup is not start_tile:
                     debug_draw(tup, (100, 0, 0), 1, 0)
 
             if iteration_count < range - 1:
@@ -205,14 +197,14 @@ def find_nearby_entity(start_tile, obstacle_types, range, entity_types, require_
                             continue
                     else:
                         continue
-                    neighbor_entity = MAP.get_entity_at(tile_from_tup(neighbor))
+                    neighbor_entity = MAP.get_entity_at(neighbor)
                     if type(neighbor_entity) in entity_types:
                         if require_crops == False or neighbor_entity.crop_current == neighbor_entity.crop_max:
                             if debug:
                                 # time.sleep(0.2)
                                 debug_draw(neighbor, (0, 0, 255), 3, 0)
                                 time.sleep(0.2)
-                            return tile_from_tup(neighbor)
+                            return neighbor
 
                     if type(neighbor_entity) in obstacle_types:
                         continue

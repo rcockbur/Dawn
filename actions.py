@@ -49,7 +49,6 @@ def select_box(corner_1, corner_3):
     clear_selection()
     entities = MAP.get_entities_in_box(corner_1, corner_3)
     filter_selection(entities)
-    # print(len(entities), "in", corner_1.x, corner_1.y, "    ", corner_3.x, corner_3.y)
     for unit in entities:
         unit.select()
         selected_entities.add(unit)

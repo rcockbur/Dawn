@@ -17,7 +17,7 @@ class Entity():
 
     def __init__(self, tile):
         self.id = Entity.new_id()
-        MAP.add_entity_at(self, tile.x, tile.y)
+        MAP.add_entity_at(self, tile[0], tile[1])
         self.is_selected = False
         self.is_dead = False
         self.tile = tile
@@ -35,4 +35,4 @@ class Entity():
         self.is_selected = False
 
     def get_tile_string(self):
-        return str(self.tile.x) + " , " + str(self.tile.y)
+        return str(self.tile[0]) + " , " + str(self.tile[1])

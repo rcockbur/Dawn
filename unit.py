@@ -96,7 +96,7 @@ class Unit(Entity):
 
     def get_target_string(self):
         if self.path.size() > 0:
-            return str(self.path.get(0).x) + " , " + str(self.path.get(0).y)
+            return str(self.path.get(0)[0]) + " , " + str(self.path.get(0)[1])
         return "-"
 
     def get_status_string(self):
@@ -124,8 +124,8 @@ class Unit(Entity):
             print(self.name, "tried to move onto", unit.name)
             return False
         self.path.pop()
-        old_tile = self.tile.copy()
-        self.tile = target.copy()
+        old_tile = self.tile
+        self.tile = target
         MAP.move_entity(self, old_tile, self.tile)
         return True
           
@@ -136,7 +136,7 @@ class Unit(Entity):
         self.is_selected = False
 
     def print(self):
-        print("--Unit id: ", self.id, "  x: ", self.tile.x, "  y: ", self.tile.y)
+        print("--Unit id: ", self.id, "  x: ", self.tile[0], "  y: ", self.tile[1])
 
     def kill_unit(self, unit):
         print(self.name, "killed", unit.name)

@@ -1,7 +1,7 @@
 print("----------------------- START --------------------------")
 
 import os, sys, pygame, random
-from point import Point
+# from point import Point
 from globals import *                               #imports point
 from map import Map, tile_from_pos, clamp_pos, pos_within_bounds
 from block import Block, Grass
@@ -25,24 +25,24 @@ for row in map_file:
         for symbol in row.strip(' \t\n\r').split(","):
             if symbol_index < TILE_COUNT:
                 if symbol == "s":
-                    Block(Point(x = symbol_index, y = row_index))
+                    Block((symbol_index, row_index))
                 elif symbol == "g":
-                    Grass(Point(x = symbol_index, y = row_index))
+                    Grass((symbol_index, row_index))
             symbol_index = symbol_index + 1
     row_index = row_index + 1
 
 # Create units
-a = Person(Point(x = TILE_COUNT-3, y = TILE_COUNT-9))
-b = Person(Point(x = TILE_COUNT-5, y = TILE_COUNT-9))
-c = Person(Point(x = TILE_COUNT-7, y = TILE_COUNT-9))
-d = Person(Point(x = TILE_COUNT-9, y = TILE_COUNT-9))
+a = Person((TILE_COUNT-3, TILE_COUNT-9))
+b = Person((TILE_COUNT-5, TILE_COUNT-9))
+c = Person((TILE_COUNT-7, TILE_COUNT-9))
+d = Person((TILE_COUNT-9, TILE_COUNT-9))
 
 for i in range(1):
     for j in range(1):
-        Wolf(Point(x=65 + 2 * i,  y= 2 + 2 * j))        
+        Wolf((65 + 2 * i, 2 + 2 * j))        
 for x in range(2):
     for y in range(1):
-        Deer(Point(x=35 + 2 * x,  y=44 + 2 * y))
+        Deer((35 + 2 * x, 44 + 2 * y))
 
 
 done = False

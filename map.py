@@ -15,7 +15,7 @@ class Map:
                 self.grid[i].append(None)
         
     def tile_within_bounds(self, pos):
-        return pos.x >= 0 and pos.y >= 0 and pos.x < TILE_COUNT and pos.y < TILE_COUNT
+        return pos[0] >= 0 and pos[1] >= 0 and pos[0] < TILE_COUNT and pos[1] < TILE_COUNT
 
     def get_entities(self):
         return self.entities.values()
@@ -33,42 +33,42 @@ class Map:
 
     def remove_entity(self, entity):
         if self.get_entity_at(entity.tile) is not None:
-            self.grid[entity.tile.x][entity.tile.y] = None
+            self.grid[entity.tile[0]][entity.tile[1]] = None
         del self.entities[entity.id]
 
     def move_entity(self, entity, from_tile, to_tile):
-        target_entity = self.grid[to_tile.x][to_tile.y]
+        target_entity = self.grid[to_tile[0]][to_tile[1]]
         if target_entity is not None and target_entity.is_dead == False:
             print(entity.name, "stomping on", target_entity.name)
-        self.grid[from_tile.x][from_tile.y] = None
-        self.grid[to_tile.x][to_tile.y] = entity
+        self.grid[from_tile[0]][from_tile[1]] = None
+        self.grid[to_tile[0]][to_tile[1]] = entity
 
     def get_entity_at(self, tile):
-        if 0 <= tile.x < len(self.grid) and 0 <= tile.y < len(self.grid[0]):
-            return self.grid[tile.x][tile.y]
+        if 0 <= tile[0] < len(self.grid) and 0 <= tile[1] < len(self.grid[0]):
+            return self.grid[tile[0]][tile[1]]
         else:
             return None
 
     def get_entities_in_box(self, corner_1, corner_3):
-        if corner_1.x < corner_3.x:
-            low_x = corner_1.x
-            high_x = corner_3.x
+        if corner_1[0] < corner_3[0]:
+            low_x = corner_1[0]
+            high_x = corner_3[0]
         else:
-            low_x = corner_3.x
-            high_x = corner_1.x
+            low_x = corner_3[0]
+            high_x = corner_1[0]
 
-        if corner_1.y < corner_3.y:
-            low_y = corner_1.y
-            high_y = corner_3.y
+        if corner_1[1] < corner_3[1]:
+            low_y = corner_1[1]
+            high_y = corner_3[1]
         else:
-            low_y = corner_3.y
-            high_y = corner_1.y
+            low_y = corner_3[1]
+            high_y = corner_1[1]
 
 
         matching_entities = set()
         for entity in self.entities.values():
-            if low_x <= entity.tile.x <= high_x:
-                if low_y <= entity.tile.y <= high_y:
+            if low_x <= entity.tile[0] <= high_x:
+                if low_y <= entity.tile[1] <= high_y:
                     matching_entities.add(entity)
         return matching_entities
 
@@ -100,15 +100,15 @@ def tile_from_pos(pos):
     if GRID_OFFSET_X <= pos[0] <= GRID_OFFSET_X + GRID_SIZE and GRID_OFFSET_Y <= pos[1] <= GRID_OFFSET_Y + GRID_SIZE:
         tile_x = int((pos[0] - GRID_OFFSET_X) / TILE_SPACING)
         tile_y = int((pos[1] - GRID_OFFSET_Y) / TILE_SPACING)
-        return Point(tile_x, tile_y)
+        return (tile_x, tile_y)
     return None
 
 def pos_within_bounds(pos):
     return GRID_OFFSET_X < pos[0] < GRID_OFFSET_X + GRID_SIZE and GRID_OFFSET_Y < pos[1] < GRID_OFFSET_Y + GRID_SIZE
 
 def calculate_rect(tile, radius):
-        pos = Point(tile_get_mid_x(tile.x) - radius, tile_get_mid_y(tile.y) - radius)
-        return pygame.Rect(pos.x, pos.y, radius * 2, radius * 2)
+        pos = (tile_get_mid_x(tile[0]) - radius, tile_get_mid_y(tile[1]) - radius)
+        return pygame.Rect(pos[0], pos[1], radius * 2, radius * 2)
 
 def tile_get_mid_x(tile_x):
     return GRID_OFFSET_X + tile_x * TILE_SPACING + TILE_RADIUS + LINE_WIDTH / 2 + 1

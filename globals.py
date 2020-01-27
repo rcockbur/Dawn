@@ -1,7 +1,7 @@
 import pygame
 import random
 import os
-from point import Point, Vector  
+# from point import Point, Vector  
 
 # Any file which imports globals, also imports Point and Vector, as well as Map (below)
 
@@ -67,19 +67,7 @@ FRAMES_PER_SECOND = 100
 LEFT_BUTTON = 1
 RIGHT_BUTTON = 3
 
-NORTH = 0
-NORTH_EAST = 1
-EAST = 2
-SOUTH_EAST = 3
-SOUTH = 4
-SOUTH_WEST = 5
-WEST = 6
-NORTH_WEST = 7
 
-
-DIRECTIONS = [NORTH, NORTH_EAST, EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, WEST, NORTH_WEST]
-DIRECTION_VECTORS = [Vector(0,-1), Vector(1,-1), Vector(1,0), Vector(1,1), Vector(0,1), Vector(-1,1), Vector(-1,0), Vector(-1,-1)]
-DIRECTION_NAMES = ["NORTH", "NORTH_EAST", "EAST", "SOUTH_EAST", "SOUTH", "SOUTH_WEST", "WEST", "NORTH_WEST"]
 
 
 
