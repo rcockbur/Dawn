@@ -18,15 +18,15 @@ class Unit(Entity):
         self.path = Path()
         self.kills = 0
         self.satiation_max = 100
-        self.satiation_current = random.randint(0, self.satiation_max)
+        self.satiation_current = random.randint(0, 0)
         self.idle_min = 1000 # after completing path
         self.idle_max = 2000
         self.move_range_min = 30
         self.move_range_max = 60
-        self.move_period = 10
+        self.move_period = 20
         self.move_current = 0
         self.status = IDLE
-        self.idle_current = random.randint(0, self.idle_max)
+        self.idle_current = random.randint(0, self.idle_max/10)
         self.kill_types = {}
         self.eats_grass = False
         self.patience_max = 50
@@ -60,8 +60,7 @@ class Unit(Entity):
                     if self.idle_current == 0:
                         if self.is_manual == False:
                             self.update_target()
-                    else:
-                        self.idle_current = self.idle_current - 1
+                    
             # we ran into something
             if self.path.size() > 0:
                 unit = MAP.get_entity_at(self.path.points[0])
@@ -88,7 +87,10 @@ class Unit(Entity):
                     self.move()
                     self.move_current = self.move_period
             else:
+                if self.status == MOVING:
+                    self.idle_current = random.randint(self.idle_min, self.idle_max)
                 self.status = IDLE
+                self.idle_current = self.idle_current - 1
             self.move_current = max(self.move_current - 1, 0)
 
 
@@ -161,7 +163,7 @@ class Deer(Unit):
     def update_target(self):
         move_range = random.randint(self.move_range_min, self.move_range_max)
 
-        if self.satiation_current == 0 and random.randint(1, 2) == 1:
+        if self.satiation_current == 0 and random.randint(1, 1) == 1:
             tile = pathfinding.find_nearby_entity(self.tile, self.block_pathing_types, move_range, {Grass}, True, debug_search_food)
         else:
             tile = None
