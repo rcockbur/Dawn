@@ -21,16 +21,14 @@ class Unit(Entity):
         self.satiation_current = random.randint(0, self.satiation_max)
         self.idle_min = 1000 # after completing path
         self.idle_max = 2000
-        self.move_range_min = 20
-        self.move_range_max = 40
+        self.move_range_min = 30
+        self.move_range_max = 60
         self.move_period = 10
         self.move_current = 0
         self.status = IDLE
-        self.idle_current = random.randint(0, self.idle_max / 2)
-        # self.idle_current = random.randint(1, 100)
+        self.idle_current = random.randint(0, self.idle_max)
         self.kill_types = {}
         self.eats_grass = False
-
         self.patience_max = 50
         self.patience_current = self.patience_max
         
@@ -47,7 +45,7 @@ class Unit(Entity):
             is_blocked = False
 
             # check hunger  
-            if frames[0] % 20 == 0:
+            if frames[0] % 30 == 0:
                 if self.satiation_current > 0:
                     self.satiation_current -= 1
                     self.color = self.satiation_color
@@ -154,21 +152,17 @@ class Deer(Unit):
         self.radius = UNIT_RADIUS_DEER
         self.block_move_types = { Block, Deer, Wolf, Person, Grass }
         self.block_pathing_types = { Block, Deer, Wolf, Person, Grass }
-        self.idle_min = 50 # after completing path
-        self.idle_max = 75
+        self.idle_min = 500 # after completing path
+        self.idle_max = 500
         self.kill_types = {}
-        self.move_range_min = 20
-        self.move_range_max = 40
         self.eats_grass = True
         Unit.init_b(self, tile)
 
     def update_target(self):
         move_range = random.randint(self.move_range_min, self.move_range_max)
 
-        if self.satiation_current == 0 and random.randint(1, 1) == 1:
-            tile = pathfinding.find_nearby_entity(self.tile, self.block_pathing_types, self.move_range_max, {Grass}, True, debug_search_food)
-            if tile is not None:
-                print(self.name, "found grass")
+        if self.satiation_current == 0 and random.randint(1, 2) == 1:
+            tile = pathfinding.find_nearby_entity(self.tile, self.block_pathing_types, move_range, {Grass}, True, debug_search_food)
         else:
             tile = None
 
@@ -195,14 +189,14 @@ class Wolf(Unit):
         self.block_pathing_types = { Block, Wolf, Person, Grass }
         self.kill_types = { Deer }
         self.idle_min = 500 # after completing path
-        self.idle_max = 1000
+        self.idle_max = 500
         Unit.init_b(self, tile)
 
     def update_target(self):
         move_range = random.randint(self.move_range_min, self.move_range_max)
 
         
-        if random.randint(1, 1) == 1 and self.satiation_current == 0:
+        if self.satiation_current == 0 and random.randint(1, 2) == 1:
             tile = pathfinding.find_nearby_entity(self.tile, self.block_pathing_types, move_range, self.kill_types, False, debug_search_food)
         else:
             tile = None

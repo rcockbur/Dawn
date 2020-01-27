@@ -62,7 +62,6 @@ def astar(start_tile, end_tile, obstacle_types, debug):
         current_node = current_heap_bundle[2]
         close_set.add(current_node)
 
-
         # update neighbors
         for i, j in neighbors:
             neighbor = current_node[0] + i, current_node[1] + j            
@@ -70,8 +69,8 @@ def astar(start_tile, end_tile, obstacle_types, debug):
             if 0 <= neighbor[0] < TILE_COUNT:
                 if 0 <= neighbor[1] < TILE_COUNT:
                     if neighbor == goal:
-                        if debug: 
-                            time.sleep(0.5)
+                        # if debug: 
+                        #     time.sleep(0.1)
                         path = Path()
                         path.append(tile_from_tup(neighbor))
                         while current_node in came_from:
@@ -84,7 +83,7 @@ def astar(start_tile, end_tile, obstacle_types, debug):
                             path.append(tile_from_tup(current_node))
                             current_node = came_from[current_node]
                         if debug: 
-                            time.sleep(0.5)
+                            time.sleep(0.2)
                         return path.reverse()  
 
                     if type(MAP.get_entity_at(tile_from_tup(neighbor))) in obstacle_types: continue
@@ -169,8 +168,8 @@ def find_nearby_tile(start_tile, obstacle_types, range, debug):
         chosen_tup = random.choice(tuple(closed_set))
         if debug:
             # time.sleep(0.2)
-            debug_draw(chosen_tup, (0, 0, 255), TILE_RADIUS, 1)
-            time.sleep(0.4)
+            debug_draw(chosen_tup, (0, 0, 255), 3, 0)
+            time.sleep(0.2)
         return tile_from_tup(chosen_tup)
     else:
         return None
@@ -211,8 +210,8 @@ def find_nearby_entity(start_tile, obstacle_types, range, entity_types, require_
                         if require_crops == False or neighbor_entity.crop_current == neighbor_entity.crop_max:
                             if debug:
                                 # time.sleep(0.2)
-                                debug_draw(neighbor, (0, 0, 255), TILE_RADIUS, 1)
-                                time.sleep(0.4)
+                                debug_draw(neighbor, (0, 0, 255), 3, 0)
+                                time.sleep(0.2)
                             return tile_from_tup(neighbor)
 
                     if type(neighbor_entity) in obstacle_types:

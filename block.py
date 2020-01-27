@@ -25,7 +25,7 @@ class Grass(Entity):
 
     def update(self):
                     # check hunger  
-        if frames[0] % 20 == 0:
+        if frames[0] % 500 == 0:
             if self.crop_current < self.crop_max:
                 self.crop_current += 1
 
