@@ -7,7 +7,7 @@ from map import Map, tile_from_pos, clamp_pos, pos_within_bounds
 from block import Block, Grass
 from unit import Unit, Deer, Wolf, Person  
 from actions import move_to_tile, select_box, clear_selection, stop
-from draw import draw_hud, draw_grid, draw_box, draw_unit, draw_path, draw_black, draw_unit_highlight
+from draw import draw_hud, draw_grid, draw_box, draw_unit, draw_path, draw_black, draw_unit_highlight, draw_block
 
 print("running main.py")
 
@@ -20,10 +20,10 @@ map_file = open("map.txt", "r")
 # Create blocks from map.txt
 row_index = 0
 for row in map_file:    
-    if row_index < TILE_COUNT:
+    if row_index < TILE_COUNT_Y:
         symbol_index = 0
         for symbol in row.strip(' \t\n\r').split(","):
-            if symbol_index < TILE_COUNT:
+            if symbol_index < TILE_COUNT_X:
                 if symbol == "s":
                     Block((symbol_index, row_index))
                 elif symbol == "g":
@@ -32,17 +32,18 @@ for row in map_file:
     row_index = row_index + 1
 
 # Create units
-a = Person((TILE_COUNT-3, TILE_COUNT-9))
-b = Person((TILE_COUNT-5, TILE_COUNT-9))
-c = Person((TILE_COUNT-7, TILE_COUNT-9))
-d = Person((TILE_COUNT-9, TILE_COUNT-9))
+# d = Person((69, 66))
+# a = Person((70, 66))
+# b = Person((71, 66))
+# c = Person((72, 66))
 
-for i in range(1):
-    for j in range(1):
-        Wolf((65 + 2 * i, 2 + 2 * j))        
-for x in range(2):
-    for y in range(2):
-        Deer((35 + 6 * x, 44 + 2 * y))
+
+# for i in range(1):
+#     for j in range(1):
+#         Wolf((65 + i, 5 + j))        
+for x in range(4):
+    for y in range(4):
+        Deer((35 + x, 44 + y))
 
 
 done = False
@@ -106,7 +107,10 @@ while not done:
 
     # draw units
     for entity in MAP.get_entities():
-        draw_unit(entity)
+        if isinstance(entity, Unit):
+            draw_unit(entity)
+        else:
+            draw_block(entity)
     for entity in MAP.get_entities():
         if entity.is_selected == True:
             draw_unit_highlight(entity)

@@ -1,32 +1,43 @@
 import os, sys, pygame, random
 from globals import *
 from unit import Unit, Person
-from block import Block
+from block import Block, Grass
 from pathfinding import astar
 
 
 print("running actions.py")
 
 def filter_selection(entities):
+    removed_entities = set()
     person_selected = False
+    unit_selected = False
+    grass_selected = False
+
     for selected_entity in entities:
         if type(selected_entity) is Person:
             person_selected = True
+        if isinstance(selected_entity, Unit):
+            unit_selected = True
+        if isinstance(selected_entity, Grass):
+            grass_selected = True
 
-    non_person_unit_selected = False
-    for selected_entity in entities:
-        if isinstance(selected_entity, Unit) and not isinstance(selected_entity, Person):
-            non_person_unit_selected = True
+    
 
-    removed_entities = set()
+
+    
     if person_selected:
         for selected_entity in entities:
             if type(selected_entity) is not Person:
                 removed_entities.add(selected_entity)
         
-    elif non_person_unit_selected:
+    elif unit_selected:
         for selected_entity in entities:
             if not isinstance(selected_entity, Unit):
+                removed_entities.add(selected_entity)
+
+    elif grass_selected:
+        for selected_entity in entities:
+            if not isinstance(selected_entity, Grass):
                 removed_entities.add(selected_entity)
 
     entities -= removed_entities

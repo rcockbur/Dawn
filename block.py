@@ -20,7 +20,7 @@ class Grass(Entity):
         self.color_grown = (0, 100, 0)
         self.radius = UNIT_RADIUS_BLOCK
         self.crop_max = 100
-        self.crop_current = random.randint(self.crop_max / 2, self.crop_max)
+        self.crop_current = random.randint(0, self.crop_max)
 
 
     def update(self):

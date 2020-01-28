@@ -58,8 +58,8 @@ def astar(start_tile, end_tile, obstacle_types, debug):
         for i, j in neighbors:
             neighbor = current_node[0] + i, current_node[1] + j            
             proposed_g_score = g_score[current_node] + heuristic(current_node, neighbor)
-            if 0 <= neighbor[0] < TILE_COUNT:
-                if 0 <= neighbor[1] < TILE_COUNT:
+            if 0 <= neighbor[0] < TILE_COUNT_X:
+                if 0 <= neighbor[1] < TILE_COUNT_Y:
                     # Outro block
                     if neighbor == end_tile:
                         path = Path()
@@ -126,8 +126,8 @@ def find_nearby_tile(start_tile, obstacle_types, range, debug):
             if iteration_count < range - 1:
                 for i, j in neighbors:
                     neighbor = (tup[0] + i, tup[1] + j)
-                    if 0 <= neighbor[0] < TILE_COUNT:
-                        if 0 <= neighbor[1] < TILE_COUNT:
+                    if 0 <= neighbor[0] < TILE_COUNT_X:
+                        if 0 <= neighbor[1] < TILE_COUNT_Y:
                             neighbor_entity = MAP.get_entity_at_tile(neighbor)
                             if type(neighbor_entity) in obstacle_types: continue
                         else: continue
@@ -176,8 +176,8 @@ def find_nearby_entity(start_tile, obstacle_types, range, entity_type, require_c
             if iteration_count < range - 1:
                 for i, j in neighbors:
                     neighbor = (tup[0] + i, tup[1] + j)
-                    if 0 <= neighbor[0] < TILE_COUNT:
-                        if 0 <= neighbor[1] < TILE_COUNT: pass
+                    if 0 <= neighbor[0] < TILE_COUNT_X:
+                        if 0 <= neighbor[1] < TILE_COUNT_Y: pass
                         else: continue
                     else: continue
                         

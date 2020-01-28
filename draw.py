@@ -33,11 +33,11 @@ def draw_hud():
     offset_y = GRID_OFFSET_Y
     for selected_entity in selected_entities:
         if isinstance(selected_entity, Unit): 
-            offset_y = offset_y + draw_unit_info(selected_entity, (GRID_SIZE + GRID_OFFSET_X + 5, offset_y))
+            offset_y = offset_y + draw_unit_info(selected_entity, (GRID_SIZE_X + GRID_OFFSET_X + 5, offset_y))
         if isinstance(selected_entity, Block): 
-            offset_y = offset_y + draw_block_info(selected_entity, (GRID_SIZE + GRID_OFFSET_X + 5, offset_y))
+            offset_y = offset_y + draw_block_info(selected_entity, (GRID_SIZE_X + GRID_OFFSET_X + 5, offset_y))
         if isinstance(selected_entity, Grass): 
-            offset_y = offset_y + draw_grass_info(selected_entity, (GRID_SIZE + GRID_OFFSET_X + 5, offset_y))
+            offset_y = offset_y + draw_grass_info(selected_entity, (GRID_SIZE_X + GRID_OFFSET_X + 5, offset_y))
 
 
                    
@@ -77,9 +77,13 @@ def draw_grass_info(grass, pos):
     return offset_y + 15
 
 def draw_grid():
-    for i in range(TILE_COUNT + 1):
-        draw_line((GRID_OFFSET_X, i * TILE_SPACING + GRID_OFFSET_Y), (GRID_SIZE + GRID_OFFSET_X, i * TILE_SPACING + GRID_OFFSET_Y), COLOR_GRID, LINE_WIDTH)
-        draw_line((i * TILE_SPACING + GRID_OFFSET_X, GRID_OFFSET_Y), (i * TILE_SPACING + GRID_OFFSET_X, GRID_SIZE + GRID_OFFSET_Y), COLOR_GRID, LINE_WIDTH)
+    for i in range(TILE_COUNT_X + 1):
+        draw_line((i * TILE_SPACING + GRID_OFFSET_X, GRID_OFFSET_Y), (i * TILE_SPACING + GRID_OFFSET_X, GRID_SIZE_Y + GRID_OFFSET_Y), COLOR_GRID, LINE_WIDTH)
+        
+    for i in range(TILE_COUNT_Y+1):
+        draw_line((GRID_OFFSET_X, i * TILE_SPACING + GRID_OFFSET_Y), (GRID_SIZE_X + GRID_OFFSET_X, i * TILE_SPACING + GRID_OFFSET_Y), COLOR_GRID, LINE_WIDTH)
+        
+        
 
 def draw_line(pos_1, pos_2, color, width):
     pygame.draw.line(screen, color, pos_1, pos_2, width)
@@ -92,9 +96,17 @@ def draw_box(tile_1, tile_3):
     pygame.draw.line(screen, COLOR_SELECTION_BOX, tile_2, tile_3, 1)
     pygame.draw.line(screen, COLOR_SELECTION_BOX, tile_4, tile_3, 1)
 
+def draw_block(block):
+    rect = calculate_rect(block.tile, block.radius)
+    pygame.draw.rect(screen, block.color, rect)
+
+
 def draw_unit(unit):
     rect = calculate_rect(unit.tile, unit.radius)
     pygame.draw.rect(screen, unit.color, rect)
+    if unit.is_male == False and unit.is_fertile == True:
+        outter_rect = calculate_rect(unit.tile, unit.radius)    
+        pygame.draw.rect(screen, COLOR_PINK, outter_rect, 1)
 
 def draw_unit_highlight(unit):
     outter_rect = calculate_rect(unit.tile, unit.radius)    
