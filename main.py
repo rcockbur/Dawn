@@ -41,8 +41,8 @@ for i in range(1):
     for j in range(1):
         Wolf((65 + 2 * i, 2 + 2 * j))        
 for x in range(2):
-    for y in range(1):
-        Deer((35 + 2 * x, 44 + 2 * y))
+    for y in range(2):
+        Deer((35 + 6 * x, 44 + 2 * y))
 
 
 done = False
@@ -98,6 +98,7 @@ while not done:
 
         for unit in dead_units:
             MAP.remove_entity(unit)
+        sim_ticks[0] += 1
 
     # draw background
     draw_black()

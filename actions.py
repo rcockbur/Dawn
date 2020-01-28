@@ -36,7 +36,7 @@ def move_to_tile(tile):
     # print("move_to_tile")
     will_draw = debug_pathfinding
     if len(selected_entities) > 0:
-        dest_unit = MAP.get_entity_at(tile)
+        dest_unit = MAP.get_entity_at_tile(tile)
         for selected_entity in selected_entities:
             # if type(dest_unit) not in selected_entity.block_pathing_types:
             if selected_entity.is_manual and type(dest_unit) not in [Block]:

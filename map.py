@@ -27,14 +27,17 @@ class Map:
                 r.add(entity)
         return r
 
-    def add_entity_at(self, entity, x, y):
-        self.grid[x][y] = entity
+    def add_entity_at_tile(self, entity, tile):
+        self.grid[tile[0]][tile[1]] = entity
         self.entities[entity.id] = entity
 
     def remove_entity(self, entity):
-        if self.get_entity_at(entity.tile) is not None:
+        # print("death of", entity.name)
+        if self.get_entity_at_tile(entity.tile) is not None:
             self.grid[entity.tile[0]][entity.tile[1]] = None
         del self.entities[entity.id]
+        if entity in selected_entities:
+            selected_entities.remove(entity)
 
     def move_entity(self, entity, from_tile, to_tile):
         target_entity = self.grid[to_tile[0]][to_tile[1]]
@@ -43,7 +46,7 @@ class Map:
         self.grid[from_tile[0]][from_tile[1]] = None
         self.grid[to_tile[0]][to_tile[1]] = entity
 
-    def get_entity_at(self, tile):
+    def get_entity_at_tile(self, tile):
         if 0 <= tile[0] < len(self.grid) and 0 <= tile[1] < len(self.grid[0]):
             return self.grid[tile[0]][tile[1]]
         else:

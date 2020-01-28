@@ -1,5 +1,5 @@
 from globals import *
-
+import random
 from entity import Entity
 
 print("running block.py")
@@ -8,7 +8,7 @@ class Block(Entity):
     
     def __init__(self, tile):
         Entity.__init__(self, tile)
-        self.color = COLOR_GREY_DARK
+        self.color = COLOR_BLOCK
         self.radius = UNIT_RADIUS_BLOCK
 
 
@@ -19,13 +19,13 @@ class Grass(Entity):
         self.color_eaten = (0, 50, 0)
         self.color_grown = (0, 100, 0)
         self.radius = UNIT_RADIUS_BLOCK
-        self.crop_current = 100
         self.crop_max = 100
+        self.crop_current = random.randint(self.crop_max / 2, self.crop_max)
 
 
     def update(self):
                     # check hunger  
-        if frames[0] % 500 == 0:
+        if sim_ticks[0] % 30 == 0:
             if self.crop_current < self.crop_max:
                 self.crop_current += 1
 
