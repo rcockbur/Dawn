@@ -1,7 +1,6 @@
 from globals import *
 import random
 from entity import Entity
-
 print("running block.py")
 
 class Block(Entity):
@@ -22,13 +21,10 @@ class Grass(Entity):
         self.crop_max = 100
         self.crop_current = random.randint(0, self.crop_max)
 
-
     def update(self):
-                    # check hunger  
         if sim_ticks[0] % 30 == 0:
             if self.crop_current < self.crop_max:
                 self.crop_current += 1
-
         if self.crop_current == self.crop_max:
             self.color = self.color_grown
         else:
@@ -36,7 +32,6 @@ class Grass(Entity):
 
     def eaten(self):
         self.crop_current = 0
-
 
     def die(self):
         dead_units.add(self)

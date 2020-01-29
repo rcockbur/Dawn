@@ -1,6 +1,5 @@
 from globals import *       #includes point
 import pygame
-
 print("running map.py")
 
 class Map:

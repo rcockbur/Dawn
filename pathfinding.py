@@ -103,6 +103,10 @@ def astar(start_tile, end_tile, obstacle_types, debug):
         print(i)
     return Path()
 
+# RANDOM_TILE_IN_RANGE - go until range, select random at end
+# TILE_AT_RANGE        - go until range, select in last round - need to remember previous rounds set
+# FIRST_ENTITY_MATCHING- go until found or range
+# ALL_ENTITIES_MATCHING
 
 def find_nearby_tile(start_tile, obstacle_types, range, debug):
     open_set = set()
@@ -154,7 +158,7 @@ def find_nearby_tile(start_tile, obstacle_types, range, debug):
         return None
 
 
-def find_nearby_entity(start_tile, obstacle_types, range, entity_type, require_crops, require_male, debug):
+def find_nearby_entity(start_tile, obstacle_types, range, validate, debug):
     open_set = set()
     closed_set = set()
     open_set.add(start_tile)
@@ -182,15 +186,11 @@ def find_nearby_entity(start_tile, obstacle_types, range, entity_type, require_c
                     else: continue
                         
                     neighbor_entity = MAP.get_entity_at_tile(neighbor)
-                    if type(neighbor_entity) is entity_type:
-                        # Outro block
-                        if (require_crops == True and neighbor_entity.crop_current == neighbor_entity.crop_max) or (require_male == True and neighbor_entity.is_male == True) or (require_male == False and require_crops == False):
-                            if debug:
-                                debug_draw(neighbor, COLOR_PATH, 2, 0)
-                                time.sleep(0.2 * slow_factor)
-                            return neighbor
-
-                        
+                    if validate(neighbor_entity):
+                        if debug:
+                            debug_draw(neighbor, COLOR_PATH, 2, 0)
+                            time.sleep(0.2 * slow_factor)
+                        return neighbor
 
                     if type(neighbor_entity) in obstacle_types: continue
                     if neighbor in closed_set or neighbor in open_set: continue

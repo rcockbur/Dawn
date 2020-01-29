@@ -3,10 +3,7 @@ from globals import *
 from block import Block, Grass
 from unit import Unit, Deer, Person, Wolf
 from map import calculate_rect
-
 print("running draw.py")
-
-
 
 freesansbold_12 = pygame.font.Font('freesansbold.ttf', 12) 
 
@@ -38,8 +35,6 @@ def draw_hud():
             offset_y = offset_y + draw_block_info(selected_entity, (GRID_SIZE_X + GRID_OFFSET_X + 5, offset_y))
         if isinstance(selected_entity, Grass): 
             offset_y = offset_y + draw_grass_info(selected_entity, (GRID_SIZE_X + GRID_OFFSET_X + 5, offset_y))
-
-
                    
 def draw_unit_info(unit, pos):
     row_x = 55
@@ -83,8 +78,6 @@ def draw_grid():
     for i in range(TILE_COUNT_Y+1):
         draw_line((GRID_OFFSET_X, i * TILE_SPACING + GRID_OFFSET_Y), (GRID_SIZE_X + GRID_OFFSET_X, i * TILE_SPACING + GRID_OFFSET_Y), COLOR_GRID, LINE_WIDTH)
         
-        
-
 def draw_line(pos_1, pos_2, color, width):
     pygame.draw.line(screen, color, pos_1, pos_2, width)
 
@@ -100,7 +93,6 @@ def draw_block(block):
     rect = calculate_rect(block.tile, block.radius)
     pygame.draw.rect(screen, block.color, rect)
 
-
 def draw_unit(unit):
     rect = calculate_rect(unit.tile, unit.radius)
     pygame.draw.rect(screen, unit.color, rect)
@@ -111,7 +103,6 @@ def draw_unit(unit):
 def draw_unit_highlight(unit):
     outter_rect = calculate_rect(unit.tile, unit.radius)    
     pygame.draw.rect(screen, COLOR_SELECTION_HIGHLIGHT, outter_rect, 1)
-
 
 def draw_path(unit):
     if unit.is_selected:

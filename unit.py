@@ -6,7 +6,6 @@ import pathfinding
 from map import calculate_rect
 from entity import Entity
 from block import Block, Grass
-
 print("running unit.py")
 
 class Unit(Entity):
@@ -24,16 +23,16 @@ class Unit(Entity):
         self.kills = 0
         self.satiation_max = 100
         self.satiation_min = -200
-        self.idle_min = 50
-        self.idle_max = 300
+        self.idle_min = 10
+        self.idle_max = 60
         self.move_range_idle = 25
         self.move_range_hunt = 50
-        self.move_period = 18
+        self.move_period = 3
         self.move_current = 0
         self.status = IDLE
         self.kill_types = {}
         self.eats_grass = False
-        self.patience_max = 50
+        self.patience_max = 10
         self.is_male = Unit.get_gender()
         if self.is_male == False:
             self.is_fertile = True
@@ -60,7 +59,6 @@ class Unit(Entity):
                 if self.satiation_current > self.satiation_min:
                     self.satiation_current -= 1
                     if self.satiation_current > 0:
-                        
                         self.color = self.satiation_color
                     else:
                         self.color = self.hungery_color
@@ -73,8 +71,7 @@ class Unit(Entity):
             if sim_ticks[0] % 30 == 0 and self.is_male == False:
                 if self.is_fertile == False:
                     if random.randint(0, 100) == 0:
-                        self.is_fertile = True
-                
+                        self.is_fertile = True    
 
             # update target if automatic, out of path, and idle_current is out
             if self.is_manual == False:
@@ -116,7 +113,6 @@ class Unit(Entity):
                 self.idle_current = max(self.idle_current - 1, 0)
             self.move_current = max(self.move_current - 1, 0)
 
-
     def get_target_string(self):
         if self.path.size() > 0:
             return str(self.path.get(0)[0]) + " , " + str(self.path.get(0)[1])
@@ -145,7 +141,6 @@ class Unit(Entity):
             return "Yes"
         else:
             return "No"
-
 
     def move(self):
         target = self.path.points[0]
@@ -191,7 +186,6 @@ class Unit(Entity):
         self.satiation_current -= 100
 
         
-
 class Deer(Unit):
 
     def __init__(self, tile):
@@ -214,9 +208,9 @@ class Deer(Unit):
             move_range_idle = self.move_range_idle
 
         if self.satiation_current < 1 and random.randint(1, 1) == 1:
-            tile = pathfinding.find_nearby_entity(self.tile, self.block_pathing_types, move_range_hunt, Grass, True, False, debug_search_food)
+            tile = pathfinding.find_nearby_entity(self.tile, self.block_pathing_types, move_range_hunt, lambda e : isinstance(e, Grass) and e.crop_current == e.crop_max, debug_search_food)
         elif self.is_male == False and random.randint(1, 1) == 1:
-            tile = pathfinding.find_nearby_entity(self.tile, self.block_pathing_types, move_range_hunt, Deer, False, True, debug_search_food)
+            tile = pathfinding.find_nearby_entity(self.tile, self.block_pathing_types, move_range_hunt, lambda e : isinstance(e, Deer) and e.is_male == True, debug_search_food)
         else:
             tile = None
 
@@ -226,9 +220,6 @@ class Deer(Unit):
         if tile is not None:
             path = pathfinding.astar(self.tile, tile, self.block_pathing_types, debug_pathfinding)
             self.path = path
-
-
-
 
 
 class Wolf(Unit):
@@ -243,7 +234,6 @@ class Wolf(Unit):
         Unit.init_b(self, tile)
 
     def update_target(self):
-        
         if self.satiation_current < self.satiation_min / 2:
             move_range_hunt = int(self.move_range_hunt * 1.5)
             move_range_idle = int(self.move_range_hunt * 1.5)
@@ -252,7 +242,7 @@ class Wolf(Unit):
             move_range_idle = self.move_range_idle
         
         if self.satiation_current < 1 and random.randint(1, 1) == 1:
-            tile = pathfinding.find_nearby_entity(self.tile, self.block_pathing_types, move_range_hunt, Deer, False, False, debug_search_food)
+            tile = pathfinding.find_nearby_entity(self.tile, self.block_pathing_types, move_range_hunt, lambda e : isinstance(e, Deer), debug_search_food)
         else:
             tile = None
 
@@ -262,8 +252,6 @@ class Wolf(Unit):
         if tile is not None:
             path = pathfinding.astar(self.tile, tile, self.block_pathing_types, debug_pathfinding)
             self.path = path
-
-
 
 class Person(Unit):
     def __init__(self, tile):
@@ -275,7 +263,7 @@ class Person(Unit):
         self.kill_types = { Deer, Wolf }
         self.block_pathing_types = { Block }
         self.block_move_types = { Block, Person }
-        self.patience_max = 100
+        self.patience_max = 20
         self.satiation_max = 1000
         Unit.init_b(self, tile)
 

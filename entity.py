@@ -1,6 +1,5 @@
 from globals import *
 import pygame, random
-
 print("running entity.py")
 
 class Entity():
@@ -13,15 +12,11 @@ class Entity():
         return Entity.id_index - 1
 
     def new_name(self):
-        # Entity.name_index += 1
-        # return self.class_name + "_" + str(Entity.name_index - 1)
-
         if self.class_name not in Entity.name_indexes:
             Entity.name_indexes[self.class_name] = 0
 
         Entity.name_indexes[self.class_name] += 1
         return self.class_name + str(Entity.name_indexes[self.class_name])
-
 
     def __init__(self, tile):
         self.id = Entity.new_id()

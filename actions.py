@@ -3,8 +3,6 @@ from globals import *
 from unit import Unit, Person
 from block import Block, Grass
 from pathfinding import astar
-
-
 print("running actions.py")
 
 def filter_selection(entities):
@@ -20,10 +18,6 @@ def filter_selection(entities):
             unit_selected = True
         if isinstance(selected_entity, Grass):
             grass_selected = True
-
-    
-
-
     
     if person_selected:
         for selected_entity in entities:
@@ -42,19 +36,15 @@ def filter_selection(entities):
 
     entities -= removed_entities
 
-
 def move_to_tile(tile):
-    # print("move_to_tile")
     will_draw = debug_pathfinding
     if len(selected_entities) > 0:
         dest_unit = MAP.get_entity_at_tile(tile)
         for selected_entity in selected_entities:
-            # if type(dest_unit) not in selected_entity.block_pathing_types:
             if selected_entity.is_manual and type(dest_unit) not in [Block]:
                 path = astar(selected_entity.tile, tile, selected_entity.block_pathing_types, will_draw)
                 will_draw = False
                 selected_entity.path = path
-
 
 def select_box(corner_1, corner_3):
     clear_selection()
