@@ -14,17 +14,15 @@ WINDOW_HEIGHT = 1080
 
 screen = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
 
-FPS = 10
+FPS = 8
 frames = [0]
 sim_ticks = [0]
 
 selected_entities = set()
 dead_units = set()
 
-debug_search_tile = False #or True
-debug_search_food = False #or True
 debug_pathfinding = False #or True
-debug_performance = False or True
+debug_performance = False #or True
 
 GRID_OFFSET_X = 10
 GRID_OFFSET_Y = 25
@@ -73,13 +71,12 @@ COLOR_WOLF = (170, 170, 170)            # grey
 COLOR_WOLF_HUNGERY = (255, 225, 225)    # light red
 COLOR_PERSON = (0, 0, 100)              # dull blue
 COLOR_PERSON_HUNGERY = (0, 0, 255)      # bright blue
-COLOR_PATH = COLOR_BLUE
-COLOR_ASTAR_PRIMARY = COLOR_GREEN
-COLOR_ASTAR_SECONDARY = COLOR_GREEN_DARK
-COLOR_FIND_TILE_PRIMARY = COLOR_YELLOW
-COLOR_FIND_TILE_SECONDARY = COLOR_YELLOW_DARK
-COLOR_FIND_ENTITY_PRIMARY = COLOR_RED
-COLOR_FIND_ENTITY_SECONDARY = COLOR_RED_DARK
+COLOR_OPEN_HEAP = COLOR_RED
+COLOR_CLOSED_SET = COLOR_BLUE
+COLOR_PATH_IDLE = COLOR_GREEN
+COLOR_PATH_HUNT = COLOR_RED
+COLOR_PATH_MATE = COLOR_PINK
+COLOR_PATH_SELECTED = COLOR_YELLOW
 
 from map import Map # Any file which imports globals also imports both Map and MAP from map.py
 print("running globals.py 2")

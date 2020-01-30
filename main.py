@@ -3,6 +3,7 @@ from globals import *                               #imports point
 from map import Map, tile_from_pos, clamp_pos, pos_within_bounds
 from block import Block, Grass
 from unit import Unit, Deer, Wolf, Person  
+# from pathfinding import find_nearby_tile
 from actions import move_to_tile, select_box, clear_selection, stop
 from draw import draw_hud, draw_grid, draw_box, draw_unit, draw_path, draw_black, draw_unit_highlight, draw_block
 print("running main.py")
@@ -25,12 +26,13 @@ for row in map_file:
             symbol_index = symbol_index + 1
     row_index = row_index + 1
 
-# for i in range(1):
-#     for j in range(1):
-#         Wolf((65 + i, 5 + j))        
+for i in range(2):
+    for j in range(1):
+        Wolf((65 + 2*i, 5 + 2*j))        
 for x in range(4):
     for y in range(4):
-        Deer((35 + x, 44 + y))
+        # tile = find_nearby_tile
+        Deer((35 + 2*x, 44 + 2*y))
 
 done = False
 paused = False
@@ -39,8 +41,8 @@ time_stamp = pygame.time.get_ticks()
 
 while not done:
     
-    print("Performance:",str(pygame.time.get_ticks() - time_stamp), "/", 1000//FPS, "ms used" ) 
-    clock.tick(FPS)
+    if debug_performance: print("Performance:",str(pygame.time.get_ticks() - time_stamp), "/", 1000//FPS, "ms used" ) 
+    
     time_stamp = pygame.time.get_ticks()    
     mouse_pos = pygame.mouse.get_pos()
     mouse_pos_clamped = clamp_pos(mouse_pos)
@@ -104,6 +106,7 @@ while not done:
 
     pygame.display.flip()
     frames[0] = frames[0] + 1
+    clock.tick(FPS)
     
 print("------------------------ FIN ---------------------------")
 

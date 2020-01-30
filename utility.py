@@ -6,6 +6,8 @@ print("running utility.py")
 
 string_length = 5
 
+def print_point(point):
+    print(point[0], "," , point[1])
 
 def measure(func):
     def wrapper(*args, **kwargs):

@@ -4,7 +4,7 @@ from math import sqrt
 from heapq import heappush, heappop
 from map import calculate_rect
 import time
-
+from utility import measure, print_point
 print("running pathfinding.py")
 
 rt_2 = sqrt(2)
@@ -19,8 +19,8 @@ def heuristic(a, b):
     delta_y = abs(a[1] - b[1])
     diagonals = min(delta_x, delta_y)
     orthos = abs(delta_x - delta_y)
-    r = diagonals * 14 + orthos * 10
-    return r
+    return diagonals * 14 + orthos * 10
+    
 
 
 def debug_draw(tup, color, radius, width):
@@ -31,7 +31,7 @@ def debug_draw(tup, color, radius, width):
 def string_from_point(point):
     return str(point[0]) + "," + str(point[1])
 
-# @measure
+@measure
 def astar(start_tile, end_tile, obstacle_types, debug):
     start_time = time.time()
     nodes_checked = 0
@@ -89,7 +89,7 @@ def astar(start_tile, end_tile, obstacle_types, debug):
                 g_score[neighbor] = proposed_g_score
                 f_score[neighbor] = proposed_g_score + heuristic(neighbor, end_tile)
                 
-                if debug:
+                if debug and proposed_d_score >= min_range:
                     debug_draw(neighbor, COLOR_ASTAR_PRIMARY, 1, 0)
 
                 heappush(open_heap, (f_score[neighbor], nodes_checked, neighbor))
@@ -103,102 +103,102 @@ def astar(start_tile, end_tile, obstacle_types, debug):
         print(i)
     return Path()
 
-# RANDOM_TILE_IN_RANGE - go until range, select random at end
-# TILE_AT_RANGE        - go until range, select in last round - need to remember previous rounds set
-# FIRST_ENTITY_MATCHING- go until found or range
-# ALL_ENTITIES_MATCHING
 
-def find_nearby_tile(start_tile, obstacle_types, range, debug):
-    open_set = set()
-    closed_set = set()
-    open_set.add(start_tile)
-    iteration_count = 0
+
+def create_path(tile, came_from, debug, debug_color):
+    if debug: 
+        debug_draw(tile, debug_color, 2, 0)
+        time.sleep(0.7 * slow_factor)
+    path = Path()
+    path.append(tile)
+
+    while tile in came_from:
+        path.append(tile)
+        tile = came_from[tile]
+
+    path = path.reverse()
+    for tile in path.points:
+        if debug:
+            debug_draw(tile, debug_color, 2, 0)
+            time.sleep(0.02 * slow_factor)                  
+
+    return path
+
+def choose_random(set):
+    return random.choice(set)
+
+# RANDOM_TILE - including a min and max range, select and return a random tile
+# FIRST_ENTITY_MATCHING- go until range, or until found, return an entity or none
+# ALL_ENTITIES_MATCHING-  return a tuple containing each entity
+
+# @measure
+def get_path(start_tile, min_range, max_range, obstacle_types, validate_entity, choose_entity, debug, debug_color):
+    min_range = min_range * 10
+    max_range = max_range * 10
+    find_entity = validate_entity is not None
 
     if debug:
-        debug_draw(start_tile, COLOR_FIND_TILE_PRIMARY, TILE_RADIUS, 1)
+        debug_draw(start_tile, COLOR_YELLOW, TILE_RADIUS, 1)
+        time.sleep(0.2 * slow_factor)
+    closed_set = set()
+    came_from = {}
+    d_score = {start_tile : 0}
+    open_heap = []
+    matching_entities = set()
+    tiles_checked = 0
+    heappush(open_heap, (d_score[start_tile], tiles_checked, start_tile))
 
-    while(len(open_set) > 0) and iteration_count < range:
-        working_set = open_set.copy()
-        open_set.clear()
-        for tup in working_set:
-            closed_set.add(tup)
+    while open_heap:
+        current_heap_bundle = heappop(open_heap)
+        current_d_score = current_heap_bundle[0]
+        # time_stamp = current_heap_bundle[1]
+        current_tile = current_heap_bundle[2]
+        current_entity = MAP.get_entity_at_tile(current_tile)
+        if find_entity:
+            if validate_entity(current_entity): 
+                # print("valid entity found")
+                matching_entities.add(current_entity)
 
-            if debug:
-                if tup is not start_tile and iteration_count < range - 1:
-                    debug_draw(tup, COLOR_FIND_TILE_SECONDARY, 1, 0)
+        closed_set.add(current_tile)
 
-            if iteration_count < range - 1:
-                for i, j in neighbors:
-                    neighbor = (tup[0] + i, tup[1] + j)
-                    if 0 <= neighbor[0] < TILE_COUNT_X:
-                        if 0 <= neighbor[1] < TILE_COUNT_Y:
-                            neighbor_entity = MAP.get_entity_at_tile(neighbor)
-                            if type(neighbor_entity) in obstacle_types: continue
-                        else: continue
-                    else: continue
-                    if neighbor in closed_set or neighbor in open_set: continue
-                    open_set.add(neighbor)
+        for i, j in neighbors:
+            neighbor = current_tile[0] + i, current_tile[1] + j
 
-                    if debug:
-                        debug_draw(neighbor, COLOR_FIND_TILE_PRIMARY, 1, 0)
+            if not (0 <= neighbor[0] < TILE_COUNT_X and 0 <= neighbor[1] < TILE_COUNT_Y): continue
 
-        iteration_count += 1
+            proposed_d_score = d_score[current_tile] + heuristic(current_tile, neighbor)
+            if proposed_d_score > max_range: continue
+            if neighbor in closed_set and d_score[neighbor] <= proposed_d_score: continue # skip if we already checked it and dont have a better score
 
-    # Outro block
-    closed_set.remove(start_tile)
-    if len(closed_set) > 0:
-        chosen_tup = random.choice(tuple(closed_set))
+            neighbor_entity = MAP.get_entity_at_tile(neighbor) 
+            if type(neighbor_entity) in obstacle_types: continue # means we cant generate a path to a block that is unpathable. we could have to put an escape            
+
+            if proposed_d_score < d_score.get(neighbor, 0) or neighbor not in [i[2] for i in open_heap]:
+                # tiles_checked = tiles_checked - 1
+                came_from[neighbor] = current_tile
+                d_score[neighbor] = proposed_d_score
+                heappush(open_heap, (d_score[neighbor], tiles_checked, neighbor))
+
+
+                if debug and proposed_d_score > min_range:
+                    debug_draw(neighbor, COLOR_OPEN_HEAP, 1, 0)
 
         if debug:
-            debug_draw(chosen_tup, COLOR_PATH, 2, 0)
-            time.sleep(0.2 * slow_factor)
-
-        return chosen_tup
-    else:
-        return None
-
-
-def find_nearby_entity(start_tile, obstacle_types, range, validate, debug):
-    open_set = set()
-    closed_set = set()
-    open_set.add(start_tile)
-    iteration_count = 0
-
-    if debug:
-        debug_draw(start_tile, COLOR_FIND_ENTITY_PRIMARY, TILE_RADIUS, 1)
-
-    while(len(open_set) > 0) and iteration_count < range:
-        working_set = open_set.copy()
-        open_set.clear()
-        for tup in working_set:
-            closed_set.add(tup)
-            
-            if debug:
-                if tup is not start_tile:
-                    debug_draw(tup, COLOR_FIND_ENTITY_SECONDARY, 1, 0)
-
-            if iteration_count < range - 1:
-                for i, j in neighbors:
-                    neighbor = (tup[0] + i, tup[1] + j)
-                    if 0 <= neighbor[0] < TILE_COUNT_X:
-                        if 0 <= neighbor[1] < TILE_COUNT_Y: pass
-                        else: continue
-                    else: continue
-                        
-                    neighbor_entity = MAP.get_entity_at_tile(neighbor)
-                    if validate(neighbor_entity):
-                        if debug:
-                            debug_draw(neighbor, COLOR_PATH, 2, 0)
-                            time.sleep(0.2 * slow_factor)
-                        return neighbor
-
-                    if type(neighbor_entity) in obstacle_types: continue
-                    if neighbor in closed_set or neighbor in open_set: continue
-                    open_set.add(neighbor)
-
-                    if debug:
-                        debug_draw(neighbor, COLOR_FIND_ENTITY_PRIMARY, 1, 0)
-        iteration_count += 1
-
-    return None
+            if current_tile is not start_tile and current_d_score > min_range:
+                debug_draw(current_tile, COLOR_CLOSED_SET, 1, 0)
+    
+    if find_entity == True:
+        if len(matching_entities) > 0:
+            matching_entity = choose_entity(tuple(matching_entities))
+            path = create_path(matching_entity.tile, came_from, debug, debug_color)
+            return path
         
+    
+    closed_set = set(filter(lambda tile : d_score[tile] > min_range, closed_set))
+    if len(closed_set) > 0:
+        chosen_tile = random.choice(tuple(closed_set))
+        path = create_path(chosen_tile, came_from, debug, COLOR_PATH_IDLE)
+        return path
+    else:
+        return Path()
+

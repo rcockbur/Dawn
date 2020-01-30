@@ -18,11 +18,11 @@ class Grass(Entity):
         self.color_eaten = (0, 50, 0)
         self.color_grown = (0, 100, 0)
         self.radius = UNIT_RADIUS_BLOCK
-        self.crop_max = 100
-        self.crop_current = random.randint(0, self.crop_max)
+        self.crop_max = 25
+        self.crop_current = random.randint(self.crop_max, self.crop_max)
 
     def update(self):
-        if sim_ticks[0] % 30 == 0:
+        if sim_ticks[0] % 8 == 0:
             if self.crop_current < self.crop_max:
                 self.crop_current += 1
         if self.crop_current == self.crop_max:

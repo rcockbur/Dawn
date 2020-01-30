@@ -109,7 +109,7 @@ def draw_path(unit):
         if unit.path is not None:
             for point in unit.path.points:
                 rect = calculate_rect(point, 2)
-                pygame.draw.rect(screen, COLOR_PATH, rect)
+                pygame.draw.rect(screen, COLOR_PATH_SELECTED, rect)
 
 def draw_black():
     screen.fill(COLOR_BACKGROUND) 
