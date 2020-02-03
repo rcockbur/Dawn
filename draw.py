@@ -23,9 +23,11 @@ def draw_text_pair(pos, offset_y, string_offset_pairs):
     return offset_y + 15
 
 def draw_hud():
-    draw_text_pair((GRID_OFFSET_X + 0, 7),   0, [ ("Deer:", 0),     (str(len(MAP.get_entities_of_type(Deer))), 50) ])
-    draw_text_pair((GRID_OFFSET_X + 150, 7), 0, [ ("Wolves:", 0),     (str(len(MAP.get_entities_of_type(Wolf))), 50) ])
-    draw_text_pair((GRID_OFFSET_X + 300, 7), 0, [ ("People:", 0),     (str(len(MAP.get_entities_of_type(Person))), 50) ])
+    draw_text_pair((GRID_OFFSET_X + 0, 7),   0, [ ("Deer:", 0),     (str(len(MAP.get_entities_of_type(Deer))), 100) ])
+    draw_text_pair((GRID_OFFSET_X + 200, 7), 0, [ ("Wolves:", 0),     (str(len(MAP.get_entities_of_type(Wolf))), 100) ])
+    draw_text_pair((GRID_OFFSET_X + 400, 7), 0, [ ("People:", 0),     (str(len(MAP.get_entities_of_type(Person))), 100) ])
+    draw_text_pair((GRID_OFFSET_X + 600, 7), 0, [ ("Sim Ticks:", 0),     (str(sim_tick[0]), 100) ])
+    draw_text_pair((GRID_OFFSET_X + 800, 7), 0, [ ("Years:", 0),     (str(sim_tick[0]//TICKS_PER_YEAR), 100) ])
 
     offset_y = GRID_OFFSET_Y
     for selected_entity in selected_entities:
@@ -45,6 +47,8 @@ def draw_unit_info(unit, pos):
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Status", 0),   (unit.get_status_string(), row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Target", 0),   (unit.get_target_string(), row_x) ])
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Food", 0),     (str(unit.satiation_current), row_x) ])
+    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Age", 0),     (str(unit.age), row_x) ])
+    # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Birthday", 0),     (str(unit.birthday), row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Hungery", 0),   (unit.get_hungery_string(), row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Kills", 0),    (str(unit.kills), row_x)])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Idle", 0),   (str(unit.idle_current), row_x) ])
@@ -52,6 +56,7 @@ def draw_unit_info(unit, pos):
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Sex", 0),   (unit.get_gender_string(), row_x) ])
     if unit.is_male == False:
         offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Fertile", 0),   (unit.get_fertile_string(), row_x) ])
+        offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Due", 0),   (unit.get_pregnant_string(), row_x) ])
     return offset_y + 10
 
 def draw_block_info(block, pos):
@@ -97,11 +102,18 @@ def draw_block(block):
 def draw_unit(unit):
     rect = calculate_rect(unit.tile, unit.radius)
     pygame.draw.rect(screen, unit.color, rect)
-    if unit.is_male == False and unit.is_fertile == True:
-        outter_rect = calculate_rect(unit.tile, unit.radius)    
-        pygame.draw.rect(screen, COLOR_PINK, outter_rect, 1)
-    if unit.can_eat():
-        if unit.satiation_current > unit.satiation_min / 2:
+    if unit.is_male == False:
+        if unit.pregnant_until is not None:
+            outter_rect = calculate_rect(unit.tile, unit.radius)    
+            pygame.draw.rect(screen, COLOR_PINK, outter_rect, 1)
+        elif unit.is_fertile == True:
+            pass
+            # outter_rect = calculate_rect(unit.tile, unit.radius)    
+            # pygame.draw.rect(screen, COLOR_PINK, outter_rect, 1)
+    
+        
+    if unit.satiation_current < 0:
+        if unit.satiation_current > unit.satiation_starving:
             outter_rect = calculate_rect(unit.tile, 2)    
             pygame.draw.rect(screen, COLOR_RED, outter_rect)
         else:
@@ -109,7 +121,7 @@ def draw_unit(unit):
             pygame.draw.rect(screen, COLOR_RED, outter_rect)
 
 def draw_unit_highlight(unit):
-    outter_rect = calculate_rect(unit.tile, unit.radius)    
+    outter_rect = calculate_rect(unit.tile, unit.radius+1)    
     pygame.draw.rect(screen, COLOR_SELECTION_HIGHLIGHT, outter_rect, 1)
 
 def draw_path(unit):

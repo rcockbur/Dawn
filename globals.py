@@ -1,22 +1,28 @@
 import pygame
 import random
 import os
+import ctypes
+
 print("running globals.py 1")
 
 NoneType = type(None)
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0,0)
+user32 = ctypes.windll.user32
+
+WINDOW_WIDTH = user32.GetSystemMetrics(0)
+WINDOW_HEIGHT = user32.GetSystemMetrics(1)
+
+g = dict()
 
 random.seed()
 pygame.init()
-
-WINDOW_WIDTH = 1920
-WINDOW_HEIGHT = 1080
 
 screen = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
 
 FPS = 30
 frames = [0]
-sim_ticks = [0]
+sim_tick = [0]
+TICKS_PER_YEAR = 1000
 
 selected_entities = set()
 dead_units = set()

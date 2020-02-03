@@ -134,7 +134,8 @@ def get_path(self, find_closest, min_range, max_range, debug):
     max_range = max_range * 10
     start_tile = self.tile
 
-    eat_chance = (100 * self.satiation_current) // self.satiation_min # ranges from 0 to 99 
+    # 100 to -200
+    eat_chance = (100 * (self.satiation_current - self.satiation_full)) // (self.satiation_min - self.satiation_full) # ranges from 0 to 99 
     wants_to_hunt = self.can_eat() and random.randint(0, 99) <= eat_chance
     wants_to_mate = self.can_mate()
     if wants_to_mate or wants_to_hunt: min_range = max_range

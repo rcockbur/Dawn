@@ -114,7 +114,7 @@ while not done:
         for unit in dead_units:
             MAP.remove_entity(unit)
         dead_units.clear()
-        sim_ticks[0] += 1
+        sim_tick[0] += 1
     mid_time = pygame.time.get_ticks()    
     logic_time = mid_time - start_time
     # draw

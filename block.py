@@ -24,9 +24,9 @@ class Grass(Entity):
         self.marked_at = -100000
 
     def update(self):
-        if sim_ticks[0] % 8 == 0:
+        if sim_tick[0] % 8 == 0:
             if self.is_marked == True:
-                if sim_ticks[0] - self.marked_at > 100:
+                if sim_tick[0] - self.marked_at > 100:
                     self.is_marked = False
                     self.marked_at = -1000
 
@@ -56,7 +56,7 @@ class Grass(Entity):
         self.marked_at = -1000
 
     def mark(self):
-        self.marked_at = sim_ticks[0]
+        self.marked_at = sim_tick[0]
         self.is_marked = True
 
     def die(self):

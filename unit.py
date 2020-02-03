@@ -9,7 +9,7 @@ from block import Block, Grass
 print("running unit.py")
 
 class Unit(Entity):
-    next_unit_is_male = True
+    next_unit_is_male = False
 
     def get_gender():
         r = Unit.next_unit_is_male
@@ -21,60 +21,69 @@ class Unit(Entity):
         self.is_manual = False
         self.path = Path()
         self.kills = 0
-        self.satiation_max = 100
+        self.satiation_max = 200
+        self.satiation_full = 100
+        self.satiation_starving = -100
         self.satiation_min = -200
-        self.idle_min = 25
-        self.idle_max = 50
-        self.move_range_min = 10
-        self.move_range_max = 20
         self.move_period_diag = 14
         self.move_period_ortho = 10
         self.move_current = 0
         self.status = STOPPED
+        self.age_adult = 2
+        
         self.kill_types = {}
         self.eat_types = {}
-        self.patience_max = 10
+        self.patience_max = 50
         self.is_male = Unit.get_gender()
+        
         self.dies_when_eaten = True
         self.target = None
+        self.age = random.randint(0, 4)
+        self.birthday = random.randint(0, TICKS_PER_YEAR - 1)
+
         if self.is_male == False:
-            self.is_fertile = False
+
+            self.is_fertile = self.age >= self.age_adult
             self.pregnant_with = None
-            self.pregnant_at = None
-            self.fertile_odds = 100
+            self.pregnant_until = None
+            
         
     def init_b(self, tile):
         self.move_current = self.move_period_ortho
-        self.color = self.satiation_color
-        self.color_original = self.color
         self.patience_current = self.patience_max
-        self.satiation_current = random.randint(self.satiation_min / 2, self.satiation_max)
+        self.satiation_current = random.randint(0, self.satiation_max)
         self.idle_current = random.randint(0, self.idle_max)
 
 
     def update(self):
         self.going_to_move = False
+        if sim_tick[0] % TICKS_PER_YEAR == self.birthday:
+            self.age += 1
+            if self.age == self.age_max:
+                print(self.name, "died of old age")
+                self.die()
+            if self.age == self.age_adult:
+                self.is_fertile = True
 
         if self.is_dead == False:
             is_blocked = False
 
             # check hunger  
-            if sim_ticks[0] % 8 == 0:
+            if sim_tick[0] % 8 == 0:
                 if self.satiation_current > self.satiation_min:
-                    self.satiation_current -= 1
-                    # if self.satiation_current > 0:
-                    #     self.color = self.satiation_color
-                    # else:
-                    #     self.color = self.hungery_color
+                    if type(self) == Wolf:
+                        self.satiation_current -= 2
+                    else:
+                        self.satiation_current -= 1
                 else:
                     print(self.name, "died of starvation")
                     self.die()
                     return
 
-            # check fertility
-            if sim_ticks[0] % 8 == 0 and self.is_male == False and self.is_fertile == False and self.satiation_current >= 0:
-                if random.randint(0, self.fertile_odds) == 0:
-                    self.is_fertile = True    
+
+            if self.is_male == False and self.pregnant_until is not None and self.pregnant_until == sim_tick[0]:
+                self.birth()
+                        
 
             # update target if automatic, out of path, and idle_current is out
             if self.is_manual == False:
@@ -99,26 +108,43 @@ class Unit(Entity):
                 if self.patience_current == 0:
                     self.patience_current = self.patience_max  
                     self.path.clear()
-                    # print(self.name, "lost patience with", entity.name, "@", sim_ticks[0])
+                    # print(self.name, "lost patience with", entity.name, "@", sim_tick[0])
             else:
                 self.patience_current = self.patience_max
 
             # move if ready
             if self.path.size() > 0:
-                # self.status = MOVING
                 if is_blocked == False and self.move_current == 0:
-                    
-                    if self.tile[0] != self.path.points[0][0] and self.tile[1] != self.path.points[0][1]:
-                        self.move_current = self.move_period_diag
-                    else:
-                        self.move_current = self.move_period_ortho
+                    self.update_move_cost(self.path.points[0])
                     self.move()
             else:
                 if self.status != STOPPED:
-                    self.idle_current = random.randint(self.idle_min, self.idle_max)
+                    self.update_idle_cost()
                     self.status = STOPPED
                 self.idle_current = max(self.idle_current - 1, 0)
             self.move_current = max(self.move_current - 1, 0)
+
+    def update_idle_cost(self):
+        self.idle_current = random.randint(self.idle_min, self.idle_max)
+        if self.satiation_current < 0 or self.can_mate():
+            if self.satiation_current > self.satiation_starving:
+                speed_up_factor = 2
+            else:
+                speed_up_factor = 4
+
+            self.idle_current = self.idle_current // speed_up_factor
+
+    def update_move_cost(self, point):
+        if self.tile[0] != point[0] and self.tile[1] != point[1]:
+            self.move_current = self.move_period_diag
+        else:
+            self.move_current = self.move_period_ortho
+        if self.satiation_current < 0 or (type(self) == Wolf and self.can_mate()):
+            if self.satiation_current > self.satiation_starving:
+                speed_up_factor = 2
+            else:
+                speed_up_factor = 4
+            self.move_current = self.move_current // speed_up_factor
 
 
     def move(self):
@@ -141,14 +167,17 @@ class Unit(Entity):
     def eat(self, entity):
         if type(self) is not Deer:
             print(self.name, "ate", entity.name)
+        if entity.dies_when_eaten == False:
+            self.path.clear()
         self.satiation_current = min(self.satiation_current + 100, self.satiation_max)
         entity.eaten()
 
     def eaten(self):
         self.die() 
 
+
     def can_eat(self):
-        return self.satiation_current < 0
+        return self.satiation_current < self.satiation_full
 
     def can_be_eaten(self):
         return True
@@ -156,25 +185,33 @@ class Unit(Entity):
     def can_be_hunted(self):
         return True
 
-
-    def mate(self, entity):
+    def birth(self):
         if type(self) is Deer:
             baby = Deer(self.tile)
         elif type(self) is Wolf:
             baby = Wolf(self.tile)
         
-        if baby.is_male == False: 
-            baby.is_fertile = False
-
-        self.is_fertile = False
         self.satiation_current -= 100
-        print(baby.name, "is born")
+        self.pregnant_until = None
+        self.pregnant_with = None
+        if self.age < self.age_senior:
+            self.is_fertile = True
+        print(self.name, "gave birth to", baby.name)
+
+
+    def mate(self, entity):
+        self.pregnant_until = sim_tick[0] + self.pregnancy_duration
+        self.pregnant_with = entity
+        self.is_fertile = False
+        print(self.name, "is pregnant")
+        
+        
 
     def can_mate(self):
-        return self.is_male == False and self.is_fertile == True and self.can_eat() == False
+        return self.is_male == False and self.is_fertile == True and self.satiation_current > 0 and self.age_adult <= self.age <= self.age_senior
 
     def can_be_mated_with(self):
-        return self.is_male
+        return self.is_male and self.age >= self.age_adult
 
 
     def select(self):
@@ -206,6 +243,12 @@ class Unit(Entity):
             return "Yes"
         return "No"
 
+    def get_pregnant_string(self):
+        if self.pregnant_until is None:
+            return "-"
+        else:
+            return str(self.pregnant_until)
+
     def get_gender_string(self):
         if self.is_male:
             return "Male"
@@ -222,13 +265,23 @@ class Deer(Unit):
 
     def __init__(self, tile):
         Unit.init_a(self, tile)
-        self.hungery_color = COLOR_DEER_HUNGERY
-        self.satiation_color = COLOR_DEER
+        self.idle_min = 50
+        self.idle_max = 100
+        self.move_range_min = 10
+        self.move_range_max = 15
+        self.color = COLOR_DEER
         self.radius = UNIT_RADIUS_DEER
+        # self.speed_up_factor = 2
         self.cant_path_to_types = { Block }
         self.cant_path_over_types = { Block, Deer, Wolf, Person, Grass }
         self.cant_move_types = { Block, Deer, Wolf, Person, Grass }
         self.eat_types = { Grass }
+        self.age_max = random.randint(8, 12)
+        self.age_senior = 10
+
+        if self.is_male == False:
+            self.fertile_odds = 35
+            self.pregnancy_duration = TICKS_PER_YEAR
         Unit.init_b(self, tile)
 
     def update_target(self):
@@ -245,16 +298,24 @@ class Deer(Unit):
 class Wolf(Unit):
     def __init__(self, tile):
         Unit.init_a(self, tile)
-        self.hungery_color = COLOR_WOLF_HUNGERY
-        self.satiation_color = COLOR_WOLF
+        self.idle_min = 100
+        self.idle_max = 200
+        self.move_range_min = 10
+        self.move_range_max = 15
+        self.color = COLOR_WOLF
         self.radius = UNIT_RADIUS_WOLF
+        # self.speed_up_factor = 2
         self.cant_path_to_types = { Block }
         self.cant_path_over_types = { Block, Deer, Wolf, Person, Grass }
         self.cant_move_types = { Block, Deer, Wolf, Person, Grass }
         self.eat_types = { Deer }
+        self.age_max = random.randint(32, 48)
+        self.age_senior = 40
 
         if self.is_male == False:
-            self.fertile_odds = 500
+            self.fertile_odds = 35
+            self.pregnancy_duration = TICKS_PER_YEAR * 4
+
         Unit.init_b(self, tile)
 
     def update_target(self):
@@ -268,8 +329,7 @@ class Wolf(Unit):
 class Person(Unit):
     def __init__(self, tile):
         Unit.init_a(self, tile)
-        self.hungery_color = COLOR_PERSON_HUNGERY
-        self.satiation_color = COLOR_PERSON
+        self.color = COLOR_PERSON
         self.radius = UNIT_RADIUS_PERSON
         self.is_manual = True
         self.kill_types = { Deer, Wolf }
