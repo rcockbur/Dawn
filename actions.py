@@ -37,7 +37,7 @@ def filter_selection(entities):
     entities -= removed_entities
 
 def move_to_tile(tile):
-    will_draw = debug_pathfinding
+    will_draw = get_debug_pathfinding()
     if len(selected_entities) > 0:
         dest_unit = MAP.get_entity_at_tile(tile)
         for selected_entity in selected_entities:

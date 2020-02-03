@@ -3,7 +3,7 @@ from path import Path
 from math import sqrt
 from heapq import heappush, heappop
 from map import calculate_rect
-import time
+import time, random
 from utility import measure, print_point
 print("running pathfinding.py")
 
@@ -110,7 +110,7 @@ def create_path(tile, came_from, debug, debug_color):
         debug_draw(tile, debug_color, 2, 0)
         time.sleep(0.7 * slow_factor)
     path = Path()
-    path.append(tile)
+    # path.append(tile)
 
     while tile in came_from:
         path.append(tile)
@@ -127,78 +127,98 @@ def create_path(tile, came_from, debug, debug_color):
 def choose_random(set):
     return random.choice(set)
 
-# RANDOM_TILE - including a min and max range, select and return a random tile
-# FIRST_ENTITY_MATCHING- go until range, or until found, return an entity or none
-# ALL_ENTITIES_MATCHING-  return a tuple containing each entity
 
 # @measure
-def get_path(start_tile, min_range, max_range, obstacle_types, validate_entity, choose_entity, debug, debug_color):
+def get_path(self, find_closest, min_range, max_range, debug):
     min_range = min_range * 10
     max_range = max_range * 10
-    find_entity = validate_entity is not None
+    start_tile = self.tile
+
+    eat_chance = (100 * self.satiation_current) // self.satiation_min # ranges from 0 to 99 
+    wants_to_hunt = self.can_eat() and random.randint(0, 99) <= eat_chance
+    wants_to_mate = self.can_mate()
+    if wants_to_mate or wants_to_hunt: min_range = max_range
+
+    activity_color = COLOR_YELLOW
+    if wants_to_mate: activity_color = COLOR_PINK
+    if wants_to_hunt: activity_color = COLOR_RED
+
+    status = MOVING
+    if wants_to_mate: status = MATING
+    if wants_to_hunt: status = HUNTING
 
     if debug:
-        debug_draw(start_tile, COLOR_YELLOW, TILE_RADIUS, 1)
+        debug_draw(start_tile, activity_color, TILE_RADIUS, 1)
         time.sleep(0.2 * slow_factor)
+
     closed_set = set()
     came_from = {}
     d_score = {start_tile : 0}
     open_heap = []
-    matching_entities = set()
-    tiles_checked = 0
-    heappush(open_heap, (d_score[start_tile], tiles_checked, start_tile))
+    edible_entities = set()
+    potential_mates = set()
+    occupied_tiles = set()
+    heappush(open_heap, (d_score[start_tile], start_tile))
 
     while open_heap:
         current_heap_bundle = heappop(open_heap)
         current_d_score = current_heap_bundle[0]
-        # time_stamp = current_heap_bundle[1]
-        current_tile = current_heap_bundle[2]
+        current_tile = current_heap_bundle[1]
         current_entity = MAP.get_entity_at_tile(current_tile)
-        if find_entity:
-            if validate_entity(current_entity): 
-                # print("valid entity found")
-                matching_entities.add(current_entity)
+        if current_entity is not None and type(current_entity) not in self.cant_path_to_types:
+            occupied_tiles.add(current_tile)
+            if wants_to_hunt and type(current_entity) in self.eat_types and current_entity.can_be_hunted():
+                edible_entities.add(current_entity)
+                break
+            elif wants_to_mate and type(current_entity) == type(self) and current_entity.can_be_mated_with(): 
+                potential_mates.add(current_entity)
+                break
 
         closed_set.add(current_tile)
 
-        for i, j in neighbors:
-            neighbor = current_tile[0] + i, current_tile[1] + j
+        if current_entity == self or type(current_entity) not in self.cant_path_over_types:
+            for i, j in neighbors:
+                neighbor = current_tile[0] + i, current_tile[1] + j
 
-            if not (0 <= neighbor[0] < TILE_COUNT_X and 0 <= neighbor[1] < TILE_COUNT_Y): continue
+                if not (0 <= neighbor[0] < TILE_COUNT_X and 0 <= neighbor[1] < TILE_COUNT_Y): continue
 
-            proposed_d_score = d_score[current_tile] + heuristic(current_tile, neighbor)
-            if proposed_d_score > max_range: continue
-            if neighbor in closed_set and d_score[neighbor] <= proposed_d_score: continue # skip if we already checked it and dont have a better score
+                proposed_d_score = d_score[current_tile] + heuristic(current_tile, neighbor)
+                if proposed_d_score > max_range: continue
+                if neighbor in closed_set and d_score[neighbor] <= proposed_d_score: continue # skip if we already checked it and dont have a better score
 
-            neighbor_entity = MAP.get_entity_at_tile(neighbor) 
-            if type(neighbor_entity) in obstacle_types: continue # means we cant generate a path to a block that is unpathable. we could have to put an escape            
+                neighbor_entity = MAP.get_entity_at_tile(neighbor) 
+                if type(neighbor_entity) in self.cant_path_to_types: continue # means we cant generate a path to a block that is unpathable. we could have to put an escape            
 
-            if proposed_d_score < d_score.get(neighbor, 0) or neighbor not in [i[2] for i in open_heap]:
-                # tiles_checked = tiles_checked - 1
-                came_from[neighbor] = current_tile
-                d_score[neighbor] = proposed_d_score
-                heappush(open_heap, (d_score[neighbor], tiles_checked, neighbor))
+                if proposed_d_score < d_score.get(neighbor, 0) or neighbor not in [i[1] for i in open_heap]:
+                    came_from[neighbor] = current_tile
+                    d_score[neighbor] = proposed_d_score
+                    heappush(open_heap, (d_score[neighbor], neighbor))
 
-
-                if debug and proposed_d_score > min_range:
-                    debug_draw(neighbor, COLOR_OPEN_HEAP, 1, 0)
+                if debug:
+                    debug_draw(neighbor, activity_color, 1, 0)
 
         if debug:
-            if current_tile is not start_tile and current_d_score > min_range:
+            if current_tile is not start_tile:
                 debug_draw(current_tile, COLOR_CLOSED_SET, 1, 0)
     
-    if find_entity == True:
-        if len(matching_entities) > 0:
-            matching_entity = choose_entity(tuple(matching_entities))
-            path = create_path(matching_entity.tile, came_from, debug, debug_color)
-            return path
-        
+    # return food
+    if wants_to_hunt and len(edible_entities) > 0:
+        edible_entity = random.choice(tuple(edible_entities))
+        path = create_path(edible_entity.tile, came_from, debug, COLOR_PATH_HUNT)
+        return (path, status, edible_entity)
+
+    # return mate
+    elif wants_to_mate and len(potential_mates) > 0:
+        mate = random.choice(tuple(potential_mates))
+        path = create_path(mate.tile, came_from, debug, COLOR_PATH_MATE)
+        return (path, status, mate)
     
-    closed_set = set(filter(lambda tile : d_score[tile] > min_range, closed_set))
+    # return random tile
+    closed_set -= occupied_tiles
+    closed_set = set(filter(lambda tile : d_score[tile] <= min_range, closed_set))
     if len(closed_set) > 0:
         chosen_tile = random.choice(tuple(closed_set))
-        path = create_path(chosen_tile, came_from, debug, COLOR_PATH_IDLE)
-        return path
+        path = create_path(chosen_tile, came_from, debug, activity_color)
+        return (path, status, None)
     else:
-        return Path()
-
+        return (Path(), STOPPED, None)

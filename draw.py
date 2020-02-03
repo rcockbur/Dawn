@@ -42,17 +42,17 @@ def draw_unit_info(unit, pos):
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Name", 0),     (unit.name, row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Class", 0),    (unit.class_name, row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Tile", 0),      (unit.get_tile_string(), row_x) ])
-    # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Status", 0),   (unit.get_status_string(), row_x) ])
+    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Status", 0),   (unit.get_status_string(), row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Target", 0),   (unit.get_target_string(), row_x) ])
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Food", 0),     (str(unit.satiation_current), row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Hungery", 0),   (unit.get_hungery_string(), row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Kills", 0),    (str(unit.kills), row_x)])
-    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Idle", 0),   (str(unit.idle_current), row_x) ])
+    # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Idle", 0),   (str(unit.idle_current), row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Move In", 0),   (str(unit.move_current), row_x) ])
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Sex", 0),   (unit.get_gender_string(), row_x) ])
     if unit.is_male == False:
         offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Fertile", 0),   (unit.get_fertile_string(), row_x) ])
-    return offset_y + 15 
+    return offset_y + 10
 
 def draw_block_info(block, pos):
     row_x = 50 
@@ -66,9 +66,10 @@ def draw_grass_info(grass, pos):
     row_x = 50 
     offset_y = 0
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Name", 0),     (grass.name, row_x) ])
-    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Class", 0),    (grass.class_name, row_x) ])
-    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Tile", 0),      (grass.get_tile_string(), row_x) ])
-    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Crop", 0),      (str(grass.crop_current), row_x) ])
+    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Marked", 0),     (grass.get_marked_string(), row_x) ])
+    # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Class", 0),    (grass.class_name, row_x) ])
+    # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Tile", 0),      (grass.get_tile_string(), row_x) ])
+    # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Crop", 0),      (str(grass.crop_current), row_x) ])
     return offset_y + 15
 
 def draw_grid():
@@ -99,17 +100,25 @@ def draw_unit(unit):
     if unit.is_male == False and unit.is_fertile == True:
         outter_rect = calculate_rect(unit.tile, unit.radius)    
         pygame.draw.rect(screen, COLOR_PINK, outter_rect, 1)
+    if unit.can_eat():
+        if unit.satiation_current > unit.satiation_min / 2:
+            outter_rect = calculate_rect(unit.tile, 2)    
+            pygame.draw.rect(screen, COLOR_RED, outter_rect)
+        else:
+            outter_rect = calculate_rect(unit.tile, 4)    
+            pygame.draw.rect(screen, COLOR_RED, outter_rect)
 
 def draw_unit_highlight(unit):
     outter_rect = calculate_rect(unit.tile, unit.radius)    
     pygame.draw.rect(screen, COLOR_SELECTION_HIGHLIGHT, outter_rect, 1)
 
 def draw_path(unit):
-    if unit.is_selected:
-        if unit.path is not None:
+    if unit.is_selected or get_debug_path():
+        if unit.path.size() > 0:
+            color = PATH_COLORS[unit.status]
             for point in unit.path.points:
                 rect = calculate_rect(point, 2)
-                pygame.draw.rect(screen, COLOR_PATH_SELECTED, rect)
+                pygame.draw.rect(screen, color, rect)
 
 def draw_black():
     screen.fill(COLOR_BACKGROUND) 

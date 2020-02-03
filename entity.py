@@ -16,7 +16,7 @@ class Entity():
             Entity.name_indexes[self.class_name] = 0
 
         Entity.name_indexes[self.class_name] += 1
-        return self.class_name + str(Entity.name_indexes[self.class_name])
+        return self.class_name + " " + str(Entity.name_indexes[self.class_name])
 
     def __init__(self, tile):
         self.id = Entity.new_id()
@@ -26,6 +26,7 @@ class Entity():
         self.tile = tile
         self.class_name = type(self).__name__
         self.name = self.new_name()
+        self.dies_when_eaten = False
 
     def die(self):
         dead_units.add(self)
