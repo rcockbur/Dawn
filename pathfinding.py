@@ -5,6 +5,7 @@ from heapq import heappush, heappop
 from map import calculate_rect
 import time, random
 from utility import measure, print_point
+
 print("running pathfinding.py")
 
 rt_2 = sqrt(2)
@@ -89,7 +90,7 @@ def astar(start_tile, end_tile, obstacle_types, debug):
                 g_score[neighbor] = proposed_g_score
                 f_score[neighbor] = proposed_g_score + heuristic(neighbor, end_tile)
                 
-                if debug and proposed_d_score >= min_range:
+                if debug and proposed_d_score >= tile_range:
                     debug_draw(neighbor, COLOR_ASTAR_PRIMARY, 1, 0)
 
                 heappush(open_heap, (f_score[neighbor], nodes_checked, neighbor))
@@ -129,16 +130,44 @@ def choose_random(set):
 
 
 # @measure
-def get_path(self, find_closest, min_range, max_range, debug):
-    min_range = min_range * 10
-    max_range = max_range * 10
+def get_path(self, find_closest):
+    debug = get_debug_pathfinding() and self.is_selected
+
+    idle_range = self.move_range_idle * 10
+    hunt_range = self.move_range_hunt * 10
+    mate_range = self.move_range_mate * 10
+
     start_tile = self.tile
 
     # 100 to -200
-    eat_chance = (100 * (self.satiation_current - self.satiation_full)) // (self.satiation_min - self.satiation_full) # ranges from 0 to 99 
+    eat_chance = (100 * (self.satiation_current - self.satiation_full)) // (self.satiation_starving - self.satiation_full) # ranges from 0 to 99 
     wants_to_hunt = self.can_eat() and random.randint(0, 99) <= eat_chance
     wants_to_mate = self.can_mate()
-    if wants_to_mate or wants_to_hunt: min_range = max_range
+
+    if wants_to_mate:
+        wants_to_hunt = False
+
+
+    if wants_to_hunt:
+        if self.is_wolf and self.satiation_current < self.satiation_starving:
+            entity_range = hunt_range * 2
+            tile_range = hunt_range * 2
+        else:
+            entity_range = hunt_range
+            tile_range = hunt_range
+
+    elif wants_to_mate:
+        if self.is_wolf and sim_tick[0] > self.last_scanned_at + 300:
+            entity_range = mate_range * 3
+            tile_range = mate_range * 3
+            self.last_scanned_at = sim_tick[0]
+        else:
+            entity_range = mate_range
+            tile_range = mate_range
+
+    else:
+        entity_range = idle_range
+        tile_range = idle_range
 
     activity_color = COLOR_YELLOW
     if wants_to_mate: activity_color = COLOR_PINK
@@ -149,6 +178,7 @@ def get_path(self, find_closest, min_range, max_range, debug):
     if wants_to_hunt: status = HUNTING
 
     if debug:
+        draw_function[0]()
         debug_draw(start_tile, activity_color, TILE_RADIUS, 1)
         time.sleep(0.2 * slow_factor)
 
@@ -184,7 +214,7 @@ def get_path(self, find_closest, min_range, max_range, debug):
                 if not (0 <= neighbor[0] < TILE_COUNT_X and 0 <= neighbor[1] < TILE_COUNT_Y): continue
 
                 proposed_d_score = d_score[current_tile] + heuristic(current_tile, neighbor)
-                if proposed_d_score > max_range: continue
+                if proposed_d_score > entity_range: continue
                 if neighbor in closed_set and d_score[neighbor] <= proposed_d_score: continue # skip if we already checked it and dont have a better score
 
                 neighbor_entity = MAP.get_entity_at_tile(neighbor) 
@@ -216,7 +246,7 @@ def get_path(self, find_closest, min_range, max_range, debug):
     
     # return random tile
     closed_set -= occupied_tiles
-    closed_set = set(filter(lambda tile : d_score[tile] <= min_range, closed_set))
+    closed_set = set(filter(lambda tile : d_score[tile] <= tile_range, closed_set)) 
     if len(closed_set) > 0:
         chosen_tile = random.choice(tuple(closed_set))
         path = create_path(chosen_tile, came_from, debug, activity_color)

@@ -5,7 +5,7 @@ from block import Block, Grass
 from pathfinding import get_path
 from unit import Unit, Deer, Wolf, Person  
 from actions import move_to_tile, select_box, clear_selection, stop
-from draw import draw_hud, draw_grid, draw_box, draw_unit, draw_path, draw_black, draw_unit_highlight, draw_block
+from draw import draw_everything, draw_hud, draw_grid, draw_box, draw_unit, draw_path, draw_black, draw_unit_highlight, draw_block
 print("running main.py")
 
 pygame.display.set_caption('Dawn') 
@@ -81,13 +81,16 @@ while not done:
                     mouse_entity.die()
             elif event.key == pygame.K_1:
                 toggle_debug_pathfinding()
-                print("debug_pathfinding:", str(get_debug_pathfinding()))
+                print("Debug Pathfinding:", str(get_debug_pathfinding()))
             elif event.key == pygame.K_2:
                 toggle_debug_path()
-                print("debug_path:", str(get_debug_path()))
+                print("Debug Path:", str(get_debug_path()))
             elif event.key == pygame.K_3:
                 toggle_debug_performance()
-                print("debug_performance:", str(get_debug_performance()))
+                print("Debug Perf:", str(get_debug_performance()))
+            elif event.key == pygame.K_4:
+                toggle_debug_status()
+                print("Debug Status:", str(get_debug_status()))
 
         # Mouse down
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -118,22 +121,7 @@ while not done:
     mid_time = pygame.time.get_ticks()    
     logic_time = mid_time - start_time
     # draw
-    draw_black()
-    draw_grid()              
-    for entity in MAP.get_entities():
-        if isinstance(entity, Unit):
-            draw_unit(entity)
-        else:
-            draw_block(entity)
-    for entity in MAP.get_entities():
-        if entity.is_selected == True:
-            draw_unit_highlight(entity)
-    for entity in MAP.get_entities():
-        if isinstance(entity, Unit):
-            draw_path(entity)
-    draw_hud()
-    if mouse_pos_start is not None:
-        draw_box(mouse_pos_start, mouse_pos_clamped)
+    draw_everything(mouse_pos_start, mouse_pos_clamped)
 
     pygame.display.flip()
     frames[0] = frames[0] + 1

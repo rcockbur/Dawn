@@ -19,6 +19,8 @@ pygame.init()
 
 screen = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
 
+draw_function = [0]
+
 FPS = 30
 frames = [0]
 sim_tick = [0]
@@ -30,13 +32,14 @@ dead_units = set()
 debug_pathfinding = False #or True
 debug_path = False        #or True
 debug_performance = False #or True
+debug_status = False       or True
 
 GRID_OFFSET_X = 10
 GRID_OFFSET_Y = 25
-TILE_COUNT_X = 100
-TILE_COUNT_Y = 81
+TILE_COUNT_X = 140
+TILE_COUNT_Y = 116
 LINE_WIDTH = 1
-TILE_RADIUS = 6
+TILE_RADIUS = 4
 LEFT_BUTTON = 1
 MIDDLE_BUTTON = 2
 RIGHT_BUTTON = 3
@@ -74,7 +77,7 @@ COLOR_BROWN_LIGHT = (140, 65, 0)
 COLOR_GRID = COLOR_GREY_VDARK
 COLOR_BLOCK = COLOR_GREY_DARK
 COLOR_TEXT_GREEN = COLOR_GREEN
-COLOR_SELECTION_HIGHLIGHT = COLOR_YELLOW
+COLOR_SELECTION_HIGHLIGHT = (150, 190, 0)
 COLOR_SELECTION_BOX = COLOR_WHITE
 COLOR_BACKGROUND = COLOR_BLACK
 COLOR_DEER = (100, 40, 0)               # brown
@@ -115,6 +118,14 @@ def toggle_debug_performance():
 def get_debug_performance():
     global debug_performance
     return debug_performance
+
+def toggle_debug_status():
+    global debug_status
+    debug_status = not debug_status
+
+def get_debug_status():
+    global debug_status
+    return debug_status
 
 from map import Map # Any file which imports globals also imports both Map and MAP from map.py
 print("running globals.py 2")

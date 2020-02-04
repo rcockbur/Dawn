@@ -7,6 +7,26 @@ print("running draw.py")
 
 freesansbold_12 = pygame.font.Font('freesansbold.ttf', 12) 
 
+def draw_everything(mouse_pos_start = None, mouse_pos_clamped = None):
+    draw_black()
+    draw_grid()              
+    for entity in MAP.get_entities():
+        if isinstance(entity, Unit):
+            draw_unit(entity)
+        else:
+            draw_block(entity)
+    for entity in MAP.get_entities():
+        if entity.is_selected == True:
+            draw_unit_highlight(entity)
+    for entity in MAP.get_entities():
+        if isinstance(entity, Unit):
+            draw_path(entity)
+    draw_hud()
+    if mouse_pos_start is not None:
+        draw_box(mouse_pos_start, mouse_pos_clamped)
+
+draw_function[0] = draw_everything
+
 def draw_text_at(font, string, pos):
     text = font.render(string, True, COLOR_TEXT_GREEN, COLOR_BACKGROUND) 
     textRect = text.get_rect() 
@@ -102,26 +122,27 @@ def draw_block(block):
 def draw_unit(unit):
     rect = calculate_rect(unit.tile, unit.radius)
     pygame.draw.rect(screen, unit.color, rect)
-    if unit.is_male == False:
-        if unit.pregnant_until is not None:
-            outter_rect = calculate_rect(unit.tile, unit.radius)    
-            pygame.draw.rect(screen, COLOR_PINK, outter_rect, 1)
-        elif unit.is_fertile == True:
-            pass
-            # outter_rect = calculate_rect(unit.tile, unit.radius)    
-            # pygame.draw.rect(screen, COLOR_PINK, outter_rect, 1)
-    
+    if get_debug_status():
+        if unit.is_male == False:
+            if unit.pregnant_until is not None:
+                outter_rect = calculate_rect(unit.tile, unit.radius)    
+                pygame.draw.rect(screen, COLOR_PINK, outter_rect, 1)
+            elif unit.is_fertile == True:
+                pass
+                # outter_rect = calculate_rect(unit.tile, unit.radius)    
+                # pygame.draw.rect(screen, COLOR_PINK, outter_rect, 1)
         
-    if unit.satiation_current < 0:
-        if unit.satiation_current > unit.satiation_starving:
-            outter_rect = calculate_rect(unit.tile, 2)    
-            pygame.draw.rect(screen, COLOR_RED, outter_rect)
-        else:
-            outter_rect = calculate_rect(unit.tile, 4)    
-            pygame.draw.rect(screen, COLOR_RED, outter_rect)
+            
+        if unit.satiation_current < 0:
+            if unit.satiation_current > unit.satiation_starving:
+                outter_rect = calculate_rect(unit.tile, 2)    
+                pygame.draw.rect(screen, COLOR_RED, outter_rect)
+            else:
+                outter_rect = calculate_rect(unit.tile, 4)    
+                pygame.draw.rect(screen, COLOR_RED, outter_rect)
 
 def draw_unit_highlight(unit):
-    outter_rect = calculate_rect(unit.tile, unit.radius+1)    
+    outter_rect = calculate_rect(unit.tile, unit.radius+2)    
     pygame.draw.rect(screen, COLOR_SELECTION_HIGHLIGHT, outter_rect, 1)
 
 def draw_path(unit):

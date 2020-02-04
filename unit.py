@@ -34,12 +34,20 @@ class Unit(Entity):
         self.kill_types = {}
         self.eat_types = {}
         self.patience_max = 50
+        self.last_scanned_at = 0
         self.is_male = Unit.get_gender()
         
         self.dies_when_eaten = True
         self.target = None
-        self.age = random.randint(0, 4)
-        self.birthday = random.randint(0, TICKS_PER_YEAR - 1)
+        
+        if sim_tick[0] == 0:
+            self.birthday = random.randint(0, TICKS_PER_YEAR - 1)
+            self.age = random.randint(2, 4)
+        else:
+            self.age = 0 # should be 0 if we want spawned units to have real age
+            self.birthday = sim_tick[0]
+
+        
 
         if self.is_male == False:
 
@@ -56,7 +64,7 @@ class Unit(Entity):
 
 
     def update(self):
-        self.going_to_move = False
+        # is it my birthday?
         if sim_tick[0] % TICKS_PER_YEAR == self.birthday:
             self.age += 1
             if self.age == self.age_max:
@@ -66,15 +74,12 @@ class Unit(Entity):
                 self.is_fertile = True
 
         if self.is_dead == False:
-            is_blocked = False
+            
 
             # check hunger  
             if sim_tick[0] % 8 == 0:
                 if self.satiation_current > self.satiation_min:
-                    if type(self) == Wolf:
-                        self.satiation_current -= 2
-                    else:
-                        self.satiation_current -= 1
+                    self.satiation_current -= 1
                 else:
                     print(self.name, "died of starvation")
                     self.die()
@@ -91,6 +96,7 @@ class Unit(Entity):
                     self.update_target()
                     
             # check whats right in front of us
+            is_blocked = False
             if self.path.size() > 0:
                 ate_the_blocker = False
                 entity = MAP.get_entity_at_tile(self.path.points[0])
@@ -126,25 +132,36 @@ class Unit(Entity):
 
     def update_idle_cost(self):
         self.idle_current = random.randint(self.idle_min, self.idle_max)
-        if self.satiation_current < 0 or self.can_mate():
-            if self.satiation_current > self.satiation_starving:
-                speed_up_factor = 2
-            else:
-                speed_up_factor = 4
 
-            self.idle_current = self.idle_current // speed_up_factor
+        speed_up_factor = 1
+        
+        if self.satiation_current < 0:
+            speed_up_factor += 0.5
+            if self.satiation_current < self.satiation_starving:
+                speed_up_factor += 0.5
+        else:
+            if self.can_mate():
+                speed_up_factor += 0.5
+
+        self.idle_current = int(self.idle_current / speed_up_factor)
 
     def update_move_cost(self, point):
         if self.tile[0] != point[0] and self.tile[1] != point[1]:
             self.move_current = self.move_period_diag
         else:
             self.move_current = self.move_period_ortho
-        if self.satiation_current < 0 or (type(self) == Wolf and self.can_mate()):
-            if self.satiation_current > self.satiation_starving:
-                speed_up_factor = 2
-            else:
-                speed_up_factor = 4
-            self.move_current = self.move_current // speed_up_factor
+
+        speed_up_factor = 1
+        
+        if self.satiation_current < 0:
+            speed_up_factor += 0.5
+            if self.satiation_current < self.satiation_starving:
+                speed_up_factor += 0.5
+        else:
+            if self.can_mate():
+                speed_up_factor += 0.5
+
+        self.move_current = int(self.move_current / speed_up_factor)
 
 
     def move(self):
@@ -191,7 +208,7 @@ class Unit(Entity):
         elif type(self) is Wolf:
             baby = Wolf(self.tile)
         
-        self.satiation_current -= 100
+        self.satiation_current -= 50
         self.pregnant_until = None
         self.pregnant_with = None
         if self.age < self.age_senior:
@@ -200,10 +217,10 @@ class Unit(Entity):
 
 
     def mate(self, entity):
-        self.pregnant_until = sim_tick[0] + self.pregnancy_duration
+        self.pregnant_until = sim_tick[0] + random.randint(self.pregnancy_duration//2, self.pregnancy_duration)
         self.pregnant_with = entity
         self.is_fertile = False
-        print(self.name, "is pregnant")
+        # print(self.name, "is pregnant")
         
         
 
@@ -267,8 +284,10 @@ class Deer(Unit):
         Unit.init_a(self, tile)
         self.idle_min = 50
         self.idle_max = 100
-        self.move_range_min = 10
-        self.move_range_max = 15
+        self.move_range_idle = 8
+        self.move_range_hunt = 14
+        self.move_range_mate = 14
+        self.is_wolf = False
         self.color = COLOR_DEER
         self.radius = UNIT_RADIUS_DEER
         # self.speed_up_factor = 2
@@ -286,7 +305,7 @@ class Deer(Unit):
 
     def update_target(self):
         
-        path_info = get_path(self, True, self.move_range_min, self.move_range_max, get_debug_pathfinding())
+        path_info = get_path(self, True)
         self.path = path_info[0]
         self.status = path_info[1]
         self.target = path_info[2]
@@ -300,8 +319,10 @@ class Wolf(Unit):
         Unit.init_a(self, tile)
         self.idle_min = 100
         self.idle_max = 200
-        self.move_range_min = 10
-        self.move_range_max = 15
+        self.move_range_idle = 12
+        self.move_range_hunt = 20
+        self.move_range_mate = 20
+        self.is_wolf = True
         self.color = COLOR_WOLF
         self.radius = UNIT_RADIUS_WOLF
         # self.speed_up_factor = 2
@@ -319,7 +340,7 @@ class Wolf(Unit):
         Unit.init_b(self, tile)
 
     def update_target(self):
-        path_info = get_path(self, True, self.move_range_min, self.move_range_max, get_debug_pathfinding())
+        path_info = get_path(self, True)
         self.path = path_info[0]
         self.status = path_info[1]
         self.target = path_info[2]
