@@ -149,9 +149,20 @@ def get_path(self, find_closest):
 
 
     if wants_to_hunt:
-        if self.is_wolf and self.satiation_current < self.satiation_starving:
-            entity_range = hunt_range * 2
-            tile_range = hunt_range * 2
+        if self.is_wolf and self.satiation_current < 0:
+            if self.satiation_current < self.satiation_starving:
+                entity_range = hunt_range * 3
+                tile_range = hunt_range * 3
+            else:
+                entity_range = hunt_range * 2
+                tile_range = hunt_range * 2
+        elif not self.is_wolf and self.satiation_current < 0:
+            if self.satiation_current < self.satiation_starving:
+                entity_range = hunt_range * 2
+                tile_range = hunt_range * 2
+            else:
+                entity_range = int(hunt_range * 1.5)
+                tile_range = int(hunt_range * 1.5)
         else:
             entity_range = hunt_range
             tile_range = hunt_range
