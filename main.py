@@ -26,17 +26,14 @@ for row in map_file:
             symbol_index = symbol_index + 1
     row_index = row_index + 1
 
-for i in range(1):
-    for j in range(1):
-        Wolf((65 + 2*i, 5 + 2*j))        
-# if True:
-#     for x in range(8):
-#         for y in range(2):
-            # Deer((45 + 2*x, 9 + 2*y))
-# for x in range(1):
-#     for y in range(1):
-#         Deer((35 + 2*x, 44 + 2*y))
-
+for x in range(TILE_COUNT_X//2):
+    for y in range(TILE_COUNT_Y//2):
+        if MAP.get_entity_at_tile((2*x,2*y)) == None:
+            rand = random.randint(0,250)
+            if rand <= 8:
+                Deer((2*x, 2*y), False)
+            # elif rand <= 9:
+            #     Wolf((2*x, 2*y), False)
 
 done = False
 paused = False
@@ -71,10 +68,10 @@ while not done:
                 stop()
             elif event.key == pygame.K_w:
                 if mouse_tile is not None and mouse_entity is None:
-                    Wolf(mouse_tile)
+                    Wolf(mouse_tile, False)
             elif event.key == pygame.K_d:
                 if mouse_tile is not None and mouse_entity is None:
-                    Deer(mouse_tile)
+                    Deer(mouse_tile, False)
             elif event.key == pygame.K_k:
                 if mouse_entity is not None:
                     print('kill')
@@ -117,14 +114,25 @@ while not done:
         for unit in dead_units:
             MAP.remove_entity(unit)
         dead_units.clear()
-        sim_tick[0] += 1
+
+        day[0] += 1
+        day_of_month[0] += 1
+        day_of_year[0] += 1
+        if day_of_month[0] == DAYS_PER_MONTH:
+            day_of_month[0] = 0
+            month[0] += 1
+            month_of_year[0] += 1
+            if month_of_year[0] == MONTHS_PER_YEAR:
+                day_of_year[0] = 0
+                month_of_year[0] = 0
+                year[0] += 1
+
     mid_time = pygame.time.get_ticks()    
     logic_time = mid_time - start_time
     # draw
     draw_everything(mouse_pos_start, mouse_pos_clamped)
 
     pygame.display.flip()
-    frames[0] = frames[0] + 1
     end_time = pygame.time.get_ticks()
     graphics_time = end_time - mid_time
     total_time = end_time - start_time

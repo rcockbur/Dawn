@@ -16,7 +16,18 @@ class Entity():
             Entity.name_indexes[self.class_name] = 0
 
         Entity.name_indexes[self.class_name] += 1
-        return self.class_name + " " + str(Entity.name_indexes[self.class_name])
+        class_count = Entity.name_indexes[self.class_name]
+        s = str(class_count)
+        
+        
+        if class_count < 1000:
+            s = " " + s
+            if class_count < 100:
+                s = " " + s
+                if class_count < 10:
+                    s = " " + s
+
+        return self.class_name + " " + s
 
     def __init__(self, tile):
         self.id = Entity.new_id()

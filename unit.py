@@ -16,15 +16,15 @@ class Unit(Entity):
         Unit.next_unit_is_male = not Unit.next_unit_is_male
         return r
 
-    def init_a(self, tile):
+    def init_a(self, tile, born_naturally):
         Entity.__init__(self, tile)
         self.is_manual = False
         self.path = Path()
         self.kills = 0
-        self.satiation_max = 200
-        self.satiation_full = 100
-        self.satiation_starving = -100
-        self.satiation_min = -200
+        self.satiation_max = 100
+        self.satiation_full = 50
+        self.satiation_starving = -50
+        self.satiation_min = -100
         self.move_period_diag = 14
         self.move_period_ortho = 10
         self.move_current = 0
@@ -40,12 +40,27 @@ class Unit(Entity):
         self.dies_when_eaten = True
         self.target = None
         
-        if sim_tick[0] == 0:
-            self.birthday = random.randint(0, TICKS_PER_YEAR - 1)
-            self.age = random.randint(2, 4)
+        if born_naturally == True:
+            self.age = 0
+            self.birth_day = day[0]
+            self.birth_month = month[0]
+            self.birth_year = year[0]
+            self.birth_day_of_month = day_of_month[0]
+            self.birth_day_of_year = day_of_year[0]
+            self.birth_month_of_year = month_of_year[0]
         else:
-            self.age = 0 # should be 0 if we want spawned units to have real age
-            self.birthday = sim_tick[0]
+            self.age = 1
+            self.birth_day_of_month = random.randint(0, DAYS_PER_MONTH - 1)
+            self.birth_month_of_year = random.randint(0, MONTHS_PER_YEAR - 1)
+            self.birth_year = year[0] - 2
+            self.birth_day_of_year = self.birth_day_of_month + self.birth_month_of_year * DAYS_PER_MONTH
+            self.birth_month = self.birth_month_of_year + self.birth_year * MONTHS_PER_YEAR
+            self.birth_day = self.birth_day_of_year + self.birth_year * DAYS_PER_YEAR
+            self.age = (day[0] - self.birth_day) // DAYS_PER_YEAR
+            
+
+            
+
 
         
 
@@ -56,7 +71,7 @@ class Unit(Entity):
             self.pregnant_until = None
             
         
-    def init_b(self, tile):
+    def init_b(self, tile, born_naturally):
         self.move_current = self.move_period_ortho
         self.patience_current = self.patience_max
         self.satiation_current = random.randint(0, self.satiation_max)
@@ -65,19 +80,19 @@ class Unit(Entity):
 
     def update(self):
         # is it my birthday?
-        if sim_tick[0] % TICKS_PER_YEAR == self.birthday:
+        if day_of_year[0] == self.birth_day_of_year:
             self.age += 1
             if self.age == self.age_max:
                 print(self.name, "died of old age")
                 self.die()
-            if self.age == self.age_adult:
+            if self.age == self.age_adult and self.is_male == False:
                 self.is_fertile = True
 
         if self.is_dead == False:
             
 
             # check hunger  
-            if sim_tick[0] % 8 == 0:
+            if day_of_month[0] == self.birth_day_of_month:
                 if self.satiation_current > self.satiation_min:
                     self.satiation_current -= 1
                 else:
@@ -86,7 +101,7 @@ class Unit(Entity):
                     return
 
 
-            if self.is_male == False and self.pregnant_until is not None and self.pregnant_until == sim_tick[0]:
+            if self.is_male == False and self.pregnant_until is not None and self.pregnant_until == day[0]:
                 self.birth()
                         
 
@@ -114,7 +129,7 @@ class Unit(Entity):
                 if self.patience_current == 0:
                     self.patience_current = self.patience_max  
                     self.path.clear()
-                    # print(self.name, "lost patience with", entity.name, "@", sim_tick[0])
+                    # print(self.name, "lost patience with", entity.name, "@", day[0])
             else:
                 self.patience_current = self.patience_max
 
@@ -186,7 +201,7 @@ class Unit(Entity):
             print(self.name, "ate", entity.name)
         if entity.dies_when_eaten == False:
             self.path.clear()
-        self.satiation_current = min(self.satiation_current + 100, self.satiation_max)
+        self.satiation_current = min(self.satiation_current + entity.food_value, self.satiation_max)
         entity.eaten()
 
     def eaten(self):
@@ -204,20 +219,21 @@ class Unit(Entity):
 
     def birth(self):
         if type(self) is Deer:
-            baby = Deer(self.tile)
+            baby = Deer(self.tile, True)
         elif type(self) is Wolf:
-            baby = Wolf(self.tile)
+            baby = Wolf(self.tile, True)
         
         self.satiation_current -= 50
         self.pregnant_until = None
         self.pregnant_with = None
         if self.age < self.age_senior:
             self.is_fertile = True
-        print(self.name, "gave birth to", baby.name)
+
+        print(self.name, "gave birth to", baby.name, "(", str(len(MAP.get_entities_of_type(self.__class__))), ")")
 
 
     def mate(self, entity):
-        self.pregnant_until = sim_tick[0] + random.randint(self.pregnancy_duration//2, self.pregnancy_duration)
+        self.pregnant_until = day[0] + random.randint(self.pregnancy_duration//2, self.pregnancy_duration)
         self.pregnant_with = entity
         self.is_fertile = False
         # print(self.name, "is pregnant")
@@ -266,22 +282,48 @@ class Unit(Entity):
         else:
             return str(self.pregnant_until)
 
-    def get_gender_string(self):
+    def get_food_string(self):
+        if self.satiation_current >= 0:
+            if self.satiation_current >= self.satiation_full:
+                s = "Full     "
+            else:
+                s = "Neutral  "
+        else:
+            if self.satiation_current <= self.satiation_starving:
+                s = "Starving "
+            else:
+                s = "Hungery  "
+        return s + str(self.satiation_current)
+
+
+    def get_sex_string(self):
         if self.is_male:
             return "Male"
-        return "Female"
+        else:
+            s = "Female"
+            if self.is_fertile: s = s + "(F)"
+            if self.pregnant_until is not None: s = s + "(P)"
+            return s
 
     def get_fertile_string(self):
         if self.is_fertile:
             return "Yes"
         else:
             return "No"
+
+    def get_birthday_string(self):
+        if self.birth_day_of_month < 10:
+            s = "0" + str(self.birth_day_of_month)
+        else:
+            s = str(self.birth_day_of_month)
+        return MONTH_NAMES[self.birth_month_of_year] + " " + s + ", " + str(self.birth_year)
+    
         
 
 class Deer(Unit):
 
-    def __init__(self, tile):
-        Unit.init_a(self, tile)
+    def __init__(self, tile, born_naturally):
+        Unit.init_a(self, tile, born_naturally)
         self.idle_min = 50
         self.idle_max = 100
         self.move_range_idle = 8
@@ -290,18 +332,18 @@ class Deer(Unit):
         self.is_wolf = False
         self.color = COLOR_DEER
         self.radius = UNIT_RADIUS_DEER
-        # self.speed_up_factor = 2
         self.cant_path_to_types = { Block }
         self.cant_path_over_types = { Block, Deer, Wolf, Person, Grass }
         self.cant_move_types = { Block, Deer, Wolf, Person, Grass }
         self.eat_types = { Grass }
-        self.age_max = random.randint(8, 12)
+        self.age_max = random.randint(20, 25)
         self.age_senior = 10
+        self.food_value = 50
 
         if self.is_male == False:
             self.fertile_odds = 35
-            self.pregnancy_duration = TICKS_PER_YEAR
-        Unit.init_b(self, tile)
+            self.pregnancy_duration = DAYS_PER_YEAR
+        Unit.init_b(self, tile, born_naturally)
 
     def update_target(self):
         
@@ -315,8 +357,8 @@ class Deer(Unit):
 
 
 class Wolf(Unit):
-    def __init__(self, tile):
-        Unit.init_a(self, tile)
+    def __init__(self, tile, born_naturally):
+        Unit.init_a(self, tile, born_naturally)
         self.idle_min = 100
         self.idle_max = 200
         self.move_range_idle = 12
@@ -325,19 +367,18 @@ class Wolf(Unit):
         self.is_wolf = True
         self.color = COLOR_WOLF
         self.radius = UNIT_RADIUS_WOLF
-        # self.speed_up_factor = 2
         self.cant_path_to_types = { Block }
         self.cant_path_over_types = { Block, Deer, Wolf, Person, Grass }
         self.cant_move_types = { Block, Deer, Wolf, Person, Grass }
         self.eat_types = { Deer }
-        self.age_max = random.randint(32, 48)
+        self.age_max = random.randint(80, 100)
         self.age_senior = 40
 
         if self.is_male == False:
             self.fertile_odds = 35
-            self.pregnancy_duration = TICKS_PER_YEAR * 4
+            self.pregnancy_duration = DAYS_PER_YEAR * 8
 
-        Unit.init_b(self, tile)
+        Unit.init_b(self, tile, born_naturally)
 
     def update_target(self):
         path_info = get_path(self, True)
@@ -348,8 +389,8 @@ class Wolf(Unit):
             
 
 class Person(Unit):
-    def __init__(self, tile):
-        Unit.init_a(self, tile)
+    def __init__(self, tile, born_naturally):
+        Unit.init_a(self, tile, born_naturally)
         self.color = COLOR_PERSON
         self.radius = UNIT_RADIUS_PERSON
         self.is_manual = True

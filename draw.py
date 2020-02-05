@@ -5,7 +5,12 @@ from unit import Unit, Deer, Person, Wolf
 from map import calculate_rect
 print("running draw.py")
 
-freesansbold_12 = pygame.font.Font('freesansbold.ttf', 12) 
+
+
+# freesansbold_12 = pygame.font.Font('freesansbold.ttf', 12) 
+FONT_SIZE = 20
+freesansbold_12 = pygame.font.SysFont('Monospace', FONT_SIZE) 
+
 
 def draw_everything(mouse_pos_start = None, mouse_pos_clamped = None):
     draw_black()
@@ -40,14 +45,17 @@ def draw_text_pair(pos, offset_y, string_offset_pairs):
         string = string_offset_pair[0]
         offset = string_offset_pair[1]
         draw_text_at(freesansbold_12, string, (x + offset, y))
-    return offset_y + 15
+    return offset_y + FONT_SIZE
+
 
 def draw_hud():
-    draw_text_pair((GRID_OFFSET_X + 0, 7),   0, [ ("Deer:", 0),     (str(len(MAP.get_entities_of_type(Deer))), 100) ])
-    draw_text_pair((GRID_OFFSET_X + 200, 7), 0, [ ("Wolves:", 0),     (str(len(MAP.get_entities_of_type(Wolf))), 100) ])
-    draw_text_pair((GRID_OFFSET_X + 400, 7), 0, [ ("People:", 0),     (str(len(MAP.get_entities_of_type(Person))), 100) ])
-    draw_text_pair((GRID_OFFSET_X + 600, 7), 0, [ ("Sim Ticks:", 0),     (str(sim_tick[0]), 100) ])
-    draw_text_pair((GRID_OFFSET_X + 800, 7), 0, [ ("Years:", 0),     (str(sim_tick[0]//TICKS_PER_YEAR), 100) ])
+    Y = 4
+    draw_text_pair((GRID_OFFSET_X + 0, Y),   0, [ ("Deer:", 0),     (str(len(MAP.get_entities_of_type(Deer))), 70) ])
+    draw_text_pair((GRID_OFFSET_X + 200, Y), 0, [ ("Wolves:", 0),     (str(len(MAP.get_entities_of_type(Wolf))), 95) ])
+    draw_text_pair((GRID_OFFSET_X + 400, Y), 0, [ ("People:", 0),     (str(len(MAP.get_entities_of_type(Person))), 95) ])
+    draw_text_pair((GRID_OFFSET_X + 600, Y), 0, [ ("Date:", 0),     (get_date_string(), 75) ])
+    # draw_text_at(freesansbold_12, str(day_of_month[0]), (GRID_OFFSET_X + 750, 7))
+    # draw_text_at(freesansbold_12, str(year[0]), (GRID_OFFSET_X + 800, 7))
 
     offset_y = GRID_OFFSET_Y
     for selected_entity in selected_entities:
@@ -59,43 +67,44 @@ def draw_hud():
             offset_y = offset_y + draw_grass_info(selected_entity, (GRID_SIZE_X + GRID_OFFSET_X + 5, offset_y))
                    
 def draw_unit_info(unit, pos):
-    row_x = 55
+    row_x = 110
     offset_y = 0
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Name", 0),     (unit.name, row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Class", 0),    (unit.class_name, row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Tile", 0),      (unit.get_tile_string(), row_x) ])
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Status", 0),   (unit.get_status_string(), row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Target", 0),   (unit.get_target_string(), row_x) ])
-    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Food", 0),     (str(unit.satiation_current), row_x) ])
+    
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Age", 0),     (str(unit.age), row_x) ])
-    # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Birthday", 0),     (str(unit.birthday), row_x) ])
+    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Birthday", 0),     (unit.get_birthday_string(), row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Hungery", 0),   (unit.get_hungery_string(), row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Kills", 0),    (str(unit.kills), row_x)])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Idle", 0),   (str(unit.idle_current), row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Move In", 0),   (str(unit.move_current), row_x) ])
-    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Sex", 0),   (unit.get_gender_string(), row_x) ])
+    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Sex", 0),   (unit.get_sex_string(), row_x) ])
+    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Food", 0),     (unit.get_food_string(), row_x) ])
     if unit.is_male == False:
-        offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Fertile", 0),   (unit.get_fertile_string(), row_x) ])
+        # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Fertile", 0),   (unit.get_fertile_string(), row_x) ])
         offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Due", 0),   (unit.get_pregnant_string(), row_x) ])
-    return offset_y + 10
+    return offset_y + FONT_SIZE
 
 def draw_block_info(block, pos):
-    row_x = 50 
+    row_x = 110
     offset_y = 0
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Name", 0),     (block.name, row_x) ])
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Class", 0),    (block.class_name, row_x) ])
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Tile", 0),      (block.get_tile_string(), row_x) ])
-    return offset_y + 15
+    return offset_y + FONT_SIZE
 
 def draw_grass_info(grass, pos):
-    row_x = 50 
+    row_x = 110
     offset_y = 0
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Name", 0),     (grass.name, row_x) ])
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Marked", 0),     (grass.get_marked_string(), row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Class", 0),    (grass.class_name, row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Tile", 0),      (grass.get_tile_string(), row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Crop", 0),      (str(grass.crop_current), row_x) ])
-    return offset_y + 15
+    return offset_y + FONT_SIZE
 
 def draw_grid():
     for i in range(TILE_COUNT_X + 1):

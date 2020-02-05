@@ -168,10 +168,10 @@ def get_path(self, find_closest):
             tile_range = hunt_range
 
     elif wants_to_mate:
-        if self.is_wolf and sim_tick[0] > self.last_scanned_at + 300:
+        if self.is_wolf and day[0] > self.last_scanned_at + 300:
             entity_range = mate_range * 3
             tile_range = mate_range * 3
-            self.last_scanned_at = sim_tick[0]
+            self.last_scanned_at = day[0]
         else:
             entity_range = mate_range
             tile_range = mate_range

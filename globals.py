@@ -22,9 +22,16 @@ screen = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
 draw_function = [0]
 
 FPS = 30
-frames = [0]
-sim_tick = [0]
-TICKS_PER_YEAR = 1000
+
+DAYS_PER_MONTH = 30
+MONTHS_PER_YEAR = 12
+DAYS_PER_YEAR = 360
+year = [2002]
+month = [year[0] * MONTHS_PER_YEAR]
+day = [year[0] * DAYS_PER_YEAR]
+day_of_month = [0]
+day_of_year = [0]
+month_of_year = [0]
 
 selected_entities = set()
 dead_units = set()
@@ -35,7 +42,7 @@ debug_performance = False #or True
 debug_status = False       or True
 
 GRID_OFFSET_X = 10
-GRID_OFFSET_Y = 25
+GRID_OFFSET_Y = 30
 TILE_COUNT_X = 140
 TILE_COUNT_Y = 116
 LINE_WIDTH = 1
@@ -131,3 +138,12 @@ from map import Map # Any file which imports globals also imports both Map and M
 print("running globals.py 2")
 MAP = Map()
 
+
+MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", ]
+
+def get_date_string():
+    if day_of_month[0] < 10:
+        s = "0" + str(day_of_month[0])
+    else:
+        s = str(day_of_month[0])
+    return MONTH_NAMES[month_of_year[0]] + "  " + s + ",  " + str(year[0])

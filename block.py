@@ -19,14 +19,15 @@ class Grass(Entity):
         self.color_grown = (0, 100, 0)
         self.radius = UNIT_RADIUS_BLOCK
         self.crop_max = 100
+        self.food_value = 25
         self.crop_current = random.randint(self.crop_max, self.crop_max)
         self.is_marked = False
         self.marked_at = -100000
 
     def update(self):
-        if sim_tick[0] % 8 == 0:
+        if day[0] % 8 == 0:
             if self.is_marked == True:
-                if sim_tick[0] - self.marked_at > 100:
+                if day[0] - self.marked_at > 100:
                     self.is_marked = False
                     self.marked_at = -1000
 
@@ -56,7 +57,7 @@ class Grass(Entity):
         self.marked_at = -1000
 
     def mark(self):
-        self.marked_at = sim_tick[0]
+        self.marked_at = day[0]
         self.is_marked = True
 
     def die(self):
