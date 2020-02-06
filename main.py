@@ -32,6 +32,8 @@ for x in range(TILE_COUNT_X//2):
             rand = random.randint(0,250)
             if rand <= 8:
                 Deer((2*x, 2*y), False)
+            elif rand <= 40:
+                Grass((2*x, 2*y))
             # elif rand <= 9:
             #     Wolf((2*x, 2*y), False)
 
@@ -115,17 +117,25 @@ while not done:
             MAP.remove_entity(unit)
         dead_units.clear()
 
-        day[0] += 1
-        day_of_month[0] += 1
-        day_of_year[0] += 1
-        if day_of_month[0] == DAYS_PER_MONTH:
-            day_of_month[0] = 0
-            month[0] += 1
-            month_of_year[0] += 1
-            if month_of_year[0] == MONTHS_PER_YEAR:
-                day_of_year[0] = 0
-                month_of_year[0] = 0
-                year[0] += 1
+        tick[0] += 1
+        tick_of_day[0] += 1
+        tick_of_month[0] += 1
+        tick_of_year[0] += 1
+        if tick_of_day[0] == TICKS_PER_DAY:
+            tick_of_day[0] = 0
+            day[0] += 1
+            day_of_month[0] += 1
+            day_of_year[0] += 1
+            if day_of_month[0] == DAYS_PER_MONTH:
+                tick_of_month[0] = 0
+                day_of_month[0] = 0
+                month[0] += 1
+                month_of_year[0] += 1
+                if month_of_year[0] == MONTHS_PER_YEAR:
+                    tick_of_year[0] = 0
+                    day_of_year[0] = 0
+                    month_of_year[0] = 0
+                    year[0] += 1
 
     mid_time = pygame.time.get_ticks()    
     logic_time = mid_time - start_time

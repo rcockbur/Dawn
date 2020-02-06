@@ -151,15 +151,15 @@ def get_path(self, find_closest):
     if wants_to_hunt:
         if self.is_wolf and self.satiation_current < 0:
             if self.satiation_current < self.satiation_starving:
-                entity_range = hunt_range * 3
-                tile_range = hunt_range * 3
+                entity_range = int(hunt_range * 2)
+                tile_range = int(hunt_range * 2)
             else:
-                entity_range = hunt_range * 2
-                tile_range = hunt_range * 2
+                entity_range = int(hunt_range * 1.5)
+                tile_range = int(hunt_range * 1.5)
         elif not self.is_wolf and self.satiation_current < 0:
             if self.satiation_current < self.satiation_starving:
-                entity_range = hunt_range * 2
-                tile_range = hunt_range * 2
+                entity_range = int(hunt_range * 2)
+                tile_range = int(hunt_range * 2)
             else:
                 entity_range = int(hunt_range * 1.5)
                 tile_range = int(hunt_range * 1.5)
@@ -169,9 +169,14 @@ def get_path(self, find_closest):
 
     elif wants_to_mate:
         if self.is_wolf and day[0] > self.last_scanned_at + 300:
-            entity_range = mate_range * 3
-            tile_range = mate_range * 3
+            entity_range = mate_range * 4
+            tile_range = mate_range * 4
             self.last_scanned_at = day[0]
+        elif not self.is_wolf and day[0] > self.last_scanned_at + 300:
+            entity_range = mate_range * 2
+            tile_range = mate_range * 2
+            self.last_scanned_at = day[0]
+        
         else:
             entity_range = mate_range
             tile_range = mate_range

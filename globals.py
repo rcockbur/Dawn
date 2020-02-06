@@ -23,12 +23,21 @@ draw_function = [0]
 
 FPS = 30
 
+START_YEAR = 2020
+
+TICKS_PER_DAY = 8
 DAYS_PER_MONTH = 30
 MONTHS_PER_YEAR = 12
 DAYS_PER_YEAR = 360
-year = [2002]
+TICKS_PER_MONTH = TICKS_PER_DAY * DAYS_PER_MONTH
+TICKS_PER_YEAR = 360 * TICKS_PER_DAY
+year = [START_YEAR]
 month = [year[0] * MONTHS_PER_YEAR]
 day = [year[0] * DAYS_PER_YEAR]
+tick = [year[0] * TICKS_PER_YEAR]
+tick_of_day = [0]
+tick_of_month = [0]
+tick_of_year = [0]
 day_of_month = [0]
 day_of_year = [0]
 month_of_year = [0]
@@ -99,6 +108,7 @@ COLOR_PATH_MOVING = COLOR_YELLOW
 COLOR_PATH_HUNT = COLOR_RED
 COLOR_PATH_MATE = COLOR_PINK
 COLOR_PATH_SELECTED = COLOR_YELLOW
+COLOR_BABY_BLUE = (0, 0, 255)
 
 PATH_COLORS = { MOVING : COLOR_PATH_MOVING, MATING : COLOR_PATH_MATE, HUNTING : COLOR_PATH_HUNT }
 

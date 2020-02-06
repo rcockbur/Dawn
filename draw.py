@@ -47,13 +47,16 @@ def draw_text_pair(pos, offset_y, string_offset_pairs):
         draw_text_at(freesansbold_12, string, (x + offset, y))
     return offset_y + FONT_SIZE
 
+def full_crop(grass):
+    return grass.crop_current >= grass.crop_max
 
 def draw_hud():
     Y = 4
-    draw_text_pair((GRID_OFFSET_X + 0, Y),   0, [ ("Deer:", 0),     (str(len(MAP.get_entities_of_type(Deer))), 70) ])
-    draw_text_pair((GRID_OFFSET_X + 200, Y), 0, [ ("Wolves:", 0),     (str(len(MAP.get_entities_of_type(Wolf))), 95) ])
-    draw_text_pair((GRID_OFFSET_X + 400, Y), 0, [ ("People:", 0),     (str(len(MAP.get_entities_of_type(Person))), 95) ])
-    draw_text_pair((GRID_OFFSET_X + 600, Y), 0, [ ("Date:", 0),     (get_date_string(), 75) ])
+    draw_text_pair((GRID_OFFSET_X + 0, Y),   0, [ ("Grass:", 0),     (str(len(list(filter(full_crop, MAP.get_entities_of_type(Grass))))) + "/" + str(len(MAP.get_entities_of_type(Grass))), 80) ])
+    draw_text_pair((GRID_OFFSET_X + 250, Y), 0, [ ("Deer:", 0),     (str(len(MAP.get_entities_of_type(Deer))), 70) ])
+    draw_text_pair((GRID_OFFSET_X + 450, Y), 0, [ ("Wolves:", 0),     (str(len(MAP.get_entities_of_type(Wolf))), 95) ])
+    draw_text_pair((GRID_OFFSET_X + 650, Y), 0, [ ("People:", 0),     (str(len(MAP.get_entities_of_type(Person))), 95) ])
+    draw_text_pair((GRID_OFFSET_X + 850, Y), 0, [ ("Date:", 0),     (get_date_string(), 75) ])
     # draw_text_at(freesansbold_12, str(day_of_month[0]), (GRID_OFFSET_X + 750, 7))
     # draw_text_at(freesansbold_12, str(year[0]), (GRID_OFFSET_X + 800, 7))
 
@@ -103,7 +106,7 @@ def draw_grass_info(grass, pos):
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Marked", 0),     (grass.get_marked_string(), row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Class", 0),    (grass.class_name, row_x) ])
     # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Tile", 0),      (grass.get_tile_string(), row_x) ])
-    # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Crop", 0),      (str(grass.crop_current), row_x) ])
+    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ ("Crop", 0),      (str(grass.crop_current), row_x) ])
     return offset_y + FONT_SIZE
 
 def draw_grid():
@@ -135,11 +138,10 @@ def draw_unit(unit):
         if unit.is_male == False:
             if unit.pregnant_until is not None:
                 outter_rect = calculate_rect(unit.tile, unit.radius)    
-                pygame.draw.rect(screen, COLOR_PINK, outter_rect, 1)
+                pygame.draw.rect(screen, COLOR_BABY_BLUE, outter_rect, 1)
             elif unit.is_fertile == True:
-                pass
-                # outter_rect = calculate_rect(unit.tile, unit.radius)    
-                # pygame.draw.rect(screen, COLOR_PINK, outter_rect, 1)
+                outter_rect = calculate_rect(unit.tile, unit.radius)    
+                pygame.draw.rect(screen, COLOR_PINK, outter_rect, 1)
         
             
         if unit.satiation_current < 0:
