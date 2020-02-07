@@ -14,13 +14,19 @@ class Block(Entity):
 class Grass(Entity):
     def __init__(self, tile):
         Entity.__init__(self, tile)
-        self.color = (0, 100, 0) 
         self.color_eaten = (0, 50, 0)
         self.color_grown = (0, 100, 0)
         self.radius = UNIT_RADIUS_BLOCK
-        self.crop_max = 10
-        self.food_value = 370
+        self.crop_max = 40
+        self.food_value = 200
+
         self.crop_current = random.randint(0, self.crop_max)
+
+        if self.crop_current == self.crop_max:
+            self.color = self.color_grown
+        else:
+            self.color = self.color_eaten
+
         self.is_marked = False
         self.marked_at = -100000
         
@@ -43,13 +49,13 @@ class Grass(Entity):
                 if day[0] - self.marked_at > 100:
                     self.is_marked = False
                     self.marked_at = -1000
-            if day_of_month[0] == self.birth_day_of_month:
-                if self.crop_current < self.crop_max:
-                    self.crop_current += 1
-                if self.crop_current == self.crop_max:
-                    self.color = self.color_grown
-                else:
-                    self.color = self.color_eaten
+        
+            if self.crop_current < self.crop_max:
+                self.crop_current += 1
+            if self.crop_current == self.crop_max:
+                self.color = self.color_grown
+            else:
+                self.color = self.color_eaten
 
     def can_be_eaten(self):
         return self.crop_current == self.crop_max

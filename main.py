@@ -12,6 +12,8 @@ pygame.display.set_caption('Dawn')
 clock = pygame.time.Clock()
 map_file = open("map.txt", "r")
 
+
+# create blocks
 print("reading map.txt")
 row_index = 0
 for row in map_file:    
@@ -26,13 +28,14 @@ for row in map_file:
             symbol_index = symbol_index + 1
     row_index = row_index + 1
 
+# create units randomly
 for x in range(TILE_COUNT_X//2):
     for y in range(TILE_COUNT_Y//2):
         if MAP.get_entity_at_tile((2*x,2*y)) == None:
             rand = random.randint(0,250)
             if rand <= 8:
                 Deer((2*x, 2*y), False)
-            elif rand <= 40:
+            elif rand <= 70:
                 Grass((2*x, 2*y))
             # elif rand <= 9:
             #     Wolf((2*x, 2*y), False)
@@ -41,11 +44,14 @@ done = False
 paused = False
 mouse_pos_start = None
 
+speed_up_factor = 1
+speed_up_factor_index = 0
 
 while not done:
     
     start_time = pygame.time.get_ticks() 
-    
+
+    keys=pygame.key.get_pressed()
     
     mouse_pos = pygame.mouse.get_pos()
     mouse_pos_clamped = clamp_pos(mouse_pos)
@@ -74,10 +80,26 @@ while not done:
             elif event.key == pygame.K_d:
                 if mouse_tile is not None and mouse_entity is None:
                     Deer(mouse_tile, False)
+            elif event.key == pygame.K_g:
+                if mouse_tile is not None and mouse_entity is None:
+                    Grass(mouse_tile)
+            elif event.key == pygame.K_b:
+                if mouse_tile is not None and mouse_entity is None:
+                    Block(mouse_tile)
             elif event.key == pygame.K_k:
-                if mouse_entity is not None:
-                    print('kill')
-                    mouse_entity.die()
+                print('kill')
+                for entity in selected_entities:
+                    entity.die()
+            elif event.key == pygame.K_EQUALS:
+                speed_up_factor = speed_up_factor * 2
+                speed_up_factor_index = 0
+                print('FASTER', str(speed_up_factor))
+            elif event.key == pygame.K_MINUS:
+                if speed_up_factor > 1:
+                    speed_up_factor = speed_up_factor // 2
+                    speed_up_factor_index = 0
+                    print('SLOWER', str(speed_up_factor))
+                    
             elif event.key == pygame.K_1:
                 toggle_debug_pathfinding()
                 print("Debug Pathfinding:", str(get_debug_pathfinding()))
@@ -100,7 +122,7 @@ while not done:
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == LEFT_BUTTON:
                 if mouse_pos_start is not None:
-                    select_box(mouse_tile_start, mouse_tile_clamped)
+                    select_box(mouse_tile_start, mouse_tile_clamped, keys[pygame.K_LSHIFT])
                     mouse_pos_start = None
             if event.button == RIGHT_BUTTON:
                 if mouse_tile is not None:
@@ -139,16 +161,20 @@ while not done:
 
     mid_time = pygame.time.get_ticks()    
     logic_time = mid_time - start_time
-    # draw
-    draw_everything(mouse_pos_start, mouse_pos_clamped)
 
-    pygame.display.flip()
+    speed_up_factor_index += 1
+    if speed_up_factor_index == speed_up_factor:
+        speed_up_factor_index = 0
+        # draw
+        draw_everything(mouse_pos_start, mouse_pos_clamped)
+        pygame.display.flip()
+
     end_time = pygame.time.get_ticks()
     graphics_time = end_time - mid_time
     total_time = end_time - start_time
     if get_debug_performance() and paused == False: 
         print("Logic:",logic_time, "    Graphics:", graphics_time, "    Total:", total_time, "    Available:", 1000//FPS) 
-    clock.tick(FPS)
+    clock.tick(FPS * speed_up_factor)
 
     
 print("------------------------ FIN ---------------------------")

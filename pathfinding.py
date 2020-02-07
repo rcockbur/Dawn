@@ -140,13 +140,9 @@ def get_path(self, find_closest):
     start_tile = self.tile
 
     # 100 to -200
-    eat_chance = (100 * (self.satiation_current - self.satiation_full)) // (self.satiation_starving - self.satiation_full) # ranges from 0 to 99 
+    eat_chance = (100 * (self.satiation_current - self.satiation_full)) // (0 - self.satiation_full) # ranges from 0 to 99 
     wants_to_hunt = self.can_eat() and random.randint(0, 99) <= eat_chance
     wants_to_mate = self.can_mate()
-
-    if wants_to_mate:
-        wants_to_hunt = False
-
 
     if wants_to_hunt:
         if self.is_wolf and self.satiation_current < 0:

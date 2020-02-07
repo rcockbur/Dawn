@@ -9,12 +9,12 @@ from block import Block, Grass
 print("running unit.py")
 
 class Unit(Entity):
-    next_unit_is_male = False
+    # next_unit_is_male = False
 
-    def get_gender():
-        r = Unit.next_unit_is_male
-        Unit.next_unit_is_male = not Unit.next_unit_is_male
-        return r
+    # def get_gender():
+    #     r = Unit.next_unit_is_male
+    #     Unit.next_unit_is_male = not Unit.next_unit_is_male
+    #     return r
 
     def init_a(self, tile, born_naturally):
         Entity.__init__(self, tile)
@@ -22,7 +22,7 @@ class Unit(Entity):
         self.path = Path()
         self.kills = 0
         self.satiation_max = 1000
-        self.satiation_full = 500
+        self.satiation_full = 800
         self.satiation_starving = -500
         self.satiation_min = -1000
         self.move_period_diag = 28
@@ -35,7 +35,7 @@ class Unit(Entity):
         self.eat_types = {}
         self.patience_max = 50
         self.last_scanned_at = 0
-        self.is_male = Unit.get_gender()
+        self.is_male = random.randint(1,2) == 1
         
         self.dies_when_eaten = True
         self.target = None
@@ -53,7 +53,7 @@ class Unit(Entity):
             self.birth_day_of_year = day_of_year[0]
             self.birth_month_of_year = month_of_year[0]
         else:
-            self.birth_tick = random.randint((START_YEAR - 10) * TICKS_PER_YEAR, START_YEAR * TICKS_PER_YEAR)
+            self.birth_tick = random.randint((START_YEAR - 9) * TICKS_PER_YEAR, START_YEAR * TICKS_PER_YEAR)
             self.birth_day = self.birth_tick // TICKS_PER_DAY
             self.birth_month = self.birth_day // DAYS_PER_MONTH
             self.birth_year = self.birth_month // MONTHS_PER_YEAR
@@ -64,15 +64,8 @@ class Unit(Entity):
             self.birth_day_of_year = self.birth_day % DAYS_PER_YEAR
             self.birth_month_of_year = self.birth_month % MONTHS_PER_YEAR
             self.age = (day[0] - self.birth_day) // DAYS_PER_YEAR
-            
-
-            
-
-
-        
 
         if self.is_male == False:
-
             self.is_fertile = self.age >= self.age_adult
             self.pregnant_with = None
             self.pregnant_until = None
@@ -81,7 +74,7 @@ class Unit(Entity):
     def init_b(self, tile, born_naturally):
         self.move_current = self.move_period_ortho
         self.patience_current = self.patience_max
-        self.satiation_current = random.randint(self.satiation_starving + 1, self.satiation_full)
+        self.satiation_current = 10 * (random.randint(0, self.satiation_full) // 10)
         self.idle_current = random.randint(0, self.idle_max)
 
 
@@ -111,12 +104,6 @@ class Unit(Entity):
 
                 if self.is_male == False and self.pregnant_until is not None and self.pregnant_until == day[0]:
                     self.birth()
-
-
-
-
-            
-                        
 
             # update target if automatic, out of path, and idle_current is out
             if self.is_manual == False:
@@ -235,8 +222,7 @@ class Unit(Entity):
             baby = Deer(self.tile, True)
         elif type(self) is Wolf:
             baby = Wolf(self.tile, True)
-        
-        self.satiation_current -= 50
+
         self.pregnant_until = None
         self.pregnant_with = None
         if self.age < self.age_senior:
@@ -246,7 +232,7 @@ class Unit(Entity):
 
 
     def mate(self, entity):
-        self.pregnant_until = day[0] + random.randint(self.pregnancy_duration//2, self.pregnancy_duration)
+        self.pregnant_until = day[0] + random.randint(int(self.pregnancy_duration * (9/10)), int(self.pregnancy_duration * (11/10)))
         self.pregnant_with = entity
         self.is_fertile = False
         # print(self.name, "is pregnant")
@@ -342,8 +328,8 @@ class Deer(Unit):
 
     def __init__(self, tile, born_naturally):
         Unit.init_a(self, tile, born_naturally)
-        self.idle_min = 50
-        self.idle_max = 100
+        self.idle_min = 100
+        self.idle_max = 200
         self.move_range_idle = 8
         self.move_range_hunt = 12
         self.move_range_mate = 12
@@ -354,14 +340,14 @@ class Deer(Unit):
         self.cant_path_over_types = { Block, Deer, Wolf, Person, Grass }
         self.cant_move_types = { Block, Deer, Wolf, Person, Grass }
         self.eat_types = { Grass }
-        self.age_max = random.randint(18, 20)
-        self.age_senior = 16
+        self.age_max = random.randint(10, 12)
+        self.age_senior = 9
         self.food_value = 500
-        self.food_eat_rate = 2
+        self.food_eat_rate = 10
 
         if self.is_male == False:
             self.fertile_odds = 35
-            self.pregnancy_duration = DAYS_PER_YEAR
+            self.pregnancy_duration = 100
         Unit.init_b(self, tile, born_naturally)
 
     def update_target(self):
@@ -390,13 +376,13 @@ class Wolf(Unit):
         self.cant_path_over_types = { Block, Deer, Wolf, Person, Grass }
         self.cant_move_types = { Block, Deer, Wolf, Person, Grass }
         self.eat_types = { Deer }
-        self.age_max = random.randint(45, 50)
-        self.age_senior = 40
-        self.food_eat_rate = 4
+        self.age_max = random.randint(20, 22)
+        self.age_senior = 18
+        self.food_eat_rate = 10
 
         if self.is_male == False:
             self.fertile_odds = 35
-            self.pregnancy_duration = DAYS_PER_YEAR * 8
+            self.pregnancy_duration = 200
 
         Unit.init_b(self, tile, born_naturally)
 

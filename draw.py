@@ -8,7 +8,7 @@ print("running draw.py")
 
 
 # freesansbold_12 = pygame.font.Font('freesansbold.ttf', 12) 
-FONT_SIZE = 20
+FONT_SIZE = 16
 freesansbold_12 = pygame.font.SysFont('Monospace', FONT_SIZE) 
 
 
@@ -33,7 +33,7 @@ def draw_everything(mouse_pos_start = None, mouse_pos_clamped = None):
 draw_function[0] = draw_everything
 
 def draw_text_at(font, string, pos):
-    text = font.render(string, True, COLOR_TEXT_GREEN, COLOR_BACKGROUND) 
+    text = font.render(string, True, COLOR_WHITE, COLOR_BACKGROUND) 
     textRect = text.get_rect() 
     textRect.topleft = pos
     screen.blit(text, textRect)
@@ -51,8 +51,8 @@ def full_crop(grass):
     return grass.crop_current >= grass.crop_max
 
 def draw_hud():
-    Y = 4
-    draw_text_pair((GRID_OFFSET_X + 0, Y),   0, [ ("Grass:", 0),     (str(len(list(filter(full_crop, MAP.get_entities_of_type(Grass))))) + "/" + str(len(MAP.get_entities_of_type(Grass))), 80) ])
+    Y = 8
+    draw_text_pair((GRID_OFFSET_X + 5, Y),   0, [ ("Grass:", 0),     (str(len(list(filter(full_crop, MAP.get_entities_of_type(Grass))))) + "/" + str(len(MAP.get_entities_of_type(Grass))), 80) ])
     draw_text_pair((GRID_OFFSET_X + 250, Y), 0, [ ("Deer:", 0),     (str(len(MAP.get_entities_of_type(Deer))), 70) ])
     draw_text_pair((GRID_OFFSET_X + 450, Y), 0, [ ("Wolves:", 0),     (str(len(MAP.get_entities_of_type(Wolf))), 95) ])
     draw_text_pair((GRID_OFFSET_X + 650, Y), 0, [ ("People:", 0),     (str(len(MAP.get_entities_of_type(Person))), 95) ])

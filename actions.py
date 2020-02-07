@@ -1,6 +1,6 @@
 import os, sys, pygame, random
 from globals import *
-from unit import Unit, Person
+from unit import Unit, Person, Wolf
 from block import Block, Grass
 from pathfinding import astar
 print("running actions.py")
@@ -10,18 +10,26 @@ def filter_selection(entities):
     person_selected = False
     unit_selected = False
     grass_selected = False
+    wolf_selected = False
 
     for selected_entity in entities:
         if type(selected_entity) is Person:
             person_selected = True
         if isinstance(selected_entity, Unit):
             unit_selected = True
+        if isinstance(selected_entity, Wolf):
+            wolf_selected = True
         if isinstance(selected_entity, Grass):
             grass_selected = True
     
     if person_selected:
         for selected_entity in entities:
             if type(selected_entity) is not Person:
+                removed_entities.add(selected_entity)
+
+    elif wolf_selected:
+        for selected_entity in entities:
+            if not isinstance(selected_entity, Wolf):
                 removed_entities.add(selected_entity)
         
     elif unit_selected:
@@ -46,8 +54,8 @@ def move_to_tile(tile):
                 will_draw = False
                 selected_entity.path = path
 
-def select_box(corner_1, corner_3):
-    clear_selection()
+def select_box(corner_1, corner_3, shift_down):
+    if not shift_down: clear_selection()
     entities = MAP.get_entities_in_box(corner_1, corner_3)
     filter_selection(entities)
     for unit in entities:
