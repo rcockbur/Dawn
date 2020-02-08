@@ -66,7 +66,7 @@ class Unit(Entity):
             self.age = (day[0] - self.birth_day) // DAYS_PER_YEAR
 
         if self.is_male == False:
-            self.is_fertile = self.age >= self.age_adult
+            self.is_fertile = False
             self.pregnant_with = None
             self.pregnant_until = None
             
@@ -84,15 +84,17 @@ class Unit(Entity):
         if self.is_dead == False:
             # its my own tick - happens once a day
             if tick_of_day[0] == self.birth_tick_of_day:
-                # age
-                if day_of_year[0] == self.birth_day_of_year:
-                    self.age += 1
-                    if self.age == self.age_max:
-                        print(self.name, "died of old age")
-                        self.die()
-                        return
-                    if self.age == self.age_adult and self.is_male == False:
-                        self.is_fertile = True
+                if day_of_month[0] == self.birth_day_of_month:
+                    if self.is_male == False and self.is_fertile == False and self.pregnant_until == None and self.age_adult <= self.age < self.age_senior:
+                        if random.randint(1, 2) == 1:
+                            self.is_fertile = True
+                    if day_of_year[0] == self.birth_day_of_year:
+                        self.age += 1
+                        if self.age == self.age_max:
+                            print(self.name, "died of old age")
+                            self.die()
+                            return
+                        
 
                 # hunger  
                 if self.satiation_current > self.satiation_min:
@@ -151,12 +153,12 @@ class Unit(Entity):
         speed_up_factor = 1
         
         if self.satiation_current < 0:
-            speed_up_factor += 0.5
+            speed_up_factor += 0.3
             if self.satiation_current < self.satiation_starving:
-                speed_up_factor += 0.5
+                speed_up_factor += 0.3
         else:
             if self.can_mate():
-                speed_up_factor += 0.5
+                speed_up_factor += 0.3
 
         self.idle_current = int(self.idle_current / speed_up_factor)
 
@@ -169,12 +171,12 @@ class Unit(Entity):
         speed_up_factor = 1
         
         if self.satiation_current < 0:
-            speed_up_factor += 0.5
+            speed_up_factor += 0.3
             if self.satiation_current < self.satiation_starving:
-                speed_up_factor += 0.5
+                speed_up_factor += 0.3
         else:
             if self.can_mate():
-                speed_up_factor += 0.5
+                speed_up_factor += 0.3
 
         self.move_current = int(self.move_current / speed_up_factor)
 
@@ -225,8 +227,7 @@ class Unit(Entity):
 
         self.pregnant_until = None
         self.pregnant_with = None
-        if self.age < self.age_senior:
-            self.is_fertile = True
+
 
         print(self.name, "gave birth to", baby.name, "(", str(len(MAP.get_entities_of_type(self.__class__))), ")")
 
@@ -329,10 +330,10 @@ class Deer(Unit):
     def __init__(self, tile, born_naturally):
         Unit.init_a(self, tile, born_naturally)
         self.idle_min = 100
-        self.idle_max = 200
-        self.move_range_idle = 8
-        self.move_range_hunt = 12
-        self.move_range_mate = 12
+        self.idle_max = 120
+        self.move_range_idle = 5
+        self.move_range_hunt = 10
+        self.move_range_mate = 10
         self.is_wolf = False
         self.color = COLOR_DEER
         self.radius = UNIT_RADIUS_DEER
@@ -342,7 +343,7 @@ class Deer(Unit):
         self.eat_types = { Grass }
         self.age_max = random.randint(10, 12)
         self.age_senior = 9
-        self.food_value = 500
+        self.food_value = 1000
         self.food_eat_rate = 10
 
         if self.is_male == False:
@@ -365,10 +366,10 @@ class Wolf(Unit):
     def __init__(self, tile, born_naturally):
         Unit.init_a(self, tile, born_naturally)
         self.idle_min = 100
-        self.idle_max = 200
-        self.move_range_idle = 8
-        self.move_range_hunt = 12
-        self.move_range_mate = 12
+        self.idle_max = 120
+        self.move_range_idle = 5
+        self.move_range_hunt = 10
+        self.move_range_mate = 10
         self.is_wolf = True
         self.color = COLOR_WOLF
         self.radius = UNIT_RADIUS_WOLF
@@ -378,7 +379,7 @@ class Wolf(Unit):
         self.eat_types = { Deer }
         self.age_max = random.randint(20, 22)
         self.age_senior = 18
-        self.food_eat_rate = 10
+        self.food_eat_rate = 5
 
         if self.is_male == False:
             self.fertile_odds = 35

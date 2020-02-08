@@ -15,30 +15,30 @@ map_file = open("map.txt", "r")
 
 # create blocks
 print("reading map.txt")
-row_index = 0
-for row in map_file:    
-    if row_index < TILE_COUNT_Y:
-        symbol_index = 0
-        for symbol in row.strip(' \t\n\r').split(","):
-            if symbol_index < TILE_COUNT_X:
-                if symbol == "s":
-                    Block((symbol_index, row_index))
-                elif symbol == "g":
-                    Grass((symbol_index, row_index))
-            symbol_index = symbol_index + 1
-    row_index = row_index + 1
+# row_index = 0
+# for row in map_file:    
+#     if row_index < TILE_COUNT_Y:
+#         symbol_index = 0
+#         for symbol in row.strip(' \t\n\r').split(","):
+#             if symbol_index < TILE_COUNT_X:
+#                 if symbol == "s":
+#                     Block((symbol_index, row_index))
+#                 elif symbol == "g":
+#                     Grass((symbol_index, row_index))
+#             symbol_index = symbol_index + 1
+#     row_index = row_index + 1
 
 # create units randomly
-for x in range(TILE_COUNT_X//2):
-    for y in range(TILE_COUNT_Y//2):
-        if MAP.get_entity_at_tile((2*x,2*y)) == None:
-            rand = random.randint(0,250)
-            if rand <= 8:
-                Deer((2*x, 2*y), False)
-            elif rand <= 70:
-                Grass((2*x, 2*y))
-            # elif rand <= 9:
-            #     Wolf((2*x, 2*y), False)
+# for x in range(TILE_COUNT_X//2):
+#     for y in range(TILE_COUNT_Y//2):
+#         if MAP.get_entity_at_tile((2*x,2*y)) == None:
+#             rand = random.randint(0,250)
+#             if rand <= 8:
+#                 Deer((2*x, 2*y), False)
+#             elif rand <= 70:
+#                 Grass((2*x, 2*y))
+#             elif rand <= 71:
+#                 Wolf((2*x, 2*y), False)
 
 done = False
 paused = False
