@@ -2,7 +2,6 @@ import os, sys, pygame, random
 from globals import *                               #imports point
 from map import Map, tile_from_pos, clamp_pos, pos_within_bounds
 from block import Block, Grass
-from pathfinding import get_path
 from unit import Unit, Deer, Wolf, Person  
 from actions import move_to_tile, select_box, clear_selection, stop
 from draw import draw_everything, draw_hud, draw_grid, draw_box, draw_unit, draw_path, draw_black, draw_unit_highlight, draw_block
@@ -29,16 +28,17 @@ print("reading map.txt")
 #     row_index = row_index + 1
 
 # create units randomly
-# for x in range(TILE_COUNT_X//2):
-#     for y in range(TILE_COUNT_Y//2):
-#         if MAP.get_entity_at_tile((2*x,2*y)) == None:
-#             rand = random.randint(0,250)
-#             if rand <= 8:
-#                 Deer((2*x, 2*y), False)
-#             elif rand <= 70:
-#                 Grass((2*x, 2*y))
-#             elif rand <= 71:
-#                 Wolf((2*x, 2*y), False)
+for x in range(TILE_COUNT_X//2):
+    for y in range(TILE_COUNT_Y//2):
+        if MAP.get_entity_at_tile((2*x,2*y)) == None:
+            rand = random.randint(0,250)
+            if rand <= 50:
+                Grass((2*x, 2*y))
+                
+            # elif rand <= 70:
+            #     Deer((2*x, 2*y), False)
+            # elif rand <= 71:
+            #     Wolf((2*x, 2*y), False)
 
 done = False
 paused = False
@@ -80,6 +80,9 @@ while not done:
             elif event.key == pygame.K_d:
                 if mouse_tile is not None and mouse_entity is None:
                     Deer(mouse_tile, False)
+            elif event.key == pygame.K_h:
+                if mouse_tile is not None and mouse_entity is None:
+                    Person(mouse_tile, False)
             elif event.key == pygame.K_g:
                 if mouse_tile is not None and mouse_entity is None:
                     Grass(mouse_tile)

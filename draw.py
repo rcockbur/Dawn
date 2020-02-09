@@ -144,7 +144,7 @@ def draw_unit(unit):
                 pygame.draw.rect(screen, COLOR_PINK, outter_rect, 1)
         
             
-        if unit.satiation_current < 0:
+        if unit.satiation_current <= unit.satiation_hungery:
             if unit.satiation_current > unit.satiation_starving:
                 outter_rect = calculate_rect(unit.tile, 2)    
                 pygame.draw.rect(screen, COLOR_RED, outter_rect)
@@ -158,11 +158,18 @@ def draw_unit_highlight(unit):
 
 def draw_path(unit):
     if unit.is_selected or get_debug_path():
-        if unit.path.size() > 0:
-            color = PATH_COLORS[unit.status]
-            for point in unit.path.points:
-                rect = calculate_rect(point, 2)
-                pygame.draw.rect(screen, color, rect)
+        for ability in unit.ability_list:
+            if hasattr(ability, 'path'):
+                path = ability.path
+            elif hasattr(ability.approach, 'path'):
+                path = ability.approach.path
+            else:
+                path = None
+            
+            if path is not None:
+                for point in path.points:
+                    rect = calculate_rect(point, 2)
+                    pygame.draw.rect(screen, ability.color, rect)
 
 def draw_black():
     screen.fill(COLOR_BACKGROUND) 

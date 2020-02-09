@@ -51,6 +51,12 @@ class Map:
         else:
             return None
 
+    def get_entity_by_id(self, id):
+        if id in self.entities:
+            return self.entities[id]
+        else:
+            return None
+
     def get_entities_in_box(self, corner_1, corner_3):
         if corner_1[0] < corner_3[0]:
             low_x = corner_1[0]
