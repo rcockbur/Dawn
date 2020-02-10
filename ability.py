@@ -4,15 +4,13 @@ from pathfinding import astar
 from path import Path
 
 print("running ability.py")
-neighbors = [(0,1),(0,-1),(1,0),(-1,0),(1,1),(1,-1),(-1,1),(-1,-1)]
-
-
 
 class Move():
     def __init__(self, unit, path, target_entity = None):
         self.unit = unit
-        self.move_current = unit.move_period_ortho
+        self.move_current = unit.move_period
         self.patience_current = unit.patience_max
+        self.verb = "wandering"
 
         if target_entity is None:
             self.target_entity_id = None
@@ -22,6 +20,7 @@ class Move():
         self.path = path
         if self.path.size() == 0: raise RuntimeError("Cannot create move ability with path of size 0")
         self.color = COLOR_PATH_MOVING
+        self.repathing_attempts = 0
 
     def execute(self):
         if self.path.size() == 0: raise RuntimeError("Cannot execute move ability with path of size 0")
@@ -52,28 +51,23 @@ class Move():
         self.move_current = max(self.move_current - 1, 0)
         return {"complete":False}
 
-
-
-
-
-
     def update_move_current(self, point):
         if self.unit.tile[0] != point[0] and self.unit.tile[1] != point[1]:
-            self.move_current = self.unit.move_period_diag
+            self.move_current = round(self.unit.move_period * 1.4)
         else:
-            self.move_current = self.unit.move_period_ortho
+            self.move_current = self.unit.move_period
 
         speed_up_factor = 1
         
         if self.unit.satiation_current <= self.unit.satiation_hungery:
-            speed_up_factor += 0.3
+            speed_up_factor += 0.2
             if self.unit.satiation_current <= self.unit.satiation_starving:
-                speed_up_factor += 0.3
+                speed_up_factor += 0.2
         else:
             if self.unit.can_mate():
-                speed_up_factor += 0.3
+                speed_up_factor += 0.2
 
-        self.move_current = int(self.move_current / speed_up_factor)
+        self.move_current = round(self.move_current / speed_up_factor)
 
 
 class ApproachAbility():
@@ -86,18 +80,19 @@ class ApproachAbility():
         else:
             self.approach = None
         self.approach_started = False
+        self.times_dodged = 0
 
 
     def execute(self):
         if type(self.approach) == Move:
             results = self.approach.execute()
-            if self.unit.is_selected and self.approach_started == False: print("starting approach")
+            # if self.unit.is_selected and self.approach_started == False: print("starting approach")
             if results["complete"]:
                 if results["success"]:
-                    if self.unit.is_selected: print("approach complete")
+                    # if self.unit.is_selected: print("approach complete")
                     self.approach = None
                 else:
-                    if self.unit.is_selected: print("approach interrupted")
+                    # if self.unit.is_selected: print("approach interrupted")
                     return {"complete":True}
 
             self.approach_started = True
@@ -105,21 +100,28 @@ class ApproachAbility():
         else:
             target_entity = MAP.get_entity_by_id(self.target_entity_id)
             if target_entity is None or target_entity.is_dead == True:
-                if self.unit.is_selected: print("target is dead")
+                # if self.unit.is_selected: print("target is dead")
                 return {"complete":True, "success":False} # done, not successful
             diff_x = abs(target_entity.tile[0] - self.unit.tile[0])
             diff_y = abs(target_entity.tile[1] - self.unit.tile[1])
             if diff_x > 1 or diff_y > 1:
-                path = astar(self.unit.tile, target_entity.tile, self.unit.cant_move_types, get_debug_pathfinding())
-                if path is not None:
-                    self.approach = Move(self.unit, path, target_entity)
-                    if self.unit.is_selected: print("target has moved, recalculating")
-                    return {"complete":False}
-                else:
-                    if self.unit.is_selected: print("target can no longer be reached")
+                
+                if self.times_dodged == self.chase_attempts:
                     return {"complete":True, "success":False}
+                else:
+                    self.times_dodged += 1
+                    path = astar(self.unit.tile, target_entity.tile, self.unit.cant_move_types, self.unit.is_selected and get_debug_pathfinding())
+                    if path is not None:
+                        self.approach = Move(self.unit, path, target_entity)
+                        # if self.unit.is_selected: print("target has moved, recalculating")
+                        return {"complete":False}
+                    else:
+                        # if self.unit.is_selected: print("target can no longer be reached")
+                        return {"complete":True, "success":False}
+
+                
             self.ability_function(target_entity)
-            if self.unit.is_selected: print("target has been", self.verb)
+            # if self.unit.is_selected: print("target has been", self.verb)
             return {"complete":True, "success":True}
 
 
@@ -128,7 +130,8 @@ class Eat(ApproachAbility):
         ApproachAbility.__init__(self, unit, path, target_entity)
         self.ability_function = self.unit.eat
         self.color = COLOR_PATH_HUNT
-        self.verb = "eaten"
+        self.verb = "eating"
+        self.chase_attempts = 1
         if hasattr(target_entity, 'mark'):
             target_entity.mark()
 
@@ -137,5 +140,13 @@ class Mate(ApproachAbility):
         ApproachAbility.__init__(self, unit, path, target_entity)
         self.ability_function = self.unit.mate
         self.color = COLOR_PATH_MATE
-        self.verb = "mated with"
+        self.verb = "mating"
+        self.chase_attempts = 2
 
+class Socialize(ApproachAbility):
+    def __init__(self, unit, path, target_entity):
+        ApproachAbility.__init__(self, unit, path, target_entity)
+        self.ability_function = self.unit.socialize
+        self.color = COLOR_PATH_SOCIAL
+        self.verb = "socializing"
+        self.chase_attempts = 0

@@ -37,7 +37,6 @@ class Entity():
         self.tile = tile
         self.class_name = type(self).__name__
         self.name = self.new_name()
-        self.dies_when_eaten = False
 
     def die(self):
         dead_units.add(self)

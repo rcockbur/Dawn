@@ -13,7 +13,7 @@ map_file = open("map.txt", "r")
 
 
 # create blocks
-print("reading map.txt")
+# print("reading map.txt")
 # row_index = 0
 # for row in map_file:    
 #     if row_index < TILE_COUNT_Y:
@@ -32,11 +32,11 @@ for x in range(TILE_COUNT_X//2):
     for y in range(TILE_COUNT_Y//2):
         if MAP.get_entity_at_tile((2*x,2*y)) == None:
             rand = random.randint(0,250)
-            if rand <= 50:
+            if rand <= 80:
                 Grass((2*x, 2*y))
                 
-            # elif rand <= 70:
-            #     Deer((2*x, 2*y), False)
+            elif rand <= 88:
+                Deer((2*x, 2*y), False)
             # elif rand <= 71:
             #     Wolf((2*x, 2*y), False)
 
@@ -46,6 +46,55 @@ mouse_pos_start = None
 
 speed_up_factor = 1
 speed_up_factor_index = 0
+slow_down_factor = 1
+slow_down_factor_index = 0
+
+def unit_report():
+
+    s = ""
+    i = 0
+    for unit_class in (Deer, Wolf):
+        i += 1
+        if i == 2: 
+            s = s + "    "
+        num_born = unit_class.monthly_born
+        num_died = unit_class.monthly_died_age + unit_class.monthly_died_starved + unit_class.monthly_died_hunted
+        diff = num_born - num_died
+        if diff >= 0:
+            diff_sign = "+"
+        else:
+            diff_sign = "-"
+        diff = abs(diff)
+        s = s + unit_class.__name__ 
+        count = len(MAP.get_entities_of_type(unit_class))
+        if count < 100:
+            s = s + " "
+            if count < 10:
+                s = s + " "
+        s = s + "  " + str(count) + " "
+
+        # s = s + " ("
+        if diff < 100: s = s + " "
+        if diff < 10: s = s + " "
+        s = s + diff_sign + str(diff) + ":"
+        if num_born < 10: s = s + " "
+        s = s + "  +" + str(num_born) 
+        
+        if num_died < 10: s = s + " "
+        s = s + "  -" + str(num_died)
+        
+        s = s + " "
+        if unit_class.monthly_died_age < 10: s = s + " "
+        s = s + str(unit_class.monthly_died_age) + "/"
+        if unit_class.monthly_died_starved < 10: s = s + " "
+        s = s + str(unit_class.monthly_died_starved) + "/"
+        if unit_class.monthly_died_hunted < 10: s = s + " "
+        s = s + str(unit_class.monthly_died_hunted)
+        unit_class.monthly_born = 0
+        unit_class.monthly_died_age = 0
+        unit_class.monthly_died_hunted = 0
+        unit_class.monthly_died_starved = 0
+    print(s)
 
 while not done:
     
@@ -94,14 +143,23 @@ while not done:
                 for entity in selected_entities:
                     entity.die()
             elif event.key == pygame.K_EQUALS:
-                speed_up_factor = speed_up_factor * 2
-                speed_up_factor_index = 0
-                print('FASTER', str(speed_up_factor))
+                if slow_down_factor > 1:
+                    slow_down_factor = slow_down_factor // 2
+                    slow_down_factor_index = 0
+                    print('Faster', str(1 / slow_down_factor))
+                else:
+                    speed_up_factor = speed_up_factor * 2
+                    speed_up_factor_index = 0
+                    print('FASTER', str(speed_up_factor))
             elif event.key == pygame.K_MINUS:
                 if speed_up_factor > 1:
                     speed_up_factor = speed_up_factor // 2
                     speed_up_factor_index = 0
                     print('SLOWER', str(speed_up_factor))
+                else:
+                    slow_down_factor = slow_down_factor * 2
+                    slow_down_factor_index = 0
+                    print('SLOWER', str(1 / slow_down_factor))
                     
             elif event.key == pygame.K_1:
                 toggle_debug_pathfinding()
@@ -133,34 +191,38 @@ while not done:
 
     if paused == False:        
         
-        # units
-        for entity_id in list(MAP.entities):
-            if isinstance(MAP.entities[entity_id], Unit) or isinstance(MAP.entities[entity_id], Grass):
-                MAP.entities[entity_id].update()
-        # dead units
-        for unit in dead_units:
-            MAP.remove_entity(unit)
-        dead_units.clear()
+        slow_down_factor_index += 1
+        if slow_down_factor_index == slow_down_factor:
+            slow_down_factor_index = 0
+            # units
+            for entity_id in list(MAP.entities):
+                if isinstance(MAP.entities[entity_id], Unit) or isinstance(MAP.entities[entity_id], Grass):
+                    MAP.entities[entity_id].update()
+            # dead units
+            for unit in dead_units:
+                MAP.remove_entity(unit)
+            dead_units.clear()
 
-        tick[0] += 1
-        tick_of_day[0] += 1
-        tick_of_month[0] += 1
-        tick_of_year[0] += 1
-        if tick_of_day[0] == TICKS_PER_DAY:
-            tick_of_day[0] = 0
-            day[0] += 1
-            day_of_month[0] += 1
-            day_of_year[0] += 1
-            if day_of_month[0] == DAYS_PER_MONTH:
-                tick_of_month[0] = 0
-                day_of_month[0] = 0
-                month[0] += 1
-                month_of_year[0] += 1
-                if month_of_year[0] == MONTHS_PER_YEAR:
-                    tick_of_year[0] = 0
-                    day_of_year[0] = 0
-                    month_of_year[0] = 0
-                    year[0] += 1
+            tick[0] += 1
+            tick_of_day[0] += 1
+            tick_of_month[0] += 1
+            tick_of_year[0] += 1
+            if tick_of_day[0] == TICKS_PER_DAY:
+                tick_of_day[0] = 0
+                day[0] += 1
+                day_of_month[0] += 1
+                day_of_year[0] += 1
+                if day_of_month[0] == DAYS_PER_MONTH:
+                    tick_of_month[0] = 0
+                    day_of_month[0] = 0
+                    month[0] += 1
+                    month_of_year[0] += 1
+                    unit_report()
+                    if month_of_year[0] == MONTHS_PER_YEAR:
+                        tick_of_year[0] = 0
+                        day_of_year[0] = 0
+                        month_of_year[0] = 0
+                        year[0] += 1
 
     mid_time = pygame.time.get_ticks()    
     logic_time = mid_time - start_time
@@ -175,9 +237,10 @@ while not done:
     end_time = pygame.time.get_ticks()
     graphics_time = end_time - mid_time
     total_time = end_time - start_time
+    effective_FPS = FPS * speed_up_factor
     if get_debug_performance() and paused == False: 
-        print("Logic:",logic_time, "    Graphics:", graphics_time, "    Total:", total_time, "    Available:", 1000//FPS) 
-    clock.tick(FPS * speed_up_factor)
+        print("Logic:",logic_time, "    Graphics:", graphics_time, "    Total:", total_time, "    Available:", 1000//effective_FPS) 
+    clock.tick(effective_FPS)
 
     
 print("------------------------ FIN ---------------------------")

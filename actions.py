@@ -3,7 +3,7 @@ from globals import *
 from unit import Unit, Person, Wolf
 from block import Block, Grass
 from pathfinding import astar
-from ability import Move
+from ability import Move, Eat
 print("running actions.py")
 
 def filter_selection(entities):
@@ -47,13 +47,22 @@ def filter_selection(entities):
 
 def move_to_tile(tile):
     if len(selected_entities) > 0:
-        dest_unit = MAP.get_entity_at_tile(tile)
+        dest_entity = MAP.get_entity_at_tile(tile)
         for selected_entity in selected_entities:
-            if selected_entity.is_manual and type(dest_unit) not in [Block]:
-                path = astar(selected_entity.tile, tile, selected_entity.block_pathing_types, get_debug_pathfinding())
-                if path is not None:
-                    move_ability = Move(selected_entity, path)
-                    selected_entity.ability_list.append(move_ability)
+            if selected_entity.is_manual:
+
+                if type(dest_entity) in selected_entity.eat_types:
+                    ability = Eat
+                elif dest_entity is None:
+                    ability = Move
+                else:
+                    ability = None
+                if ability is not None:
+                    path = astar(selected_entity.tile, tile, selected_entity.cant_path_over_types, get_debug_pathfinding())
+                    if path is not None:
+                        selected_entity.ability_list.clear()
+                        new_ability = ability(selected_entity, path, dest_entity)
+                        selected_entity.ability_list.append(new_ability)
 
 def select_box(corner_1, corner_3, shift_down):
     if not shift_down: clear_selection()

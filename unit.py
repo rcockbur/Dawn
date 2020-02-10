@@ -6,48 +6,39 @@ from pathfinding import get_path, get_path
 from map import calculate_rect
 from entity import Entity
 from block import Block, Grass
-from ability import Move, Eat, Mate
+from ability import Move, Eat, Mate, Socialize
 print("running unit.py")
 
 abilities = {
     HUNTING: Eat,
     MATING: Mate,
-    MOVING: Move
+    MOVING: Move,
+    SOCIAL: Socialize
 }
 
 class Unit(Entity):
-    # next_unit_is_male = False
-
-    # def get_gender():
-    #     r = Unit.next_unit_is_male
-    #     Unit.next_unit_is_male = not Unit.next_unit_is_male
-    #     return r
 
     def init_a(self, tile, born_naturally):
         Entity.__init__(self, tile)
-        self.is_manual = False
+        
         # self.path = Path()
         self.ability_list = list()
         self.kills = 0
-        self.satiation_max = 1000
-        self.satiation_full = 800
+        self.satiation_min = -1000
         self.satiation_starving = -500
         self.satiation_hungery = 0
-        self.satiation_min = -1000
-        self.move_period_diag = 28
-        self.move_period_ortho = 20
-        # self.move_current = 0
-        self.status = STOPPED
-        self.age_adult = 2
+        self.satiation_full = 1000
+        self.satiation_max = 1200
         
-        self.kill_types = {}
-        self.eat_types = {}
-        self.patience_max = 50
+        self.cant_path_to_types = { Block }
+        self.cant_path_over_types = { Block, Deer, Wolf, Person, Grass }
+        self.cant_move_types = { Block, Deer, Wolf, Person, Grass }
+        
         self.last_scanned_at_hunt = 0
         self.last_scanned_at_mate = 0
+        self.last_scanned_at_social = 0
         self.is_male = random.randint(1,2) == 1
         
-        self.dies_when_eaten = True
         self.target = None
         
         if born_naturally == True:
@@ -63,7 +54,7 @@ class Unit(Entity):
             self.birth_day_of_year = day_of_year[0]
             self.birth_month_of_year = month_of_year[0]
         else:
-            self.birth_tick = random.randint((START_YEAR - 9) * TICKS_PER_YEAR, START_YEAR * TICKS_PER_YEAR)
+            self.birth_tick = random.randint((year[0] - 9) * TICKS_PER_YEAR, year[0] * TICKS_PER_YEAR)
             self.birth_day = self.birth_tick // TICKS_PER_DAY
             self.birth_month = self.birth_day // DAYS_PER_MONTH
             self.birth_year = self.birth_month // MONTHS_PER_YEAR
@@ -82,7 +73,6 @@ class Unit(Entity):
             
         
     def init_b(self, tile, born_naturally):
-        self.move_current = self.move_period_ortho
         # self.patience_current = self.patience_max
         self.satiation_current = 10 * (random.randint(self.satiation_hungery, self.satiation_full) // 10)
         if self.is_manual == False:
@@ -100,7 +90,9 @@ class Unit(Entity):
                     if day_of_year[0] == self.birth_day_of_year:
                         self.age += 1
                         if self.age == self.age_max:
-                            print(self.name, "died of old age")
+                            
+                            self.__class__.monthly_died_age += 1
+                            # print(self.name, "died of old age", str(self.__class__.monthly_died_age))
                             self.die()
                             return
                         
@@ -108,7 +100,8 @@ class Unit(Entity):
                 if self.satiation_current > self.satiation_min:
                     self.satiation_current -= self.food_eat_rate
                 else:
-                    print(self.name, "died of starvation")
+                    self.__class__.monthly_died_starved += 1
+                    # print(self.name, "died of starvation")
                     self.die()
                     return
                 # pregnancy
@@ -131,29 +124,38 @@ class Unit(Entity):
     def update_abilities(self):
         wants_to_hunt = False
         wants_to_mate = False
+        wants_to_socialize = False
         if self.satiation_current < self.satiation_full:
-            eat_chance = (100 * (self.satiation_current - self.satiation_full)) // (self.satiation_hungery - self.satiation_full) # ranges from 0 to 99 
+            eat_chance = (100 * (self.satiation_current - self.satiation_full)) // (self.satiation_starving - self.satiation_full) # ranges from 0 to 99 
             if random.randint(0, 99) <= eat_chance:
                 wants_to_hunt = True
         if wants_to_hunt == False and self.can_mate():
             wants_to_mate = True
+        if wants_to_hunt == False and self.is_social:
+            wants_to_socialize = True
 
         if wants_to_hunt:
-            if tick[0] >= self.last_scanned_at_hunt + TICKS_PER_DAY * DAYS_PER_MONTH:
+            if tick[0] >= self.last_scanned_at_hunt + (TICKS_PER_DAY * DAYS_PER_MONTH)//2:
                 self.last_scanned_at_hunt = tick[0]
                 search_range = self.move_range_hunt * 2
             else:
                 search_range = self.move_range_hunt
         elif wants_to_mate:
-            if tick[0] >= self.last_scanned_at_mate + TICKS_PER_DAY * DAYS_PER_MONTH:
+            if tick[0] >= self.last_scanned_at_mate + (TICKS_PER_DAY * DAYS_PER_MONTH)//2:
                 self.last_scanned_at_mate = tick[0]
                 search_range = self.move_range_mate * 2
             else:
                 search_range = self.move_range_mate
+        elif wants_to_socialize:
+            if tick[0] >= self.last_scanned_at_social + (TICKS_PER_DAY + DAYS_PER_MONTH)//2:
+                self.last_scanned_at_social = tick[0]
+                search_range = self.move_range_social * 2
+            else:
+                search_range = self.move_range_social
         else:
             search_range = self.move_range_idle
 
-        path_info = get_path(self, True, wants_to_hunt, wants_to_mate, search_range, self.move_range_idle)
+        path_info = get_path(self, True, wants_to_hunt, wants_to_mate, wants_to_socialize, search_range, self.move_range_idle)
         path = path_info[0]
         ability_type = path_info[1]
         target = path_info[2]
@@ -171,8 +173,7 @@ class Unit(Entity):
         else:
             if self.can_mate():
                 speed_up_factor += 0.3
-        self.idle_current = int(self.idle_current / speed_up_factor)
-
+        self.idle_current = round(self.idle_current / speed_up_factor)
 
     def move(self, tile):
         if MAP.tile_within_bounds(tile) == False:
@@ -188,7 +189,6 @@ class Unit(Entity):
         MAP.move_entity(self, old_tile, self.tile)
         return True
 
-
     def eat(self, entity):
         if type(entity) in self.eat_types:
             self.satiation_current = min(self.satiation_current + entity.food_value, self.satiation_max)
@@ -198,6 +198,7 @@ class Unit(Entity):
 
     def eaten(self):
         self.die() 
+        self.__class__.monthly_died_hunted += 1
 
     def can_be_eaten(self):
         return True
@@ -212,30 +213,31 @@ class Unit(Entity):
             baby = Wolf(self.tile, True)
         self.pregnant_until = None
         self.pregnant_with = None
-        print(self.name, "gave birth to", baby.name, "(", str(len(MAP.get_entities_of_type(self.__class__))), ")")
-
+        # print(self.name, "gave birth to", baby.name, "(", str(len(MAP.get_entities_of_type(self.__class__))), ")")
+        self.__class__.monthly_born += 1
 
     def mate(self, entity):
-        self.pregnant_until = day[0] + random.randint(int(self.pregnancy_duration * (9/10)), int(self.pregnancy_duration * (11/10)))
-        self.pregnant_with = entity
-        self.is_fertile = False
-        print(self.name, "is pregnant")
+        if random.randint(1, 2) == 1:
+            self.pregnant_until = day[0] + random.randint(int(self.pregnancy_duration * (9/10)), int(self.pregnancy_duration * (11/10)))
+            self.pregnant_with = entity
+            self.is_fertile = False
+            # print(self.name, "is pregnant")        
         
-        
-
     def can_mate(self):
         return self.is_male == False and self.is_fertile == True and self.satiation_current > self.satiation_hungery and self.age_adult <= self.age <= self.age_senior
 
     def can_be_mated_with(self):
         return self.is_male and self.age >= self.age_adult
 
-
     def select(self):
         self.is_selected = True
 
+    def socialize(self, entity):
+        # print(self.name, "socialized with", entity.name)
+        pass
+
     def deselect(self):
         self.is_selected = False
-
 
     def get_target_string(self):
         if self.path.size() > 0:
@@ -243,17 +245,11 @@ class Unit(Entity):
         return "-"
 
     def get_status_string(self):
-        if self.status == STOPPED:
-            return "Stopped"
-        elif self.status == MOVING:
-            return "Moving"
-        elif self.status == HUNTING:
-            return "Hunting"
-        elif self.status == MATING:
-            return "Mating"
+        if len(self.ability_list) > 0:
+            ability = self.ability_list[0]
+            return ability.verb
         else:
-            return "error"
-
+            return "idle"
 
     def get_pregnant_string(self):
         if self.pregnant_until is None:
@@ -262,8 +258,7 @@ class Unit(Entity):
             day = str(self.pregnant_until % DAYS_PER_MONTH)
             month = (self.pregnant_until // DAYS_PER_MONTH) % MONTHS_PER_YEAR
             year = str((self.pregnant_until // DAYS_PER_YEAR))
-            return MONTH_NAMES[month] + " " + day + ", " + year
-            
+            return MONTH_NAMES[month] + " " + day + ", " + year       
 
     def get_food_string(self):
         if self.satiation_current > self.satiation_hungery:
@@ -301,75 +296,120 @@ class Unit(Entity):
             s = str(self.birth_day_of_month)
         return MONTH_NAMES[self.birth_month_of_year] + " " + s + ", " + str(self.birth_year)
     
-     
-   
-
 class Deer(Unit):
+
+    monthly_born = 0
+    monthly_died_age = 0
+    monthly_died_starved = 0
+    monthly_died_hunted = 0
 
     def __init__(self, tile, born_naturally):
         Unit.init_a(self, tile, born_naturally)
-        self.idle_min = 100
-        self.idle_max = 120
-        self.move_range_idle = 5
-        self.move_range_hunt = 10
-        self.move_range_mate = 10
-        self.is_wolf = False
+        # common base
         self.color = COLOR_DEER
         self.radius = UNIT_RADIUS_DEER
-        self.cant_path_to_types = { Block }
-        self.cant_path_over_types = { Block, Deer, Wolf, Person, Grass }
-        self.cant_move_types = { Block, Deer, Wolf, Person, Grass }
+
+        # common eating
+        self.food_eat_rate = 20
         self.eat_types = { Grass }
-        self.age_max = random.randint(10, 12)
+
+        # common movement
+        self.move_period = 20
+        self.patience_max = 50
+        
+        # common age
+        self.age_adult = 2
         self.age_senior = 9
-        self.food_value = 1000
-        self.food_eat_rate = 10
+        self.age_max = random.randint(10, 12)
         if self.is_male == False:
             self.pregnancy_duration = 100
 
+        # by type - idle and range
+        self.is_manual = False
+        self.idle_min = 100
+        self.idle_max = 120
+        self.move_range_idle = 8
+        self.move_range_hunt = 8
+        self.move_range_mate = 8
+        self.is_social = False
+
+        # unique
+        self.food_value = 1000
+        
         Unit.init_b(self, tile, born_naturally)
 
 
-
-
-
 class Wolf(Unit):
+
+    monthly_born = 0
+    monthly_died_age = 0
+    monthly_died_starved = 0
+    monthly_died_hunted = 0
+
     def __init__(self, tile, born_naturally):
         Unit.init_a(self, tile, born_naturally)
-        self.idle_min = 100
-        self.idle_max = 120
-        self.move_range_idle = 10
-        self.move_range_hunt = 20
-        self.move_range_mate = 20
-        self.is_wolf = True
+        # common base
         self.color = COLOR_WOLF
         self.radius = UNIT_RADIUS_WOLF
-        self.cant_path_to_types = { Block }
-        self.cant_path_over_types = { Block, Deer, Wolf, Person, Grass }
-        self.cant_move_types = { Block, Deer, Wolf, Person, Grass }
+
+        # common eating
+        self.food_eat_rate = 20
         self.eat_types = { Deer }
-        self.age_max = random.randint(20, 22)
+        
+        # common movement
+        self.move_period = 20
+        self.patience_max = 50 
+
+        # common age
+        self.age_adult = 2
         self.age_senior = 18
-        self.food_eat_rate = 5
+        self.age_max = random.randint(20, 22)
         if self.is_male == False:
             self.pregnancy_duration = 200
+
+        # by type - idle and range
+        self.is_manual = False
+        self.idle_min = 100
+        self.idle_max = 120
+        self.move_range_idle = 4
+        self.move_range_hunt = 8
+        self.move_range_mate = 12
+        self.move_range_social = 12
+        self.is_social = True
 
         Unit.init_b(self, tile, born_naturally)
 
 
 class Person(Unit):
+
+    monthly_born = 0
+    monthly_died_age = 0
+    monthly_died_starved = 0
+    monthly_died_hunted = 0
+
     def __init__(self, tile, born_naturally):
         Unit.init_a(self, tile, born_naturally)
+        # common base
         self.color = COLOR_PERSON
         self.radius = UNIT_RADIUS_PERSON
-        self.is_manual = True
-        self.kill_types = { Deer, Wolf }
-        self.block_pathing_types = { Block }
-        self.cant_move_types = { Block, Person }
-        self.patience_max = 20
-        self.satiation_max = 1000
+
+        # common eating
         self.food_eat_rate = 1
+        self.eat_types = { Deer, Wolf }
+
+        # common movement
+        self.move_period = 10
+        self.patience_max = 20
+        
+        # common age
+        self.age_adult = 16
         self.age_senior = 75
         self.age_max = random.randint(80, 100)
+        if self.is_male == False:
+            self.pregnancy_duration = 200
+
+        # by type
+        self.is_manual = True
+
         Unit.init_b(self, tile, born_naturally)
 

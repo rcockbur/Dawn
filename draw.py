@@ -56,8 +56,10 @@ def draw_hud():
     draw_text_pair((GRID_OFFSET_X + 250, Y), 0, [ ("Deer:", 0),     (str(len(MAP.get_entities_of_type(Deer))), 70) ])
     draw_text_pair((GRID_OFFSET_X + 450, Y), 0, [ ("Wolves:", 0),     (str(len(MAP.get_entities_of_type(Wolf))), 95) ])
     draw_text_pair((GRID_OFFSET_X + 650, Y), 0, [ ("People:", 0),     (str(len(MAP.get_entities_of_type(Person))), 95) ])
-    draw_text_pair((GRID_OFFSET_X + 850, Y), 0, [ ("Date:", 0),     (get_date_string(), 75) ])
-    # draw_text_at(freesansbold_12, str(day_of_month[0]), (GRID_OFFSET_X + 750, 7))
+    draw_text_pair((GRID_OFFSET_X + 850, Y), 0, [ ("Date:", 0),     (get_date_string(), 125) ])
+    s = str(tick_of_day[0]) + ":00"
+    if tick_of_day[0] < 10: s = "0" + s
+    draw_text_at(freesansbold_12, s, (GRID_OFFSET_X + 910, Y))
     # draw_text_at(freesansbold_12, str(year[0]), (GRID_OFFSET_X + 800, 7))
 
     offset_y = GRID_OFFSET_Y

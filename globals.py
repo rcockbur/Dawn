@@ -31,6 +31,7 @@ MONTHS_PER_YEAR = 12
 DAYS_PER_YEAR = 360
 TICKS_PER_MONTH = TICKS_PER_DAY * DAYS_PER_MONTH
 TICKS_PER_YEAR = 360 * TICKS_PER_DAY
+
 year = [START_YEAR]
 month = [year[0] * MONTHS_PER_YEAR]
 day = [year[0] * DAYS_PER_YEAR]
@@ -52,7 +53,7 @@ debug_status = False       or True
 
 GRID_OFFSET_X = 10
 GRID_OFFSET_Y = 30
-TILE_COUNT_X = 140
+TILE_COUNT_X = 180
 TILE_COUNT_Y = 116
 LINE_WIDTH = 1
 TILE_RADIUS = 4
@@ -64,6 +65,7 @@ STOPPED = 0
 MOVING = 1
 HUNTING = 2
 MATING = 3
+SOCIAL = 4
 
 
 TILE_SPACING = TILE_RADIUS * 2 + LINE_WIDTH
@@ -107,10 +109,10 @@ COLOR_CLOSED_SET = COLOR_BLUE
 COLOR_PATH_MOVING = COLOR_YELLOW
 COLOR_PATH_HUNT = COLOR_RED
 COLOR_PATH_MATE = COLOR_PINK
+COLOR_PATH_SOCIAL = COLOR_GREEN
 COLOR_PATH_SELECTED = COLOR_YELLOW
 COLOR_BABY_BLUE = (0, 0, 255)
 
-PATH_COLORS = { MOVING : COLOR_PATH_MOVING, MATING : COLOR_PATH_MATE, HUNTING : COLOR_PATH_HUNT }
 
 def toggle_debug_pathfinding():
     global debug_pathfinding
@@ -156,4 +158,4 @@ def get_date_string():
         s = "0" + str(day_of_month[0])
     else:
         s = str(day_of_month[0])
-    return MONTH_NAMES[month_of_year[0]] + "  " + s + ",  " + str(year[0])
+    return MONTH_NAMES[month_of_year[0]] + " " + s + ", " + str(year[0])
