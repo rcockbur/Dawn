@@ -1,8 +1,6 @@
-# a command queues up 1-2 abilities
 from globals import *
 from pathfinding import astar
 from path import Path
-
 print("running ability.py")
 
 class Move():
@@ -11,31 +9,28 @@ class Move():
         self.move_current = unit.move_period
         self.patience_current = unit.patience_max
         self.verb = "wandering"
-
+        self.path = path
+        self.color = COLOR_PATH_MOVING
+        self.repath_attempts = repath_attempts
         if target_entity is None:
             self.target_entity_id = None
         else:
             self.target_entity_id = target_entity.id
-            
-        self.path = path
-        if self.path.size() == 0: raise RuntimeError("Cannot create move ability with path of size 0")
-        self.color = COLOR_PATH_MOVING
-        self.repath_attempts = repath_attempts
+        if self.path.size() == 0: 
+            raise RuntimeError("Cannot create move ability with path of size 0")
+        
 
     def execute(self):
-        if self.path.size() == 0: raise RuntimeError("Cannot execute move ability with path of size 0")
+        if self.path.size() == 0: 
+            raise RuntimeError("Cannot execute move ability with path of size 0")
 
-        is_blocked = False
-            
         entity = MAP.get_entity_at_tile(self.path.points[0])
-
         if entity is not None and self.target_entity_id is not None and entity.id == self.target_entity_id:
             return {"complete":True, "success":True}
 
+        is_blocked = False
         if type(entity) in self.unit.__class__.cant_move_types:
             is_blocked = True
-
-        # we are blocked
         if is_blocked == True:
             self.patience_current = self.patience_current - 1
             if self.patience_current == 0:
@@ -68,9 +63,7 @@ class Move():
             self.move_current = round(self.unit.move_period * 1.4)
         else:
             self.move_current = self.unit.move_period
-
         speed_up = 1
-        
         if self.unit.sat_current <= self.unit.__class__.sat_hungery:
             speed_up += 0.2
             if self.unit.sat_current <= self.unit.__class__.sat_starving:
@@ -78,9 +71,7 @@ class Move():
         else:
             if self.unit.can_mate():
                 speed_up += 0.2
-
         self.move_current = round(self.move_current / speed_up)
-
 
 class ApproachAbility():
     def __init__(self, unit, path, target_entity, repath_attempts = 0):
@@ -95,17 +86,13 @@ class ApproachAbility():
         self.times_dodged = 0
         self.can_execute_at = -1000
 
-
     def execute(self):
         if type(self.approach) == Move:
             results = self.approach.execute()
-            # if self.unit.is_selected and self.approach_started == False: print("starting approach")
             if results["complete"]:
                 if results["success"]:
-                    # if self.unit.is_selected: print("approach complete")
                     self.approach = None
                 else:
-                    # if self.unit.is_selected: print("approach interrupted")
                     return {"complete":True}
 
             self.approach_started = True
@@ -113,12 +100,10 @@ class ApproachAbility():
         else:
             target_entity = MAP.get_entity_by_id(self.target_entity_id)
             if target_entity is None or target_entity.is_destroyed == True:
-                # if self.unit.is_selected: print("target is dead")
                 return {"complete":True, "success":False} # done, not successful
             diff_x = abs(target_entity.tile[0] - self.unit.tile[0])
             diff_y = abs(target_entity.tile[1] - self.unit.tile[1])
             if diff_x > 1 or diff_y > 1:
-                
                 if self.times_dodged == self.chase_attempts:
                     return {"complete":True, "success":False}
                 else:
@@ -126,10 +111,8 @@ class ApproachAbility():
                     path = astar(self.unit.tile, target_entity.tile, self.unit.__class__.cant_move_types, self.unit.is_selected and get_debug_pathfinding())
                     if path is not None:
                         self.approach = Move(self.unit, path, target_entity)
-                        # if self.unit.is_selected: print("target has moved, recalculating")
                         return {"complete":False}
                     else:
-                        # if self.unit.is_selected: print("target can no longer be reached")
                         return {"complete":True, "success":False}
             if current_date[DT_HOUR] >= self.can_execute_at:
                 r = self.ability_function(target_entity)

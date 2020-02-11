@@ -71,7 +71,6 @@ def select_box(corner_1, corner_3, shift_down):
     for unit in entities:
         unit.select()
         selected_entities.add(unit)
-        # print("Selected:", unit.name)
 
 def clear_selection():
     if len(selected_entities) > 0:
@@ -82,4 +81,20 @@ def clear_selection():
 def stop():
     for selected_entity in selected_entities:
         selected_entity.path.clear()
+
+def load_map_file(file_string):
+    print("reading map.txt")
+    map_file = open(file_string, "r")
+    row_index = 0
+    for row in map_file:    
+        if row_index < TILE_COUNT_Y:
+            symbol_index = 0
+            for symbol in row.strip(' \t\n\r').split(","):
+                if symbol_index < TILE_COUNT_X:
+                    if symbol == "s":
+                        Block((symbol_index, row_index))
+                    elif symbol == "g":
+                        Grass((symbol_index, row_index))
+                symbol_index = symbol_index + 1
+        row_index = row_index + 1
 

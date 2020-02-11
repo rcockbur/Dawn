@@ -3,9 +3,8 @@ from path import Path
 from math import sqrt
 from heapq import heappush, heappop
 from map import calculate_rect
+from utility import measure
 import time, random
-from utility import measure, print_point
-
 print("running pathfinding.py")
 
 rt_2 = sqrt(2)
@@ -38,7 +37,6 @@ def astar(start_tile, end_tile, obstacle_types, debug):
     nodes_checked = 0
 
     if debug:
-        # debug_draw(end_tile, COLOR_PATH, 2, 0)   
         debug_draw(start_tile, COLOR_YELLOW, TILE_RADIUS, 1)
 
     closed_set = set()
@@ -140,7 +138,6 @@ def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socializ
     elif wants_to_socialize: activity_color = COLOR_PATH_SOCIAL
     else: activity_color = COLOR_PATH_MOVING
 
-
     if debug:
         draw_function[0]()
         debug_draw(start_tile, activity_color, TILE_RADIUS, 1)
@@ -225,7 +222,6 @@ def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socializ
         return (path, MATING, mate)
 
     # return friend
-    # print(str(len(potential_friends)))
     elif wants_to_socialize and len(potential_friends) > 0:
         friend = random.choice(tuple(potential_friends))
         path = create_path(friend.tile, came_from, debug, COLOR_PATH_SOCIAL)

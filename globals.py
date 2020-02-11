@@ -1,8 +1,4 @@
-import pygame
-import random
-import os
-import ctypes
-
+import pygame, random, os, ctypes
 print("running globals.py 1")
 
 NoneType = type(None)
@@ -12,67 +8,31 @@ user32 = ctypes.windll.user32
 WINDOW_WIDTH = user32.GetSystemMetrics(0)
 WINDOW_HEIGHT = user32.GetSystemMetrics(1)
 
-g = dict()
-
 random.seed()
 pygame.init()
 
 screen = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
-
+pygame.display.set_caption('Dawn') 
 draw_function = [0]
 
 FPS = 30
-
-START_YEAR = 1989
-
-HOURS_PER_DAY = 24
-DAYS_PER_MONTH = 30
-MONTHS_PER_YEAR = 12
-DAYS_PER_YEAR = DAYS_PER_MONTH * MONTHS_PER_YEAR
-HOURS_PER_MONTH = HOURS_PER_DAY * DAYS_PER_MONTH
-HOURS_PER_YEAR = HOURS_PER_DAY * DAYS_PER_YEAR
-
-DT_YEAR = 0
-DT_MONTH = 1
-DT_DAY = 2
-DT_HOUR = 3
-DT_MONTH_OY = 4
-DT_DAY_OM = 5
-DT_DAY_OY = 6
-DT_HOUR_OD = 7
-DT_HOUR_OM = 8
-DT_HOUR_OY = 9
-DATE_TYPES = ( DT_YEAR, DT_MONTH, DT_DAY, DT_HOUR, DT_MONTH_OY, DT_DAY_OM, DT_DAY_OY, DT_HOUR_OD, DT_HOUR_OM, DT_HOUR_OY )
-
-current_date = dict()
-current_date[DT_YEAR] = START_YEAR
-current_date[DT_MONTH] = START_YEAR * MONTHS_PER_YEAR
-current_date[DT_DAY] = START_YEAR * DAYS_PER_YEAR
-current_date[DT_HOUR] = START_YEAR * HOURS_PER_YEAR
-current_date[DT_MONTH_OY] = 0
-current_date[DT_DAY_OY] = 0
-current_date[DT_DAY_OM] = 0
-current_date[DT_HOUR_OY] = 0
-current_date[DT_HOUR_OM] = 0
-current_date[DT_HOUR_OD] = 0
-
+clock = pygame.time.Clock()
+speed_up_factor = [1.0]
+slow_down_factor = [1.0]
 
 selected_entities = set()
 destroyed_units = set()
-
-speed_up_factor = [1.0]
-slow_down_factor = [1.0]
 
 debug_pathfinding = False #or True 
 debug_path = False        #or True
 debug_performance = False #or True
 debug_status = False      #or True
-debug_unit_report = False #or True
+debug_unit_report = False or True
 
-GRID_OFFSET_X = 10
-GRID_OFFSET_Y = 30
+GRID_OFFSET_X = 15
+GRID_OFFSET_Y = 35
 TILE_COUNT_X = 150
-TILE_COUNT_Y = 116
+TILE_COUNT_Y = 115
 LINE_WIDTH = 1
 TILE_RADIUS = 4
 LEFT_BUTTON = 1
@@ -84,7 +44,6 @@ MOVING = 1
 HUNTING = 2
 MATING = 3
 SOCIAL = 4
-
 
 TILE_SPACING = TILE_RADIUS * 2 + LINE_WIDTH
 GRID_SIZE_X = TILE_COUNT_X * TILE_SPACING
@@ -131,6 +90,38 @@ COLOR_PATH_SOCIAL = COLOR_GREEN
 COLOR_PATH_SELECTED = COLOR_YELLOW
 COLOR_BABY_BLUE = (0, 0, 255)
 
+HOURS_PER_DAY = 24
+DAYS_PER_MONTH = 30
+MONTHS_PER_YEAR = 12
+DAYS_PER_YEAR = DAYS_PER_MONTH * MONTHS_PER_YEAR
+HOURS_PER_MONTH = HOURS_PER_DAY * DAYS_PER_MONTH
+HOURS_PER_YEAR = HOURS_PER_DAY * DAYS_PER_YEAR
+
+DT_YEAR = 0
+DT_MONTH = 1
+DT_DAY = 2
+DT_HOUR = 3
+DT_MONTH_OY = 4
+DT_DAY_OM = 5
+DT_DAY_OY = 6
+DT_HOUR_OD = 7
+DT_HOUR_OM = 8
+DT_HOUR_OY = 9
+DATE_TYPES = ( DT_YEAR, DT_MONTH, DT_DAY, DT_HOUR, DT_MONTH_OY, DT_DAY_OM, DT_DAY_OY, DT_HOUR_OD, DT_HOUR_OM, DT_HOUR_OY )
+MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", ]
+
+current_date = dict()
+START_YEAR = 1989
+current_date[DT_YEAR] = START_YEAR
+current_date[DT_MONTH] = START_YEAR * MONTHS_PER_YEAR
+current_date[DT_DAY] = START_YEAR * DAYS_PER_YEAR
+current_date[DT_HOUR] = START_YEAR * HOURS_PER_YEAR
+current_date[DT_MONTH_OY] = 0
+current_date[DT_DAY_OY] = 0
+current_date[DT_DAY_OM] = 0
+current_date[DT_HOUR_OY] = 0
+current_date[DT_HOUR_OM] = 0
+current_date[DT_HOUR_OD] = 0
 
 def toggle_debug_pathfinding():
     global debug_pathfinding
@@ -177,11 +168,3 @@ print("running globals.py 2")
 MAP = Map()
 
 
-MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", ]
-
-def get_date_string():
-    if current_date[DT_DAY_OM] < 10:
-        s = "0" + str(current_date[DT_DAY_OM])
-    else:
-        s = str(current_date[DT_DAY_OM])
-    return MONTH_NAMES[current_date[DT_MONTH_OY]] + " " + s + ", " + str(current_date[DT_YEAR])
