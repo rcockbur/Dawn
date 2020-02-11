@@ -1,5 +1,5 @@
 from globals import *
-from path import Path
+# from path import Path
 from math import sqrt
 from heapq import heappush, heappop
 from map import calculate_rect
@@ -61,7 +61,7 @@ def astar(start_tile, end_tile, obstacle_types, debug):
                 if 0 <= neighbor[1] < TILE_COUNT_Y:
                     # Outro block
                     if neighbor == end_tile:
-                        path = Path()
+                        path = list()
                         path.append(neighbor)
                         if debug: 
                             time.sleep(0.2 * slow_factor)
@@ -106,15 +106,16 @@ def create_path(tile, came_from, debug, debug_color):
     if debug: 
         debug_draw(tile, debug_color, 2, 0)
         time.sleep(0.7 * slow_factor)
-    path = Path()
+    path = list()
+
     # path.append(tile)
 
     while tile in came_from:
         path.append(tile)
         tile = came_from[tile]
 
-    path = path.reverse()
-    for tile in path.points:
+    path.reverse()
+    for tile in path:
         if debug:
             debug_draw(tile, debug_color, 2, 0)
             time.sleep(0.02 * slow_factor)                  
@@ -207,8 +208,8 @@ def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socializ
         chosen_list.sort(key=lambda e: d_score[e.tile])
         edible_entity = chosen_list[0]    
         path = create_path(edible_entity.tile, came_from, debug, COLOR_PATH_HUNT)
-        if path.size() > 0: path.points.pop()
-        if path.size() == 0:
+        if len(path) > 0: path.pop(0)
+        if len(path) == 0:
             path = None
         return (path, HUNTING, edible_entity)
 
@@ -216,8 +217,8 @@ def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socializ
     elif wants_to_mate and len(potential_mates) > 0:
         mate = random.choice(tuple(potential_mates))
         path = create_path(mate.tile, came_from, debug, COLOR_PATH_MATE)
-        if path.size() > 0: path.points.pop()
-        if path.size() == 0:
+        if len(path) > 0: path.pop(0)
+        if len(path) == 0:
             path = None
         return (path, MATING, mate)
 
@@ -225,8 +226,8 @@ def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socializ
     elif wants_to_socialize and len(potential_friends) > 0:
         friend = random.choice(tuple(potential_friends))
         path = create_path(friend.tile, came_from, debug, COLOR_PATH_SOCIAL)
-        if path.size() > 0: path.points.pop()
-        if path.size() == 0:
+        if len(path) > 0: path.pop(0)
+        if len(path) == 0:
             path = None
         return (path, SOCIAL, friend)
     

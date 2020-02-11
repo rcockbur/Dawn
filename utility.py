@@ -55,24 +55,64 @@ def format_ability_list(ability_list):
     return s
 
 def format_datetime_from_hour(hour):
-    day = hour // HOURS_PER_DAY
-    month = day // DAYS_PER_MONTH
-    year = month // MONTHS_PER_YEAR
-    hour_of_day = hour % HOURS_PER_DAY
-    day_of_month = day % DAYS_PER_MONTH
-    month_of_year = month % MONTHS_PER_YEAR
+    if hour is not None:
+        day = hour // HOURS_PER_DAY
+        month = day // DAYS_PER_MONTH
+        year = month // MONTHS_PER_YEAR
+        hour_of_day = hour % HOURS_PER_DAY
+        day_of_month = day % DAYS_PER_MONTH
+        month_of_year = month % MONTHS_PER_YEAR
 
-    if hour_of_day < 10:
-        hour_string = "0" + str(hour_of_day) + ":00"
+        if hour_of_day < 10:
+            hour_string = "0" + str(hour_of_day) + ":00"
+        else:
+            hour_string = str(hour_of_day) + ":00"
+
+        if day_of_month < 10:
+            day_string = "0" + str(day_of_month)
+        else:
+            day_string = str(day_of_month)
+
+        return hour_string + " " + MONTH_NAMES[month_of_year] + " " + day_string + ", " + str(year)
     else:
-        hour_string = str(hour_of_day) + ":00"
+        return "None"
 
-    if day_of_month < 10:
-        day_string = "0" + str(day_of_month)
+def format_date_from_day(day):
+    if day is not None:
+        month = day // DAYS_PER_MONTH
+        year = month // MONTHS_PER_YEAR
+        day_of_month = day % DAYS_PER_MONTH
+        month_of_year = month % MONTHS_PER_YEAR
+
+        if day_of_month < 10:
+            day_string = "0" + str(day_of_month)
+        else:
+            day_string = str(day_of_month)
+
+        return MONTH_NAMES[month_of_year] + " " + day_string + ", " + str(year)
     else:
-        day_string = str(day_of_month)
+        return "None"
 
-    return hour_string + " " + MONTH_NAMES[month_of_year] + " " + day_string + ", " + str(year)
+def format_name_from_id(id):
+    entity = MAP.get_entity_by_id(id)
+    if entity is not None:
+        return entity.name
+    entity = MAP.get_destroyed_entity_by_id(id)
+    if entity is not None:
+        return entity.name + "(D)"
+    return "None"
+
+def format_entity_header(unit):
+    s = ""
+    if hasattr(unit, "is_male"):
+        if unit.is_male: s = "(M)"
+        else: s = "(F) "
+
+    if hasattr(unit, "age"):
+        s = s + str(unit.age)
+
+    return s 
+    
 
 def unit_report(entity_types):
     s = ""

@@ -3,7 +3,7 @@ from globals import *
 from block import Block, Grass
 from unit import Unit, Deer, Person, Wolf
 from map import calculate_rect
-from utility import format_datetime, format_date, format_ability_list, format_datetime_from_hour
+from utility import format_datetime, format_date, format_ability_list, format_datetime_from_hour, format_date_from_day, format_name_from_id, format_entity_header
 print("running draw.py")
 
 FONT_SIZE = 16
@@ -46,7 +46,7 @@ def draw_text_pair(pos, offset_y, string_offset_pairs):
     return offset_y + FONT_SIZE + 2
 
 def full_crop(grass):
-    return grass.crop_current >= grass.crop_max
+    return grass.crop_current >= grass.__class__.crop_max
 
 def draw_hud():
     padding_top = 10
@@ -66,16 +66,20 @@ def draw_hud():
 def draw_selected_info(unit, pos):
     row_x = 200
     offset_y = 0
-    for k, v in vars(unit).items():
+    
+    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (unit.name, 0),     (format_entity_header(unit), 100) ])
+    for k, v in sorted(list(vars(unit).items())):
         if k == "birth":
             offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_datetime(v), row_x) ])
         elif k == "ability_list":
             offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_ability_list(v), row_x) ])
-        elif k == "can_scan_at":
+        elif k in ("can_scan_at", "pregnant_until"):
             offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_datetime_from_hour(v), row_x) ])
-        elif k == "marked_until":
-            offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_datetime_from_hour(v), row_x) ])
-        elif k in ("is_selected", "is_destroyed", "id", "is_dead", "kills", "pregnant_with", "color", "pregnancy_duration", "eat_rate", "sat_lost_per_day", "repath_attempts", "move_period", "patience_max", "color_eaten", "color_grown"):
+        elif k in ("marked_until_d"):
+            offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_date_from_day(v), row_x) ])
+        elif k in ("pregnant_with", "parent_mom", "parent_dad"):
+            offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_name_from_id(v), row_x) ])
+        elif k in ("id", "color", "name", "age"):
             pass
         else:
             offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (str(v), row_x) ])
@@ -83,7 +87,7 @@ def draw_selected_info(unit, pos):
 
 
 def draw_grid():
-    print(str(camera_pos))
+    # print(str(camera_pos))
     for i in range(TILE_COUNT_X + 1):
         draw_line((i * TILE_SPACING + GRID_OFFSET_X - camera_pos[0], GRID_OFFSET_Y- camera_pos[1]), (i * TILE_SPACING + GRID_OFFSET_X - camera_pos[0], GRID_SIZE_Y + GRID_OFFSET_Y - camera_pos[1]), COLOR_GRID, LINE_WIDTH)
         
@@ -135,7 +139,7 @@ def draw_path(unit):
             else:
                 path = None
             if path is not None:
-                for point in path.points:
+                for point in path:
                     rect = calculate_rect(point, 2)
                     pygame.draw.rect(screen, ability.color, rect)
 

@@ -124,7 +124,7 @@ while not done:
                 if mouse_tile is not None:
                     move_to_tile(mouse_tile)
     if paused == False: 
-        print(str(camera_pos))       
+        # print(str(camera_pos))       
         slow_down_factor_index += 1
         if slow_down_factor_index == slow_down_factor[0]:
             slow_down_factor_index = 0

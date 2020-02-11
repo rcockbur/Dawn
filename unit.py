@@ -1,7 +1,7 @@
 from globals import *
 import pygame, random
 from utility import measure
-from path import Path
+# from path import Path
 from pathfinding import get_path, get_path
 from map import calculate_rect
 from ability import Move, Eat, Mate, Socialize
@@ -17,23 +17,31 @@ def link_types():
     Unit.cant_move_types = { Block, Deer, Wolf, Person, Grass }
 
 class Unit(Entity):
+    food_remaining =4000
+    idle_min = 60
+    idle_max = 100
     is_social = False
+    move_period = 20
+    patience_max = 50
+    pregnancy_duration_d = 150
     sat_min = -1000
     sat_starving = -500
     sat_hungery = 0
     sat_peckish = 500
     sat_full = 1000
     sat_max = 1200
+    sat_lost_per_day = 20
 
     def init_a(self, tile, born_naturally):
         Entity.__init__(self, tile, born_naturally)
         self.ability_list = list()
-        self.kills = 0
         self.is_dead = False
         self.eat_rate = 150
         self.idle_is_dirty = False
         self.can_scan_at = 0
         self.is_male = random.randint(1,2) == 1
+        self.parent_mom = None
+        self.parent_dad = None
 
         if self.is_male == False:
             self.is_fertile = False
@@ -41,7 +49,7 @@ class Unit(Entity):
             self.pregnant_until = None
         
     def init_b(self, tile, born_naturally):
-        # self.patience_current = self.patience_max
+        # self.patience_current = self.__class__.patience_max
         self.sat_current = 10 * (random.randint(self.__class__.sat_hungery, self.__class__.sat_full) // 10)
         if self.__class__.is_manual == False:
             self.idle_current = random.randint(0, self.__class__.idle_max)
@@ -57,20 +65,20 @@ class Unit(Entity):
                                 self.is_fertile = True
                         if current_date[DT_DAY_OY] == self.birth[DT_DAY_OY]:
                             self.age += 1
-                            if self.age == self.age_max:
+                            if self.age == self.death_at_age:
                                 self.__class__.monthly_died_age += 1
                                 self.die()
                                 return
                     # hunger  
                     if self.sat_current > self.__class__.sat_min:
-                        self.sat_current = max(self.sat_current - self.sat_lost_per_day, self.sat_min)
+                        self.sat_current = max(self.sat_current - self.__class__.sat_lost_per_day, self.sat_min)
                     else:
                         self.__class__.monthly_died_starved += 1
                         self.die()
                         return
-                    # pregnancy
-                    if self.is_male == False and self.pregnant_until is not None and self.pregnant_until == current_date[DT_DAY]:
-                        self.give_birth()
+                # pregnancy
+                if self.is_male == False and self.pregnant_until is not None and self.pregnant_until == current_date[DT_HOUR]:
+                    self.give_birth()
                 # automatic unit update ability
                 if self.__class__.is_manual == False:
                     if len(self.ability_list) == 0 :
@@ -149,6 +157,7 @@ class Unit(Entity):
     def die(self):
         self.is_dead = True
         self.color = COLOR_RED
+        self.food_remaining = self.__class__.food_remaining
         self.ability_list.clear()
 
     def move(self, tile):
@@ -168,6 +177,8 @@ class Unit(Entity):
     # returns true if there is more to be eaten here
     def eat(self, entity):
         if self.can_eat(entity) and self.sat_current < self.__class__.sat_full:
+            if isinstance(entity, Unit) and entity.is_dead == False:
+                self.kills += 1
             r = entity.eaten(self.eat_rate)
             food_gained = r[0]
             is_more = r[1]
@@ -200,14 +211,18 @@ class Unit(Entity):
             baby = Deer(self.tile, True)
         elif type(self) is Wolf:
             baby = Wolf(self.tile, True)
+        baby.parent_mom = self.id
+        baby.parent_dad = self.pregnant_with
         self.pregnant_until = None
         self.pregnant_with = None
         self.__class__.monthly_born += 1
 
     def mate(self, entity):
         if random.randint(1, 2) == 1:
-            self.pregnant_until = current_date[DT_DAY] + random.randint(int(self.pregnancy_duration * (9/10)), int(self.pregnancy_duration * (11/10)))
-            self.pregnant_with = entity
+            min_duration = int(self.__class__.pregnancy_duration_d * (9/10)) * HOURS_PER_DAY
+            max_duration = int(self.__class__.pregnancy_duration_d * (11/10)) * HOURS_PER_DAY
+            self.pregnant_until = current_date[DT_HOUR] + random.randint(min_duration, max_duration)
+            self.pregnant_with = entity.id
             self.is_fertile = False 
         return {"complete": True}
         
@@ -248,6 +263,9 @@ class Unit(Entity):
             return s
     
 class Deer(Unit):
+    age_adult = 2
+    age_senior = 9
+    eat_types = { Grass }
     monthly_born = 0
     monthly_died_age = 0
     monthly_died_starved = 0
@@ -255,25 +273,14 @@ class Deer(Unit):
     move_range_idle = 8
     move_range_hunt = 8
     move_range_mate = 8
-    eat_types = { Grass }
-    idle_min = 60
-    idle_max = 100
-    scan_period = HOURS_PER_DAY * 120
     radius = UNIT_RADIUS_DEER
-    age_adult = 2
-    age_senior = 9
+    repath_attempts = 1
+    scan_period = HOURS_PER_DAY * 120
 
     def __init__(self, tile, born_naturally):
         Unit.init_a(self, tile, born_naturally)
         self.color = COLOR_DEER
-        self.sat_lost_per_day = 20
-        self.move_period = 20
-        self.patience_max = 50
-        self.age_max = random.randint(10, 12)
-        if self.is_male == False:
-            self.pregnancy_duration = 100
-        self.food_remaining = 4000
-        self.repath_attempts = 1
+        self.death_at_age = random.randint(10, 12)
         Unit.init_b(self, tile, born_naturally)
 
     def can_eat(self, entity):
@@ -284,6 +291,10 @@ class Deer(Unit):
 
 
 class Wolf(Unit):
+    age_adult = 2
+    age_senior = 9
+    eat_types = { Deer }
+    is_social = True
     monthly_born = 0
     monthly_died_age = 0
     monthly_died_starved = 0
@@ -292,26 +303,15 @@ class Wolf(Unit):
     move_range_hunt = 10
     move_range_mate = 12
     move_range_social = 12
-    eat_types = { Deer }
-    idle_min = 60
-    idle_max = 100
-    scan_period = HOURS_PER_DAY * 60
     radius = UNIT_RADIUS_WOLF
-    age_adult = 2
-    age_senior = 9
-    is_social = True
+    repath_attempts = 2
+    scan_period = HOURS_PER_DAY * 60
 
     def __init__(self, tile, born_naturally):
         Unit.init_a(self, tile, born_naturally)
         self.color = COLOR_WOLF
-        self.sat_lost_per_day = 20
-        self.move_period = 20
-        self.patience_max = 50 
-        self.age_max = random.randint(10, 12)
-        if self.is_male == False:
-            self.pregnancy_duration = 150
-        self.food_remaining = 4000
-        self.repath_attempts = 2
+        self.death_at_age = random.randint(10, 12)
+        self.kills = 0
         Unit.init_b(self, tile, born_naturally)
 
     def can_eat(self, entity):
@@ -322,27 +322,23 @@ class Wolf(Unit):
 
 
 class Person(Unit):
+    age_adult = 16
+    age_senior = 75
+    eat_types = { Deer, Wolf }
+    is_manual = True
     monthly_born = 0
     monthly_died_age = 0
     monthly_died_starved = 0
     monthly_died_hunted = 0
-    eat_types = { Deer, Wolf }
     radius = UNIT_RADIUS_PERSON
-    age_adult = 16
-    age_senior = 75
-    is_manual = True
+    repath_attempts = 2
+    sat_lost_per_day = 5
 
     def __init__(self, tile, born_naturally):
         Unit.init_a(self, tile, born_naturally)
         self.color = COLOR_PERSON
-        self.sat_lost_per_day = 1
-        self.move_period = 10
-        self.patience_max = 20
-        self.age_max = random.randint(80, 100)
-        if self.is_male == False:
-            self.pregnancy_duration = 150
-        self.food_remaining = 2000
-        self.repath_attempts = 2
+        self.death_at_age = random.randint(80, 100)
+        self.kills = 0
         Unit.init_b(self, tile, born_naturally)
 
 link_types()

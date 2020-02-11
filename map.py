@@ -7,6 +7,7 @@ class Map:
         self.grid = list()
 
         self.entities = dict()
+        self.destroyed_entities = dict()
 
         for i in range(TILE_COUNT_X):
             self.grid.append(list())
@@ -34,6 +35,7 @@ class Map:
         # print("death of", entity.name)
         if self.get_entity_at_tile(entity.tile) is not None:
             self.grid[entity.tile[0]][entity.tile[1]] = None
+        self.destroyed_entities[entity.id] = entity
         del self.entities[entity.id]
         if entity in selected_entities:
             selected_entities.remove(entity)
@@ -54,6 +56,12 @@ class Map:
     def get_entity_by_id(self, id):
         if id in self.entities:
             return self.entities[id]
+        else:
+            return None
+
+    def get_destroyed_entity_by_id(self, id):
+        if id in self.destroyed_entities:
+            return self.destroyed_entities[id]
         else:
             return None
 
