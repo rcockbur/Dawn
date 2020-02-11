@@ -83,11 +83,12 @@ def draw_selected_info(unit, pos):
 
 
 def draw_grid():
+    print(str(camera_pos))
     for i in range(TILE_COUNT_X + 1):
-        draw_line((i * TILE_SPACING + GRID_OFFSET_X, GRID_OFFSET_Y), (i * TILE_SPACING + GRID_OFFSET_X, GRID_SIZE_Y + GRID_OFFSET_Y), COLOR_GRID, LINE_WIDTH)
+        draw_line((i * TILE_SPACING + GRID_OFFSET_X - camera_pos[0], GRID_OFFSET_Y- camera_pos[1]), (i * TILE_SPACING + GRID_OFFSET_X - camera_pos[0], GRID_SIZE_Y + GRID_OFFSET_Y - camera_pos[1]), COLOR_GRID, LINE_WIDTH)
         
     for i in range(TILE_COUNT_Y+1):
-        draw_line((GRID_OFFSET_X, i * TILE_SPACING + GRID_OFFSET_Y), (GRID_SIZE_X + GRID_OFFSET_X, i * TILE_SPACING + GRID_OFFSET_Y), COLOR_GRID, LINE_WIDTH)
+        draw_line((GRID_OFFSET_X - camera_pos[0], i * TILE_SPACING + GRID_OFFSET_Y - camera_pos[1]), (GRID_SIZE_X + GRID_OFFSET_X - camera_pos[0], i * TILE_SPACING + GRID_OFFSET_Y - camera_pos[1]), COLOR_GRID, LINE_WIDTH)
         
 def draw_line(pos_1, pos_2, color, width):
     pygame.draw.line(screen, color, pos_1, pos_2, width)

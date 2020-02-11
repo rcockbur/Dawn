@@ -44,7 +44,9 @@ while not done:
         if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
             done = True
         # Keyboard
+
         elif event.type == pygame.KEYDOWN:
+            global camera_pos
             if event.key == pygame.K_SPACE:
                 paused = not paused       
             elif event.key == pygame.K_ESCAPE:
@@ -99,6 +101,14 @@ while not done:
             elif event.key == pygame.K_5:
                 toggle_debug_unit_report()
                 print("Monthly Unit Report:", str(get_debug_unit_report()))
+            elif event.key == pygame.K_UP:
+                camera_pos[1] = max(camera_pos[1] - 1, 0)
+            elif event.key == pygame.K_DOWN:
+                camera_pos[1] = camera_pos[1] + 1
+            elif event.key == pygame.K_LEFT:
+                camera_pos[0] = max(camera_pos[0] - 1, 0)
+            elif event.key == pygame.K_RIGHT:
+                camera_pos[0] = camera_pos[0] + 1
         # Mouse down
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == LEFT_BUTTON and mouse_tile != None and mouse_pos_start == None:
@@ -113,7 +123,8 @@ while not done:
             if event.button == RIGHT_BUTTON:
                 if mouse_tile is not None:
                     move_to_tile(mouse_tile)
-    if paused == False:        
+    if paused == False: 
+        print(str(camera_pos))       
         slow_down_factor_index += 1
         if slow_down_factor_index == slow_down_factor[0]:
             slow_down_factor_index = 0
