@@ -23,37 +23,55 @@ draw_function = [0]
 
 FPS = 30
 
-START_YEAR = 1997
+START_YEAR = 1989
 
-TICKS_PER_DAY = 24
+HOURS_PER_DAY = 24
 DAYS_PER_MONTH = 30
 MONTHS_PER_YEAR = 12
-DAYS_PER_YEAR = 360
-TICKS_PER_MONTH = TICKS_PER_DAY * DAYS_PER_MONTH
-TICKS_PER_YEAR = 360 * TICKS_PER_DAY
+DAYS_PER_YEAR = DAYS_PER_MONTH * MONTHS_PER_YEAR
+HOURS_PER_MONTH = HOURS_PER_DAY * DAYS_PER_MONTH
+HOURS_PER_YEAR = HOURS_PER_DAY * DAYS_PER_YEAR
 
-year = [START_YEAR]
-month = [year[0] * MONTHS_PER_YEAR]
-day = [year[0] * DAYS_PER_YEAR]
-tick = [year[0] * TICKS_PER_YEAR]
-tick_of_day = [0]
-tick_of_month = [0]
-tick_of_year = [0]
-day_of_month = [0]
-day_of_year = [0]
-month_of_year = [0]
+DT_YEAR = 0
+DT_MONTH = 1
+DT_DAY = 2
+DT_HOUR = 3
+DT_MONTH_OY = 4
+DT_DAY_OM = 5
+DT_DAY_OY = 6
+DT_HOUR_OD = 7
+DT_HOUR_OM = 8
+DT_HOUR_OY = 9
+DATE_TYPES = ( DT_YEAR, DT_MONTH, DT_DAY, DT_HOUR, DT_MONTH_OY, DT_DAY_OM, DT_DAY_OY, DT_HOUR_OD, DT_HOUR_OM, DT_HOUR_OY )
+
+current_date = dict()
+current_date[DT_YEAR] = START_YEAR
+current_date[DT_MONTH] = START_YEAR * MONTHS_PER_YEAR
+current_date[DT_DAY] = START_YEAR * DAYS_PER_YEAR
+current_date[DT_HOUR] = START_YEAR * HOURS_PER_YEAR
+current_date[DT_MONTH_OY] = 0
+current_date[DT_DAY_OY] = 0
+current_date[DT_DAY_OM] = 0
+current_date[DT_HOUR_OY] = 0
+current_date[DT_HOUR_OM] = 0
+current_date[DT_HOUR_OD] = 0
+
 
 selected_entities = set()
-dead_units = set()
+destroyed_units = set()
 
-debug_pathfinding = False #or True
+speed_up_factor = [1.0]
+slow_down_factor = [1.0]
+
+debug_pathfinding = False #or True 
 debug_path = False        #or True
 debug_performance = False #or True
-debug_status = False       or True
+debug_status = False      #or True
+debug_unit_report = False #or True
 
 GRID_OFFSET_X = 10
 GRID_OFFSET_Y = 30
-TILE_COUNT_X = 180
+TILE_COUNT_X = 150
 TILE_COUNT_Y = 116
 LINE_WIDTH = 1
 TILE_RADIUS = 4
@@ -146,6 +164,14 @@ def get_debug_status():
     global debug_status
     return debug_status
 
+def toggle_debug_unit_report():
+    global debug_unit_report
+    debug_unit_report = not debug_unit_report
+
+def get_debug_unit_report():
+    global debug_unit_report
+    return debug_unit_report
+
 from map import Map # Any file which imports globals also imports both Map and MAP from map.py
 print("running globals.py 2")
 MAP = Map()
@@ -154,8 +180,8 @@ MAP = Map()
 MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", ]
 
 def get_date_string():
-    if day_of_month[0] < 10:
-        s = "0" + str(day_of_month[0])
+    if current_date[DT_DAY_OM] < 10:
+        s = "0" + str(current_date[DT_DAY_OM])
     else:
-        s = str(day_of_month[0])
-    return MONTH_NAMES[month_of_year[0]] + " " + s + ", " + str(year[0])
+        s = str(current_date[DT_DAY_OM])
+    return MONTH_NAMES[current_date[DT_MONTH_OY]] + " " + s + ", " + str(current_date[DT_YEAR])

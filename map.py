@@ -19,10 +19,10 @@ class Map:
     def get_entities(self):
         return self.entities.values()
 
-    def get_entities_of_type(self, _type):
+    def get_entities_of_type(self, _type, include_dead = True):
         r = set()
         for entity in self.entities.values():
-            if type(entity) == _type:
+            if type(entity) == _type and (include_dead or entity.is_dead == False):
                 r.add(entity)
         return r
 
@@ -40,7 +40,7 @@ class Map:
 
     def move_entity(self, entity, from_tile, to_tile):
         target_entity = self.grid[to_tile[0]][to_tile[1]]
-        if target_entity is not None and target_entity.is_dead == False:
+        if target_entity is not None and target_entity.is_destroyed == False:
             print(entity.name, "stomping on", target_entity.name)
         self.grid[from_tile[0]][from_tile[1]] = None
         self.grid[to_tile[0]][to_tile[1]] = entity

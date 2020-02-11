@@ -100,8 +100,6 @@ def astar(start_tile, end_tile, obstacle_types, debug):
                 debug_draw(current_node, COLOR_RED, 1, 0)
                 
     print("Path not found")
-    for i in obstacle_types:
-        print(i)
     return None
 
 
@@ -130,7 +128,7 @@ def choose_random(set):
 
 
 # @measure
-def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socialize, search_range, idle_range):
+def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socialize, prefer_food, search_range, idle_range):
     debug = get_debug_pathfinding() and self.is_selected
 
     start_tile = self.tile
@@ -163,20 +161,20 @@ def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socializ
         current_d_score = current_heap_bundle[0]
         current_tile = current_heap_bundle[1]
         current_entity = MAP.get_entity_at_tile(current_tile)
-        if current_entity is not None and type(current_entity) not in self.cant_path_to_types:
+        if current_entity is not None and type(current_entity) not in self.__class__.cant_path_to_types:
             occupied_tiles.add(current_tile)
-            if wants_to_hunt and type(current_entity) in self.eat_types and current_entity.can_be_hunted():
+            if wants_to_hunt and self.can_eat(current_entity) and current_entity.can_be_hunted() and current_entity is not self:
                 edible_entities.add(current_entity)
-                break
-            elif wants_to_mate and type(current_entity) == type(self) and current_entity.can_be_mated_with(): 
-                potential_mates.add(current_entity)
-                break
-            if wants_to_socialize and type(current_entity) == type(self) and current_entity is not self:
-                potential_friends.add(current_entity)
+            else:
+                if wants_to_mate and type(current_entity) == type(self) and current_entity.can_be_mated_with(): 
+                    potential_mates.add(current_entity)
+                    break
+                if wants_to_socialize and type(current_entity) == type(self) and current_entity is not self:
+                    potential_friends.add(current_entity)
 
         closed_set.add(current_tile)
 
-        if current_entity == self or type(current_entity) not in self.cant_path_over_types:
+        if current_entity == self or type(current_entity) not in self.__class__.cant_path_over_types:
             for i, j in neighbors:
                 neighbor = current_tile[0] + i, current_tile[1] + j
 
@@ -187,7 +185,7 @@ def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socializ
                 if neighbor in closed_set and d_score[neighbor] <= proposed_d_score: continue # skip if we already checked it and dont have a better score
 
                 neighbor_entity = MAP.get_entity_at_tile(neighbor) 
-                if type(neighbor_entity) in self.cant_path_to_types: continue # means we cant generate a path to a block that is unpathable. we could have to put an escape            
+                if type(neighbor_entity) in self.__class__.cant_path_to_types: continue # means we cant generate a path to a block that is unpathable. we could have to put an escape            
 
                 if proposed_d_score < d_score.get(neighbor, 0) or neighbor not in [i[1] for i in open_heap]:
                     came_from[neighbor] = current_tile
@@ -203,7 +201,14 @@ def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socializ
     
     # return food
     if wants_to_hunt and len(edible_entities) > 0:
-        edible_entity = random.choice(tuple(edible_entities))
+        prefered_edible_entities = set(filter(prefer_food, edible_entities)) 
+        if len(prefered_edible_entities) > 0:
+            chosen_list = list(prefered_edible_entities)
+        else:
+            chosen_list = list(edible_entities)
+
+        chosen_list.sort(key=lambda e: d_score[e.tile])
+        edible_entity = chosen_list[0]    
         path = create_path(edible_entity.tile, came_from, debug, COLOR_PATH_HUNT)
         if path.size() > 0: path.points.pop()
         if path.size() == 0:
@@ -220,7 +225,8 @@ def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socializ
         return (path, MATING, mate)
 
     # return friend
-    elif wants_to_socialize and len(potential_friends) > 1 and random.randint(1,2) == 1:
+    # print(str(len(potential_friends)))
+    elif wants_to_socialize and len(potential_friends) > 0:
         friend = random.choice(tuple(potential_friends))
         path = create_path(friend.tile, came_from, debug, COLOR_PATH_SOCIAL)
         if path.size() > 0: path.points.pop()

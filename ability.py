@@ -6,7 +6,7 @@ from path import Path
 print("running ability.py")
 
 class Move():
-    def __init__(self, unit, path, target_entity = None):
+    def __init__(self, unit, path, target_entity = None, repath_attempts = 1):
         self.unit = unit
         self.move_current = unit.move_period
         self.patience_current = unit.patience_max
@@ -20,7 +20,7 @@ class Move():
         self.path = path
         if self.path.size() == 0: raise RuntimeError("Cannot create move ability with path of size 0")
         self.color = COLOR_PATH_MOVING
-        self.repathing_attempts = 0
+        self.repath_attempts = repath_attempts
 
     def execute(self):
         if self.path.size() == 0: raise RuntimeError("Cannot execute move ability with path of size 0")
@@ -32,14 +32,26 @@ class Move():
         if entity is not None and self.target_entity_id is not None and entity.id == self.target_entity_id:
             return {"complete":True, "success":True}
 
-        if type(entity) in self.unit.cant_move_types:
+        if type(entity) in self.unit.__class__.cant_move_types:
             is_blocked = True
 
         # we are blocked
         if is_blocked == True:
             self.patience_current = self.patience_current - 1
             if self.patience_current == 0:
-                return {"complete":True, "success":False}
+                if self.repath_attempts > 0:
+                    path = astar(self.unit.tile, self.path.points[-1], self.unit.__class__.cant_move_types, self.unit.is_selected and get_debug_pathfinding())
+                    self.repath_attempts -= 1
+                    # print(self.unit.name, "is pathing around", entity.name)
+                    if path is not None:
+                        self.path = path
+                        return {"complete":False}
+                    else:
+                        print(self.unit.name, "was unable to find a repath, aborting")
+                        return {"complete":True, "success":False}
+                else:
+                    # print(self.unit.name, "has lost patience with", entity.name)
+                    return {"complete":True, "success":False}
         else:
             self.patience_current = self.unit.patience_max
 
@@ -57,30 +69,31 @@ class Move():
         else:
             self.move_current = self.unit.move_period
 
-        speed_up_factor = 1
+        speed_up = 1
         
-        if self.unit.satiation_current <= self.unit.satiation_hungery:
-            speed_up_factor += 0.2
-            if self.unit.satiation_current <= self.unit.satiation_starving:
-                speed_up_factor += 0.2
+        if self.unit.sat_current <= self.unit.__class__.sat_hungery:
+            speed_up += 0.2
+            if self.unit.sat_current <= self.unit.__class__.sat_starving:
+                speed_up += 0.2
         else:
             if self.unit.can_mate():
-                speed_up_factor += 0.2
+                speed_up += 0.2
 
-        self.move_current = round(self.move_current / speed_up_factor)
+        self.move_current = round(self.move_current / speed_up)
 
 
 class ApproachAbility():
-    def __init__(self, unit, path, target_entity):
+    def __init__(self, unit, path, target_entity, repath_attempts = 0):
         self.unit = unit
         self.target_entity_id = target_entity.id
         if path is not None:
             if path.size() == 0: raise RuntimeError("Cannot approach with a size 0 path")
-            self.approach = Move(unit, path, target_entity)
+            self.approach = Move(unit, path, target_entity, repath_attempts)
         else:
             self.approach = None
         self.approach_started = False
         self.times_dodged = 0
+        self.can_execute_at = -1000
 
 
     def execute(self):
@@ -99,7 +112,7 @@ class ApproachAbility():
             return {"complete":False}
         else:
             target_entity = MAP.get_entity_by_id(self.target_entity_id)
-            if target_entity is None or target_entity.is_dead == True:
+            if target_entity is None or target_entity.is_destroyed == True:
                 # if self.unit.is_selected: print("target is dead")
                 return {"complete":True, "success":False} # done, not successful
             diff_x = abs(target_entity.tile[0] - self.unit.tile[0])
@@ -110,7 +123,7 @@ class ApproachAbility():
                     return {"complete":True, "success":False}
                 else:
                     self.times_dodged += 1
-                    path = astar(self.unit.tile, target_entity.tile, self.unit.cant_move_types, self.unit.is_selected and get_debug_pathfinding())
+                    path = astar(self.unit.tile, target_entity.tile, self.unit.__class__.cant_move_types, self.unit.is_selected and get_debug_pathfinding())
                     if path is not None:
                         self.approach = Move(self.unit, path, target_entity)
                         # if self.unit.is_selected: print("target has moved, recalculating")
@@ -118,16 +131,18 @@ class ApproachAbility():
                     else:
                         # if self.unit.is_selected: print("target can no longer be reached")
                         return {"complete":True, "success":False}
-
-                
-            self.ability_function(target_entity)
-            # if self.unit.is_selected: print("target has been", self.verb)
-            return {"complete":True, "success":True}
+            if current_date[DT_HOUR] >= self.can_execute_at:
+                r = self.ability_function(target_entity)
+                if r["complete"] == True:
+                    return {"complete":True, "success":True}
+                else:
+                    self.can_execute_at = current_date[DT_HOUR] + HOURS_PER_DAY
+            return {"complete":False}
 
 
 class Eat(ApproachAbility):
     def __init__(self, unit, path, target_entity):
-        ApproachAbility.__init__(self, unit, path, target_entity)
+        ApproachAbility.__init__(self, unit, path, target_entity, unit.repath_attempts)
         self.ability_function = self.unit.eat
         self.color = COLOR_PATH_HUNT
         self.verb = "eating"
@@ -137,7 +152,7 @@ class Eat(ApproachAbility):
 
 class Mate(ApproachAbility):
     def __init__(self, unit, path, target_entity):
-        ApproachAbility.__init__(self, unit, path, target_entity)
+        ApproachAbility.__init__(self, unit, path, target_entity, unit.repath_attempts)
         self.ability_function = self.unit.mate
         self.color = COLOR_PATH_MATE
         self.verb = "mating"
@@ -145,7 +160,7 @@ class Mate(ApproachAbility):
 
 class Socialize(ApproachAbility):
     def __init__(self, unit, path, target_entity):
-        ApproachAbility.__init__(self, unit, path, target_entity)
+        ApproachAbility.__init__(self, unit, path, target_entity, unit.repath_attempts)
         self.ability_function = self.unit.socialize
         self.color = COLOR_PATH_SOCIAL
         self.verb = "socializing"
