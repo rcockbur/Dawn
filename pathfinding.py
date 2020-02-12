@@ -76,7 +76,8 @@ def astar(start_tile, end_tile, obstacle_types, debug):
                         if debug: 
                             debug_draw(start_tile, COLOR_GREEN, TILE_RADIUS, 1)
                             time.sleep(0.2 * slow_factor)
-                        return path.reverse()  
+                        path.reverse()
+                        return path
                     if type(MAP.get_entity_at_tile(neighbor)) in obstacle_types: continue
                 else: continue # out of bounds y         
             else: continue # out of bounds x
@@ -122,8 +123,50 @@ def create_path(tile, came_from, debug, debug_color):
 
     return path
 
-def choose_random(set):
-    return random.choice(set)
+def modify_quality(closed_set_quality, enemies, debug):
+
+    search_range = 80
+    for enemy in enemies:
+        # print("enemy_found")
+        closed_set = set()
+        d_score = {enemy.tile : 0}
+        open_heap = []
+        heappush(open_heap, (d_score[enemy.tile], enemy.tile))
+
+        while open_heap:
+            current_heap_bundle = heappop(open_heap)
+            current_d_score = current_heap_bundle[0]
+            current_tile = current_heap_bundle[1]
+            current_entity = MAP.get_entity_at_tile(current_tile)
+
+            closed_set.add(current_tile)
+            if current_tile in closed_set_quality:
+                if debug:
+                    debug_draw(current_tile, COLOR_RED, 1, 0)
+                    time.sleep(0.1 * slow_factor)
+
+                closed_set_quality[current_tile] = 0
+
+            if type(current_entity) not in static_entity_types:
+                for i, j in neighbors:
+                    neighbor = current_tile[0] + i, current_tile[1] + j
+
+                    if not (0 <= neighbor[0] < TILE_COUNT_X and 0 <= neighbor[1] < TILE_COUNT_Y): continue
+
+                    proposed_d_score = d_score[current_tile] + heuristic(current_tile, neighbor)
+                    if proposed_d_score > search_range: continue
+                    if neighbor in closed_set and d_score[neighbor] <= proposed_d_score: continue # skip if we already checked it and dont have a better score
+
+                    neighbor_entity = MAP.get_entity_at_tile(neighbor) 
+                    if type(neighbor_entity) in static_entity_types: continue # means we cant generate a path to a block that is unpathable. we could have to put an escape            
+
+                    if proposed_d_score < d_score.get(neighbor, 0) or neighbor not in [i[1] for i in open_heap]:
+                        d_score[neighbor] = proposed_d_score
+                        heappush(open_heap, (d_score[neighbor], neighbor))
+                        
+                        # if debug:
+                        #     debug_draw(neighbor, COLOR_RED, 1, 0)
+                        #     time.sleep(0.1 * slow_factor)
 
 
 # @measure
@@ -145,12 +188,14 @@ def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socializ
         time.sleep(0.2 * slow_factor)
 
     closed_set = set()
+    closed_set_quality = {}
     came_from = {}
     d_score = {start_tile : 0}
     open_heap = []
-    edible_entities = set()
-    potential_mates = set()
-    potential_friends = set()
+    if wants_to_hunt:       edibles = list()
+    if wants_to_mate:       mates = list()
+    if wants_to_socialize:  friends = list()
+    enemies = list()
     occupied_tiles = set()
     heappush(open_heap, (d_score[start_tile], start_tile))
 
@@ -162,15 +207,17 @@ def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socializ
         if current_entity is not None and type(current_entity) not in self.__class__.cant_path_to_types:
             occupied_tiles.add(current_tile)
             if wants_to_hunt and self.can_eat(current_entity) and current_entity.can_be_hunted() and current_entity is not self:
-                edible_entities.add(current_entity)
+                edibles.append(current_entity)
             else:
                 if wants_to_mate and type(current_entity) == type(self) and current_entity.can_be_mated_with(): 
-                    potential_mates.add(current_entity)
-                    break
+                    mates.append(current_entity)
                 if wants_to_socialize and type(current_entity) == type(self) and current_entity is not self:
-                    potential_friends.add(current_entity)
+                    friends.append(current_entity)
+            if type(current_entity) in self.__class__.avoid_types:
+                enemies.append(current_entity)
 
         closed_set.add(current_tile)
+        closed_set_quality[current_tile] = 1
 
         if current_entity == self or type(current_entity) not in self.__class__.cant_path_over_types:
             for i, j in neighbors:
@@ -190,53 +237,74 @@ def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socializ
                     d_score[neighbor] = proposed_d_score
                     heappush(open_heap, (d_score[neighbor], neighbor))
 
-                if debug:
-                    debug_draw(neighbor, activity_color, 1, 0)
+                # if debug:
+                #     debug_draw(neighbor, activity_color, 1, 0)
 
         if debug:
             if current_tile is not start_tile:
                 debug_draw(current_tile, COLOR_CLOSED_SET, 1, 0)
     
+    # dangerous_tiles = set()
+    # for enemy in enemies:
+    #     for i, j in neighbors:
+    #         neighbor = (enemy.tile[0] + i, enemy.tile[1] + j)
+    #         if neighbor in closed_set:
+    #             # if neighbor not in dangerous_tiles:
+    #             #     draw_function[0]()
+    #             #     debug_draw(neighbor, COLOR_RED, TILE_RADIUS, 2)
+    #             #     time.sleep(1 * slow_factor)
+    #             dangerous_tiles.add(neighbor)
+    # print("---------START-----------")
+    # print(str(closed_set_quality))
+    if len(enemies) > 0:
+        modify_quality(closed_set_quality, enemies, debug)
+    # print("---------MODIFY-----------")
+    # print(str(closed_set_quality))
+    # print("---------END-----------")
+
+
+
+    # print("Dangerous_tiles:",str(len(dangerous_tiles)))
     # return food
-    if wants_to_hunt and len(edible_entities) > 0:
-        prefered_edible_entities = set(filter(prefer_food, edible_entities)) 
-        if len(prefered_edible_entities) > 0:
-            chosen_list = list(prefered_edible_entities)
-        else:
-            chosen_list = list(edible_entities)
+    if wants_to_hunt: edibles = [edible for edible in edibles if closed_set_quality[edible.tile] > 0]
+    if wants_to_hunt and len(edibles) > 0:
+        # prefered_edibles = set(filter(prefer_food, edibles)) 
+        prefered_edibles = [edible for edible in edibles if prefer_food(edible)]
+        if len(prefered_edibles) > 0: chosen_list = prefered_edibles
+        else: chosen_list = edibles
 
         chosen_list.sort(key=lambda e: d_score[e.tile])
         edible_entity = chosen_list[0]    
         path = create_path(edible_entity.tile, came_from, debug, COLOR_PATH_HUNT)
-        if len(path) > 0: path.pop(0)
-        if len(path) == 0:
-            path = None
+        if len(path) > 0: path.pop(-1)
+        if len(path) == 0: path = None
         return (path, HUNTING, edible_entity)
 
     # return mate
-    elif wants_to_mate and len(potential_mates) > 0:
-        mate = random.choice(tuple(potential_mates))
+    if wants_to_mate: mates = [mate for mate in mates if closed_set_quality[mate.tile] > 0]
+    if wants_to_mate and len(mates) > 0:
+        mate = random.choice(mates)
         path = create_path(mate.tile, came_from, debug, COLOR_PATH_MATE)
-        if len(path) > 0: path.pop(0)
-        if len(path) == 0:
-            path = None
+        if len(path) > 0: path.pop(-1)
+        if len(path) == 0: path = None
         return (path, MATING, mate)
 
     # return friend
-    elif wants_to_socialize and len(potential_friends) > 0:
-        friend = random.choice(tuple(potential_friends))
+    if wants_to_socialize: friends = [friend for friend in friends if closed_set_quality[friend.tile] > 0]
+    if wants_to_socialize and len(friends) > 0:
+        friend = random.choice(friends)
         path = create_path(friend.tile, came_from, debug, COLOR_PATH_SOCIAL)
-        if len(path) > 0: path.pop(0)
-        if len(path) == 0:
-            path = None
+        if len(path) > 0: path.pop(-1)
+        if len(path) == 0: path = None
         return (path, SOCIAL, friend)
     
     # return random tile
     closed_set -= {start_tile}
     closed_set -= occupied_tiles
-    closed_set = set(filter(lambda tile : d_score[tile] <= idle_range, closed_set)) 
+    # closed_set -= dangerous_tiles
+    closed_set = [tile for tile in closed_set if d_score[tile] <= idle_range and closed_set_quality[tile] > 0]
     if len(closed_set) > 0:
-        chosen_tile = random.choice(tuple(closed_set))
+        chosen_tile = random.choice(closed_set)
         path = create_path(chosen_tile, came_from, debug, activity_color)
         return (path, MOVING, None)
     else:

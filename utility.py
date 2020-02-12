@@ -47,12 +47,7 @@ def format_datetime(date):
 
     return hour_string + " " + MONTH_NAMES[date[DT_MONTH_OY]] + " " + day_string + ", " + str(date[DT_YEAR])
 
-def format_ability_list(ability_list):
-    s = "["
-    for ability in ability_list:
-        s = s + ability.__class__.__name__
-    s = s + "]"
-    return s
+
 
 def format_datetime_from_hour(hour):
     if hour is not None:
@@ -76,6 +71,12 @@ def format_datetime_from_hour(hour):
         return hour_string + " " + MONTH_NAMES[month_of_year] + " " + day_string + ", " + str(year)
     else:
         return "None"
+
+def format_type_list(_list):
+    return "[" + ",".join((_item.__name__ for _item in _list)) + "]"
+
+def format_ability_list(ability_list):
+    return "[" + ",".join((_item.__class__.__name__ for _item in ability_list)) + "]"
 
 def format_date_from_day(day):
     if day is not None:
@@ -155,3 +156,21 @@ def unit_report(entity_types):
         unit_class.monthly_died_hunted = 0
         unit_class.monthly_died_starved = 0
     print(s)
+
+def weighted_random(pairs):
+    boundary_temp = 0
+    boundaries = [0]
+    num_pairs = 0
+    for pair in pairs:
+        num_pairs+=1
+        boundary_temp = boundary_temp + pair[1]
+        boundaries.append(boundary_temp)
+    if boundaries[num_pairs] > 0:
+        chosen_int = randint(0, boundaries[num_pairs]-1)
+        for boundary_lower in range(num_pairs):
+            boundary_upper = boundary_lower + 1
+            if boundaries[boundary_upper] > boundaries[boundary_lower]:
+                if boundaries[boundary_upper] > chosen_int >= boundaries[boundary_lower]:
+                    return pairs[boundary_lower][0]
+        raise RuntimeError("No direction found")
+    return None

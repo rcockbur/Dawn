@@ -15,6 +15,8 @@ def link_types():
     Unit.cant_path_to_types = { Block }
     Unit.cant_path_over_types = { Block, Deer, Wolf, Person, Grass }
     Unit.cant_move_types = { Block, Deer, Wolf, Person, Grass }
+    Deer.avoid_types.add(Wolf)
+    Wolf.avoid_types.add(Person)
 
 class Unit(Entity):
     food_remaining =4000
@@ -265,14 +267,15 @@ class Unit(Entity):
 class Deer(Unit):
     age_adult = 2
     age_senior = 9
+    avoid_types = set()
     eat_types = { Grass }
     monthly_born = 0
     monthly_died_age = 0
     monthly_died_starved = 0
     monthly_died_hunted = 0
-    move_range_idle = 8
-    move_range_hunt = 8
-    move_range_mate = 8
+    move_range_idle = 6
+    move_range_hunt = 6
+    move_range_mate = 6
     radius = UNIT_RADIUS_DEER
     repath_attempts = 1
     scan_period = HOURS_PER_DAY * 120
@@ -293,16 +296,17 @@ class Deer(Unit):
 class Wolf(Unit):
     age_adult = 2
     age_senior = 9
+    avoid_types = set()
     eat_types = { Deer }
     is_social = True
     monthly_born = 0
     monthly_died_age = 0
     monthly_died_starved = 0
     monthly_died_hunted = 0
-    move_range_idle = 10
-    move_range_hunt = 10
-    move_range_mate = 12
-    move_range_social = 12
+    move_range_idle = 6
+    move_range_hunt = 6
+    move_range_mate = 8
+    move_range_social = 8
     radius = UNIT_RADIUS_WOLF
     repath_attempts = 2
     scan_period = HOURS_PER_DAY * 60

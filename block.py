@@ -3,6 +3,10 @@ from entity import Entity
 import random
 print("running block.py")
 
+def link_types():
+    static_entity_types.add(Block)
+    static_entity_types.add(Grass)
+
 class Block(Entity):
     radius = UNIT_RADIUS_BLOCK
     
@@ -15,7 +19,7 @@ class Grass(Entity):
     color_eaten = (0, 50, 0)
     color_grown = (0, 100, 0)
     radius = UNIT_RADIUS_BLOCK
-    crop_max = 300
+    crop_max = 500
 
     def __init__(self, tile):
         Entity.__init__(self, tile, born_naturally = True)
@@ -64,9 +68,6 @@ class Grass(Entity):
         self.is_dead = True
 
 
-
-
-
-
+link_types()
 
 

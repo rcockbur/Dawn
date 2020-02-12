@@ -5,7 +5,6 @@ print("running entity.py")
 class Entity():
     id_index = 0
     name_indexes = dict()
-    name_index = 0
     is_manual = False
 
     def new_id():

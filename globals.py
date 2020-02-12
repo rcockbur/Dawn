@@ -23,6 +23,7 @@ slow_down_factor = [1.0]
 
 selected_entities = set()
 destroyed_units = set()
+static_entity_types = set()
 
 debug_pathfinding = False #or True 
 debug_path = False        #or True
