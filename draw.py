@@ -83,39 +83,29 @@ def format_variables(k, v):
 def draw_selected_info(unit, pos):
     row_x = 200
     offset_y = 0
-    
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (unit.name, 0),     ("", 100) ])
-    
     for k, v in sorted(list(vars(unit).items())):
         if not callable(v):
             if k in {"id", "color", "name"}: pass
             else: offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_variables(k, v), row_x) ])
-            
-
     offset_y += FONT_SIZE
-    
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (unit.__class__.__name__, 0),     ("", 100) ])
     for k, v in sorted(list(vars(unit.__class__).items())):
         if not callable(v):
             if k in {"__doc__", "__module__"}: pass
             else: offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_variables(k, v), row_x) ])
-
     offset_y += FONT_SIZE
-
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (unit.__class__.__bases__[0].__name__, 0),     ("", 100) ])
     for k, v in sorted(list(vars(unit.__class__.__bases__[0]).items())):
         if not callable(v):
             if k in {"__doc__", "__module__", "__dict__", "__weakref__"}: pass
             else: offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_variables(k, v), row_x) ])
-
     offset_y += FONT_SIZE
-
     offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (unit.__class__.__bases__[0].__bases__[0].__name__, 0),     ("", 100) ])
     for k, v in sorted(list(vars(unit.__class__.__bases__[0].__bases__[0]).items())):
         if not callable(v):
             if k in {"__doc__", "__module__", "__dict__", "__weakref__"}: pass
             else: offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_variables(k, v), row_x) ])
-
     return offset_y + FONT_SIZE
 
 

@@ -64,13 +64,16 @@ class Move():
         else:
             self.move_current = self.unit.__class__.move_period
         speed_up = 1
-        if self.unit.sat_current <= self.unit.__class__.sat_hungery:
-            speed_up += 0.2
-            if self.unit.sat_current <= self.unit.__class__.sat_starving:
-                speed_up += 0.2
+        if self.unit.in_danger:
+            speed_up += 1.0
         else:
-            if self.unit.can_mate():
+            if self.unit.sat_current <= self.unit.__class__.sat_hungery:
                 speed_up += 0.2
+                if self.unit.sat_current <= self.unit.__class__.sat_starving:
+                    speed_up += 0.2
+            else:
+                if self.unit.can_mate():
+                    speed_up += 0.2
         self.move_current = round(self.move_current / speed_up)
 
 class ApproachAbility():

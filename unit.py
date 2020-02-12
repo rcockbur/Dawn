@@ -44,6 +44,7 @@ class Unit(Entity):
         self.is_male = random.randint(1,2) == 1
         self.parent_mom = None
         self.parent_dad = None
+        self.in_danger = False
 
         if self.is_male == False:
             self.is_fertile = False
@@ -112,7 +113,7 @@ class Unit(Entity):
                 wants_to_hunt = True
         if wants_to_hunt == False and self.can_mate():
             wants_to_mate = True
-        if wants_to_hunt == False and self.__class__.is_social and random.randint(1,2) == 1:
+        if wants_to_hunt == False and self.__class__.is_social and random.randint(1,3) > 1:
             wants_to_socialize = True
 
         search_range = self.__class__.move_range_idle
@@ -133,20 +134,25 @@ class Unit(Entity):
         path = path_info[0]
         ability_type = path_info[1]
         target = path_info[2]
+        self.in_danger = path_info[3]
         if ability_type is not STOPPED:
             ability = abilities[ability_type]
             self.ability_list.append(ability(self, path, target))
                     
     def reset_idle_current(self):
         self.idle_current = random.randint(self.__class__.idle_min, self.__class__.idle_max)
-        speed_up = 1    
-        if self.sat_current < self.__class__.sat_hungery:
-            speed_up += 0.3
-            if self.sat_current < self.__class__.sat_starving:
+        speed_up = 1
+        if self.in_danger:
+            speed_up += 1.0
+            self.in_danger = False
+        else:    
+            if self.sat_current < self.__class__.sat_hungery:
                 speed_up += 0.3
-        else:
-            if self.can_mate():
-                speed_up += 0.3
+                if self.sat_current < self.__class__.sat_starving:
+                    speed_up += 0.3
+            else:
+                if self.can_mate():
+                    speed_up += 0.3
         self.idle_current = round(self.idle_current / speed_up)
         self.idle_is_dirty = False
 
@@ -273,9 +279,9 @@ class Deer(Unit):
     monthly_died_age = 0
     monthly_died_starved = 0
     monthly_died_hunted = 0
-    move_range_idle = 6
-    move_range_hunt = 6
-    move_range_mate = 6
+    move_range_idle = 8
+    move_range_hunt = 8
+    move_range_mate = 8
     radius = UNIT_RADIUS_DEER
     repath_attempts = 1
     scan_period = HOURS_PER_DAY * 120
@@ -303,10 +309,10 @@ class Wolf(Unit):
     monthly_died_age = 0
     monthly_died_starved = 0
     monthly_died_hunted = 0
-    move_range_idle = 6
-    move_range_hunt = 6
-    move_range_mate = 8
-    move_range_social = 8
+    move_range_idle = 8
+    move_range_hunt = 10
+    move_range_mate = 10
+    move_range_social = 10
     radius = UNIT_RADIUS_WOLF
     repath_attempts = 2
     scan_period = HOURS_PER_DAY * 60

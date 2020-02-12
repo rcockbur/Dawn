@@ -15,9 +15,9 @@ for x in range(TILE_COUNT_X//2):
     for y in range(TILE_COUNT_Y//2):
         if MAP.get_entity_at_tile((2*x,2*y)) == None:
             rand = random.randint(0,250)
-            if rand <= 40:
+            if rand <= 60:
                 Grass((2*x, 2*y))
-            elif rand <= 50:
+            elif rand <= 65:
                 Deer((2*x, 2*y), False)
             # elif rand <= 96:
             #     Wolf((2*x, 2*y), False)
