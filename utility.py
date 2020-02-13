@@ -157,13 +157,14 @@ def unit_report(entity_types):
         unit_class.monthly_died_starved = 0
     print(s)
 
-def weighted_random(pairs):
+def weighted_random(_dict):
+    # print(str(_dict))
     boundary_temp = 0
     boundaries = [0]
     num_pairs = 0
-    for pair in pairs:
+    for v in _dict.values():
         num_pairs+=1
-        boundary_temp = boundary_temp + pair[1]
+        boundary_temp = boundary_temp + v
         boundaries.append(boundary_temp)
     if boundaries[num_pairs] > 0:
         chosen_int = randint(0, boundaries[num_pairs]-1)
@@ -171,6 +172,6 @@ def weighted_random(pairs):
             boundary_upper = boundary_lower + 1
             if boundaries[boundary_upper] > boundaries[boundary_lower]:
                 if boundaries[boundary_upper] > chosen_int >= boundaries[boundary_lower]:
-                    return pairs[boundary_lower][0]
+                    return list(_dict.keys())[boundary_lower]
         raise RuntimeError("No direction found")
     return None
