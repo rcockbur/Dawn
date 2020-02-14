@@ -20,8 +20,6 @@ def link_types():
 
 class Unit(Entity):
     food_remaining =4000
-    idle_min = 60
-    idle_max = 100
     is_social = False
     move_period = 20
     patience_max = 50
@@ -275,6 +273,8 @@ class Deer(Unit):
     age_senior = 9
     avoid_types = set()
     eat_types = { Grass }
+    idle_min = 40
+    idle_max = 60
     monthly_born = 0
     monthly_died_age = 0
     monthly_died_starved = 0
@@ -304,6 +304,8 @@ class Wolf(Unit):
     age_senior = 9
     avoid_types = set()
     eat_types = { Deer }
+    idle_min = 60
+    idle_max = 100
     is_social = True
     monthly_born = 0
     monthly_died_age = 0
