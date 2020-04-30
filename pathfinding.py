@@ -120,18 +120,19 @@ def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socializ
         raise RuntimeError("wants_to_hunt is true at the same time as mate or social") 
 
     start_tile = self.tile
-    outer_range = 200
-    middle_range = 150
-    inner_range = 100
+    outer_range = 100
+    middle_range = 50
+    inner_range = 40
     activity_color = COLOR_WHITE
 
-    if wants_to_hunt: 
-        edibles = list()
-    else:
-        if wants_to_mate: 
-            mates = list()        
-        if wants_to_socialize: 
-            friends = list()
+    
+    edibles = list()
+    prefered_edibles = list()
+    mates = list()        
+    friends = list()
+    can_mate = self.can_mate()
+    my_type = type(self)
+    can_eat = self.sat_current < self.sat_full
     
     closed_set = set()
     closed_set_quality = {}
@@ -154,17 +155,37 @@ def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socializ
         current_d_score = current_heap_bundle[0]
         current_tile = current_heap_bundle[1]
         current_entity = MAP.get_entity_at_tile(current_tile)
-        if current_entity is not None and type(current_entity) not in self.__class__.cant_path_to_types and current_tile is not start_tile:
+        current_entity_type = type(current_entity)
+        if current_entity is not None and current_entity_type not in self.__class__.cant_path_to_types and current_tile is not start_tile:
             occupied_tiles.add(current_tile)
-            if wants_to_hunt and self.can_eat(current_entity) and current_entity.can_be_hunted():
-                edibles.append(current_entity)
-            else:
-                if wants_to_mate and type(current_entity) == type(self) and current_entity.can_be_mated_with(): 
-                    mates.append(current_entity)
-                if wants_to_socialize and type(current_entity) == type(self):
-                    friends.append(current_entity)
-            if type(current_entity) in self.__class__.avoid_types:
+            if current_entity_type in self.__class__.avoid_types:
                 enemies.append(current_entity)
+                if debug:
+                    outter_rect = calculate_rect(current_entity.tile, TILE_RADIUS)    
+                    pygame.draw.rect(screen, COLOR_ENEMY, outter_rect, 1)
+            if can_eat and self.can_eat_entity(current_entity) and current_entity.can_be_hunted():
+                if prefer_food(current_entity):
+                    edibles.append(current_entity)
+                    if debug:
+                        outter_rect = calculate_rect(current_entity.tile, TILE_RADIUS)    
+                        pygame.draw.rect(screen, COLOR_PATH_HUNT, outter_rect, 1)
+                elif current_d_score <= middle_range:
+                    prefered_edibles.append(current_entity)
+                    if debug:
+                        outter_rect = calculate_rect(current_entity.tile, TILE_RADIUS)    
+                        pygame.draw.rect(screen, COLOR_PATH_HUNT, outter_rect, 1)
+            else:
+                if can_mate and current_entity_type == my_type and current_entity.can_be_mated_with() and current_d_score <= middle_range: 
+                    mates.append(current_entity)
+                    if debug:
+                        outter_rect = calculate_rect(current_entity.tile, TILE_RADIUS)    
+                        pygame.draw.rect(screen, COLOR_PATH_MATE, outter_rect, 1)
+                if current_entity_type == my_type and current_d_score <= middle_range:
+                    friends.append(current_entity)
+                    if debug:
+                        outter_rect = calculate_rect(current_entity.tile, TILE_RADIUS)    
+                        pygame.draw.rect(screen, COLOR_PATH_SOCIAL, outter_rect, 1)
+            
 
         # closed_set.add(current_tile)
         closed_set_quality[current_tile] = 10
@@ -203,22 +224,26 @@ def get_path(self, find_closest, wants_to_hunt, wants_to_mate, wants_to_socializ
     closed_set_quality.pop(start_tile)
 
     # return edible - closest. prefered have priority
-    if wants_to_hunt: edibles = [edible for edible in edibles if closed_set_quality[edible.tile] > 0 and d_score[edible.tile] <= inner_range]
-    if wants_to_hunt and len(edibles) > 0:
-        prefered_edibles = [edible for edible in edibles if prefer_food(edible)]
-        if len(prefered_edibles) > 0: chosen_list = prefered_edibles
-        else: chosen_list = edibles
-        return calc_path_info(self, came_from, closed_set_quality, chosen_list, COLOR_PATH_HUNT, HUNTING) + [in_danger]
+    if wants_to_hunt: 
+        prefered_edibles = [edible for edible in prefered_edibles if closed_set_quality[edible.tile] > 0]
+        edibles = [edible for edible in edibles if closed_set_quality[edible.tile] > 0]
+        if (len(edibles) > 0 or len(prefered_edibles) > 0):
+            # prefered_edibles = [edible for edible in edibles if prefer_food(edible)]
+            if len(prefered_edibles) > 0: chosen_list = prefered_edibles
+            else: chosen_list = edibles
+            return calc_path_info(self, came_from, closed_set_quality, chosen_list, COLOR_PATH_HUNT, HUNTING) + [in_danger]
 
     # return mate - random
-    if wants_to_mate: mates = [mate for mate in mates if closed_set_quality[mate.tile] > 0 and d_score[mate.tile] <= inner_range]
-    if wants_to_mate and len(mates) > 0:
-        return calc_path_info(self, came_from, closed_set_quality, mates, COLOR_PATH_MATE, MATING) + [in_danger]
+    if wants_to_mate: 
+        mates = [mate for mate in mates if closed_set_quality[mate.tile] > 0]
+        if len(mates) > 0:
+            return calc_path_info(self, came_from, closed_set_quality, mates, COLOR_PATH_MATE, MATING) + [in_danger]
 
     # return friend - random
-    if wants_to_socialize: friends = [friend for friend in friends if closed_set_quality[friend.tile] > 0 and d_score[friend.tile] <= inner_range]
-    if wants_to_socialize and len(friends) > 0:
-        return calc_path_info(self, came_from, closed_set_quality, friends, COLOR_PATH_SOCIAL, SOCIAL) + [in_danger]
+    if wants_to_socialize: 
+        friends = [friend for friend in friends if closed_set_quality[friend.tile] > 0]
+        if len(friends) > 0:
+            return calc_path_info(self, came_from, closed_set_quality, friends, COLOR_PATH_SOCIAL, SOCIAL) + [in_danger]
     
     # return random tile
     [closed_set_quality.pop(key) for key in occupied_tiles]
@@ -250,7 +275,7 @@ def calc_path_info(unit, came_from, closed_set_quality, entities, color, status)
 
 # @measure
 def modify_quality(closed_set_quality, enemies, debug):
-    outer_range = 120
+    outer_range = 60
     closed_set = set()
     open_heap = []
     d_score = dict()

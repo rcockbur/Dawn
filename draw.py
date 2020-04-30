@@ -12,7 +12,7 @@ monospace = pygame.font.SysFont('Monospace', FONT_SIZE)
 
 def draw_everything(mouse_pos_start = None, mouse_pos_clamped = None):
     draw_black()
-    draw_grid()
+    # draw_grid()
     for entity in MAP.get_entities():
         if isinstance(entity, Unit):
             draw_path(entity)
@@ -87,25 +87,26 @@ def draw_selected_info(unit, pos):
     for k, v in sorted(list(vars(unit).items())):
         if not callable(v):
             if k in {"id", "color", "name"}: pass
+            elif k in { "pregnant_until", "birth" }: offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_variables(k, v), row_x-10) ])
             else: offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_variables(k, v), row_x) ])
-    offset_y += FONT_SIZE
-    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (unit.__class__.__name__, 0),     ("", 100) ])
-    for k, v in sorted(list(vars(unit.__class__).items())):
-        if not callable(v):
-            if k in {"__doc__", "__module__"}: pass
-            else: offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_variables(k, v), row_x) ])
-    offset_y += FONT_SIZE
-    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (unit.__class__.__bases__[0].__name__, 0),     ("", 100) ])
-    for k, v in sorted(list(vars(unit.__class__.__bases__[0]).items())):
-        if not callable(v):
-            if k in {"__doc__", "__module__", "__dict__", "__weakref__"}: pass
-            else: offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_variables(k, v), row_x) ])
-    offset_y += FONT_SIZE
-    offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (unit.__class__.__bases__[0].__bases__[0].__name__, 0),     ("", 100) ])
-    for k, v in sorted(list(vars(unit.__class__.__bases__[0].__bases__[0]).items())):
-        if not callable(v):
-            if k in {"__doc__", "__module__", "__dict__", "__weakref__"}: pass
-            else: offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_variables(k, v), row_x) ])
+    # offset_y += FONT_SIZE
+    # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (unit.__class__.__name__, 0),     ("", 100) ])
+    # for k, v in sorted(list(vars(unit.__class__).items())):
+    #     if not callable(v):
+    #         if k in {"__doc__", "__module__"}: pass
+    #         else: offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_variables(k, v), row_x) ])
+    # offset_y += FONT_SIZE
+    # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (unit.__class__.__bases__[0].__name__, 0),     ("", 100) ])
+    # for k, v in sorted(list(vars(unit.__class__.__bases__[0]).items())):
+    #     if not callable(v):
+    #         if k in {"__doc__", "__module__", "__dict__", "__weakref__"}: pass
+    #         else: offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_variables(k, v), row_x) ])
+    # offset_y += FONT_SIZE
+    # offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (unit.__class__.__bases__[0].__bases__[0].__name__, 0),     ("", 100) ])
+    # for k, v in sorted(list(vars(unit.__class__.__bases__[0].__bases__[0]).items())):
+    #     if not callable(v):
+    #         if k in {"__doc__", "__module__", "__dict__", "__weakref__"}: pass
+    #         else: offset_y = draw_text_pair((pos[0], pos[1]), offset_y, [ (k, 0),     (format_variables(k, v), row_x) ])
     return offset_y + FONT_SIZE
 
 

@@ -21,7 +21,6 @@ def link_types():
 class Unit(Entity):
     food_remaining =4000
     is_social = False
-    move_period = 20
     patience_max = 50
     pregnancy_duration_d = 150
     sat_min = -1000
@@ -182,7 +181,7 @@ class Unit(Entity):
 
     # returns true if there is more to be eaten here
     def eat(self, entity):
-        if self.can_eat(entity) and self.sat_current < self.__class__.sat_full:
+        if self.can_eat_entity(entity) and self.sat_current < self.__class__.sat_full:
             if isinstance(entity, Unit) and entity.is_dead == False:
                 self.kills += 1
             r = entity.eaten(self.eat_rate)
@@ -273,17 +272,19 @@ class Deer(Unit):
     age_senior = 9
     avoid_types = set()
     eat_types = { Grass }
-    idle_min = 40
-    idle_max = 60
+    idle_min = 20
+    idle_max = 25
     monthly_born = 0
     monthly_died_age = 0
     monthly_died_starved = 0
     monthly_died_hunted = 0
+    move_period = 20
     move_range_idle = 8
     move_range_hunt = 8
     move_range_mate = 8
     radius = UNIT_RADIUS_DEER
-    repath_attempts = 1
+    repath_attempts = 2
+    chase_attempts = 0
     scan_period = HOURS_PER_DAY * 120
 
     def __init__(self, tile, born_naturally):
@@ -292,11 +293,11 @@ class Deer(Unit):
         self.death_at_age = random.randint(10, 12)
         Unit.init_b(self, tile, born_naturally)
 
-    def can_eat(self, entity):
+    def can_eat_entity(self, entity):
         return type(entity) in self.__class__.eat_types
 
     def prefer_food(self, entity):
-        return True
+        return False
 
 
 class Wolf(Unit):
@@ -311,12 +312,14 @@ class Wolf(Unit):
     monthly_died_age = 0
     monthly_died_starved = 0
     monthly_died_hunted = 0
-    move_range_idle = 8
-    move_range_hunt = 10
-    move_range_mate = 10
+    move_period = 15
+    move_range_idle = 50
+    move_range_hunt = 50
+    move_range_mate = 50
     move_range_social = 10
     radius = UNIT_RADIUS_WOLF
-    repath_attempts = 2
+    repath_attempts = 4
+    chase_attempts = 4
     scan_period = HOURS_PER_DAY * 60
 
     def __init__(self, tile, born_naturally):
@@ -326,7 +329,7 @@ class Wolf(Unit):
         self.kills = 0
         Unit.init_b(self, tile, born_naturally)
 
-    def can_eat(self, entity):
+    def can_eat_entity(self, entity):
         return type(entity) in self.__class__.eat_types or type(entity) == Wolf and entity.is_dead == True
 
     def prefer_food(self, entity):
